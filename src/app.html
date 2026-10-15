@@ -175,16 +175,17 @@ h1,h2,h3{margin:0;font-family:Georgia,"Times New Roman",serif;font-weight:700;le
 <div id="root" class="app"></div>
 
 <script src="content.js"></script>
+<script src="content-kab.js"></script>
 <script>
 /* =========================================================
    Tounsi w Bark — v0.1
-   Niveau 1, 3 épisodes, épreuve de Khalti, carnet de mots.
+   Tunisien et kabyle, épisodes, révisions, discussion, Studio famille.
    Tout est stocké sur le téléphone (localStorage).
    ========================================================= */
 'use strict';
-const LANG = 'tn';
-const PACK = window.TWB_CONTENT[LANG];
-const CAST = window.TWB_CAST, KH = window.TWB_KHALTI;
+const PACKS = window.TWB_CONTENT;
+const CAST = window.TWB_CAST;
+let PACK, KH, CHAT;
 const LS = 'twb.state.v1';
 
 // ---------- Fonctions natives (dans l'APK) ----------
@@ -192,13 +193,18 @@ const Native = (() => {
   const C = window.Capacitor;
   const isNative = !!(C && C.isNativePlatform && C.isNativePlatform());
   const plug = n => (isNative && C.registerPlugin && C.isPluginAvailable(n)) ? C.registerPlugin(n) : null;
-  return { isNative, Speech: plug('SpeechRecognition'), TTS: plug('TextToSpeech'), App: plug('App') };
+  return { isNative, Speech: plug('SpeechRecognition'), TTS: plug('TextToSpeech'), App: plug('App'), LN: plug('LocalNotifications'), FS: plug('Filesystem'), Share: plug('Share') };
 })();
 
 // ---------- État ----------
-const blank = () => ({ name: '', gender: 'm', xp: 0, done: {}, saved: [], streak: { last: '', count: 0 }, hontes: 0, opts: { fr: true, ar: false } });
+const blank = () => ({ name: '', gender: 'm', lang: 'tn', xp: 0, done: {}, saved: [], weak: {}, review: '', streak: { last: '', count: 0 }, hontes: 0, opts: { fr: true, ar: false }, notif: { on: false, hour: 19 }, voiceName: '' });
 let S = load();
 function load(){ try { return Object.assign(blank(), JSON.parse(localStorage.getItem(LS) || '{}')); } catch(e){ return blank(); } }
+function usePack(){
+  PACK = PACKS[S.lang] || PACKS.tn; KH = PACK.lines;
+  CHAT = Object.assign({}, window.TWB_CHAT, { rules: PACK.chat.rules, personas: PACK.chat.personas });
+}
+usePack();
 function save(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch(e){} }
 
 // ---------- Outils ----------
@@ -213,6 +219,8 @@ function fill(s){
   const petit = S.gender === 'f' ? 'benti' : 'wlidi', petitAr = S.gender === 'f' ? 'بنتي' : 'وليدي';
   const f = S.gender === 'f';
   return String(s).replace(/\{petitAr\}/g, petitAr).replace(/\{petit\}/g, petit).replace(/\{prenom\}/g, S.name || 'Nour')
+    .replace(/\{mmi\}/g, f ? 'a yelli' : 'a mmi').replace(/\{k\}/g, f ? 'm' : 'k').replace(/\{e\}/g, f ? 'e' : '')
+    .replace(/\{jayAr\}/g, f ? 'جاية' : 'جاي').replace(/\{jay\}/g, f ? 'jaya' : 'jay')
     .replace(/\{petitFr\}/g, f ? 'ma petite' : 'mon petit').replace(/\{cousinAr\}/g, f ? 'كوزينة' : 'كوزان').replace(/\{cousin\}/g, f ? 'cousine' : 'cousin').replace(/\{genre\}/g, f ? 'une fille' : 'un garçon');
 }
 function toast(msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
@@ -250,39 +258,57 @@ function avatar(key, size){
     ? `<circle cx="42" cy="55" r="6" fill="#fff" fill-opacity=".5" stroke="#1f2430" stroke-width="2"/><circle cx="58" cy="55" r="6" fill="#fff" fill-opacity=".5" stroke="#1f2430" stroke-width="2"/><path d="M48 55h4" stroke="#1f2430" stroke-width="2"/><circle cx="42" cy="55" r="2.2" fill="#1f2430"/><circle cx="58" cy="55" r="2.2" fill="#1f2430"/>`
     : `<circle cx="42" cy="54" r="2.6" fill="#1f2430"/><circle cx="58" cy="54" r="2.6" fill="#1f2430"/>`;
   const mouth = c.moustache ? `<path d="M40 64q10-6 20 0q-10 2-20 0z" fill="#2b1d16"/><path d="M45 69q5 3 10 0" stroke="#1f2430" stroke-width="2" fill="none" stroke-linecap="round"/>` : `<path d="M43 65q7 5 14 0" stroke="#1f2430" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="36" cy="62" r="3" fill="#e57373" fill-opacity=".45"/><circle cx="64" cy="62" r="3" fill="#e57373" fill-opacity=".45"/>`;
-  const body = `<path d="M14 100c4-18 18-26 36-26s32 8 36 26z" fill="${c.jersey || (c.scarf ? '#7a4b8c' : c.cap ? '#5c6b7a' : '#e8e1d5')}"/>${c.jersey ? '<path d="M38 76h24l-4 24H42z" fill="#f1c40f"/>' : ''}`;
+  const body = `<path d="M14 100c4-18 18-26 36-26s32 8 36 26z" fill="${c.jersey || c.robe || (c.scarf ? '#7a4b8c' : c.cap ? '#5c6b7a' : '#e8e1d5')}"/>${c.jersey ? '<path d="M38 76h24l-4 24H42z" fill="#f1c40f"/>' : ''}`;
   const bg = c.scarf ? '#fbe7e1' : c.cap ? '#fdf3d7' : '#e3edf8';
   return `<svg class="av" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="${bg}"/>${body}${c.scarf ? head : ''}${face}${eyes}${mouth}${c.scarf ? '' : head}</svg>`;
 }
 
-// ---------- Voix du téléphone ----------
-async function speak(ar){
-  ar = fill(ar);
+// ---------- Voix : enregistrements de la famille, sinon voix du téléphone ----------
+const V = it => (it && (it[PACK.speakField] || it.tn)) || '';
+const arDiv = it => (S.opts.ar && PACK.speakField === 'ar' && it && it.ar) ? `<div class="ar">${esc(fill(it.ar))}</div>` : '';
+function vnorm(t){ return String(t).toLowerCase().replace(/[\s.,!?;:…'’"«»()\-–—،؟]/g, ''); }
+function vkey(text){ let h = 5381; const t = vnorm(text); for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0; return S.lang + '_' + h.toString(36); }
+const LOCAL = new Map(); let BUNDLE = {};
+function idb(){ return new Promise((res, rej) => { const r = indexedDB.open('twb', 1); r.onupgradeneeded = () => r.result.createObjectStore('voices'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbPut(k, v){ try { const d = await idb(); await new Promise(r => { const t = d.transaction('voices', 'readwrite'); t.objectStore('voices').put(v, k); t.oncomplete = r; t.onerror = r; }); } catch(e){} }
+async function loadVoices(){
+  try { const d = await idb(); await new Promise(r => { const t = d.transaction('voices'); const st = t.objectStore('voices'); const c = st.openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { LOCAL.set(cur.key, cur.value); cur.continue(); } else r(); }; c.onerror = r; }); } catch(e){}
+  try { const r = await fetch('audio/index.json'); if (r.ok) BUNDLE = await r.json(); } catch(e){}
+}
+let curAudio = null;
+function playSrc(src){ return new Promise(res => { try { if (curAudio) curAudio.pause(); const a = new Audio(src); curAudio = a; a.onended = a.onerror = () => res(true); a.play().catch(() => res(false)); setTimeout(() => res(true), 15000); } catch(e){ res(false); } }); }
+function playKey(k){ if (LOCAL.has(k)) return playSrc(URL.createObjectURL(LOCAL.get(k))); if (BUNDLE[k]) return playSrc('audio/' + BUNDLE[k]); return Promise.resolve(false); }
+const ttsOK = () => PACK.voice === 'tts' && !!(Native.TTS || 'speechSynthesis' in window);
+function hasVoice(raw){ if (!raw) return false; const k = vkey(fill(raw)); return LOCAL.has(k) || !!BUNDLE[k] || ttsOK(); }
+async function speak(raw){
+  if (!raw) return false;
+  const text = fill(raw), k = vkey(text);
+  if (LOCAL.has(k) || BUNDLE[k]) return playKey(k);
+  if (PACK.voice !== 'tts') return false;
   if (Native.TTS) {
-    for (const lang of ['ar-TN', 'ar-SA', 'ar']) {
-      try { await Native.TTS.speak({ text: ar, lang, rate: 0.85, pitch: 1, volume: 1, category: 'playback' }); return true; } catch(e){}
+    for (const lang of PACK.ttsLangs) {
+      try { await Native.TTS.speak({ text, lang, rate: 0.85, pitch: 1, volume: 1, category: 'playback' }); return true; } catch(e){}
     }
     toast('Installe une voix arabe dans les réglages Android (Synthèse vocale)');
     return false;
   }
   if ('speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance(ar);
+    const u = new SpeechSynthesisUtterance(text);
     const v = speechSynthesis.getVoices().find(v => /^ar/i.test(v.lang));
     if (v) u.voice = v; u.lang = v ? v.lang : 'ar-TN'; u.rate = 0.85;
     return new Promise(res => { u.onend = u.onerror = () => res(true); speechSynthesis.cancel(); speechSynthesis.speak(u); setTimeout(() => res(true), 12000); });
   }
-  toast('Pas de voix disponible sur cet appareil'); return false;
+  return false;
 }
-const canSpeak = () => !!(Native.TTS || 'speechSynthesis' in window);
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-say]');
   if (b) { e.preventDefault(); e.stopPropagation(); speak(b.dataset.say); }
 }, true);
-const sayBtn = (ar, label) => `<button class="listen" data-say="${esc(ar)}">${ICON.speaker}${label || 'Écouter'}</button>`;
+const sayBtn = (raw, label) => hasVoice(raw) ? `<button class="listen" data-say="${esc(raw)}">${ICON.speaker}${label || 'Écouter'}</button>` : '';
 
 // ---------- Micro ----------
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const canListen = () => !!(Native.Speech || SR);
+const canListen = () => !!((Native.Speech || SR) && PACK.srLang);
 async function listen(o){
   o = o || {};
   if (Native.Speech) {
@@ -291,11 +317,11 @@ async function listen(o){
     if (!available) throw new Error('indispo');
     const perm = await R.requestPermissions();
     if (perm.speechRecognition && perm.speechRecognition !== 'granted') throw new Error('refus');
-    const r = await R.start({ language: o.lang || 'ar-TN', maxResults: 5, prompt: 'Ahki! (Parle !)', partialResults: false, popup: o.popup !== false });
+    const r = await R.start({ language: o.lang || PACK.srLang || 'fr-FR', maxResults: 5, prompt: 'Ahki! (Parle !)', partialResults: false, popup: o.popup !== false });
     return (r && r.matches) || [];
   }
   return new Promise((res, rej) => {
-    const rec = new SR(); rec.lang = o.lang || 'ar-TN'; rec.interimResults = false; rec.maxAlternatives = 5;
+    const rec = new SR(); rec.lang = o.lang || PACK.srLang || 'fr-FR'; rec.interimResults = false; rec.maxAlternatives = 5;
     rec.onresult = e => res(Array.from(e.results[0]).map(a => a.transcript));
     rec.onerror = e => rej(new Error(e.error === 'not-allowed' ? 'refus' : 'rien'));
     rec.onend = () => res([]);
@@ -314,17 +340,24 @@ function lev(a, b){
 }
 function sim(a, b){ if (!a || !b) return 0; return 1 - lev(a, b) / Math.max(a.length, b.length); }
 function matchSpeech(heard, item){
-  const tA = normAr(fill(item.ar)), tL = normLat(fill(item.tn));
+  const tA = item.ar ? normAr(fill(item.ar)) : '', tL = normLat(fill(item.tn));
   return heard.some(h => Math.max(sim(normAr(h), tA), sim(normLat(h), tL)) >= 0.6);
 }
 
-// ---------- Données dérivées ----------
-const LEVEL = PACK.levels[0];
-const ALL_WORDS = PACK.levels.flatMap(l => l.episodes.flatMap(e => e.words.map(w => Object.assign({ ep: e.id }, w))));
-const wordById = id => ALL_WORDS.find(w => w.id === id);
-const epIndex = id => LEVEL.episodes.findIndex(e => e.id === id);
-function isOpen(i){ return i === 0 || !!S.done[LEVEL.episodes[i - 1].id]; }
-const bossOpen = () => LEVEL.episodes.every(e => S.done[e.id]);
+// ---------- Données dérivées (par langue) ----------
+let WORDS_CACHE = null;
+function allWords(){
+  if (!WORDS_CACHE || WORDS_CACHE.lang !== S.lang) WORDS_CACHE = { lang: S.lang, list: PACK.levels.flatMap(l => l.episodes.flatMap(e => e.words.map(w => Object.assign({ ep: e.id, lvl: l.id }, w)))) };
+  return WORDS_CACHE.list;
+}
+const wordById = id => allWords().find(w => w.id === id);
+const levelOf = epId => PACK.levels.find(l => l.episodes.some(e => e.id === epId));
+const epIndex = id => { const l = levelOf(id); return l ? l.episodes.findIndex(e => e.id === id) : -1; };
+function levelOpen(l){ const i = PACK.levels.indexOf(l); if (i <= 0) return true; const p = PACK.levels[i - 1]; return !!(p.boss && S.done[p.boss.id]); }
+function isOpen(l, i){ return levelOpen(l) && (i === 0 || !!S.done[l.episodes[i - 1].id]); }
+const bossOpen = l => l.episodes.length && l.episodes.every(e => S.done[e.id]);
+const MN = () => CAST[PACK.mascot].name;
+const learned = () => allWords().filter(w => S.done[w.ep]);
 
 function bumpStreak(){
   const t = today();
@@ -337,47 +370,47 @@ function streakNow(){ return (S.streak.last === today() || S.streak.last === yes
 // ---------- Navigation ----------
 let tab = 'learn', screen = null, stack = [];
 function go(fn){ stack.push(fn); fn(); }
-function back(){
-  stack.pop();
-  const f = stack[stack.length - 1];
-  if (f) f(); else home();
-}
 if (Native.App) Native.App.addListener('backButton', () => {
-  if (screen === 'home') Native.App.exitApp(); else if (screen === 'lesson') confirmQuit(); else { chatRun++; stack = []; home(); }
+  if (screen === 'home') Native.App.exitApp(); else if (screen === 'lesson') confirmQuit(); else { chatRun++; stopRec(); stack = []; home(); }
 });
 
 // ---------- Accueil ----------
 function onboarding(){
   screen = 'onboard';
-  let g = S.gender || 'm';
+  let g = S.gender || 'm', lg = S.lang || 'tn';
   root.innerHTML = `<div class="main fadein">
-    <div class="hero">${avatar('khalti', 112)}
+    <div class="hero">${avatar('khalti', 96)} ${avatar('nanna', 96)}
       <h1>Tounsi <span>w</span> Bark</h1>
-      <p class="muted">Apprends le tunisien avec Khalti.<br>Elle est drôle, elle est exigeante, et elle a toujours raison.</p>
+      <p class="muted">Apprends la langue de ta famille avec humour.<br>Khalti et Nanna sont drôles, exigeantes, et ont toujours raison.</p>
     </div>
-    <div class="say">${avatar('khalti', 44)}<div class="bubble">Aslema ! Rappelle-moi ton prénom, ya…<div class="fr">(Elle fait semblant de l’avoir oublié.)</div></div></div>
     <label class="q" for="nm">Ton prénom</label>
     <input class="field" id="nm" autocomplete="given-name" maxlength="20" placeholder="ex. Yasmine" value="${esc(S.name)}">
-    <div class="q" style="margin-top:18px">Pour Khalti, tu es…</div>
+    <div class="q" style="margin-top:18px">Tu veux apprendre…</div>
     <div class="seg">
-      <button class="opt" data-g="m">son wlidi<small>garçon</small></button>
-      <button class="opt" data-g="f">sa benti<small>fille</small></button>
+      <button class="opt" data-l="tn">le tunisien<small>avec Khalti</small></button>
+      <button class="opt" data-l="kab">le kabyle<small>avec Nanna · brouillon</small></button>
+    </div>
+    <div class="q" style="margin-top:8px">Pour la famille, tu es…</div>
+    <div class="seg">
+      <button class="opt" data-g="m">un garçon<small>wlidi · mmi</small></button>
+      <button class="opt" data-g="f">une fille<small>benti · yelli</small></button>
     </div>
     <button class="btn btn-primary btn-block" id="go" style="margin-top:14px">Yalla, on commence</button>
   </div>`;
-  const paint = () => root.querySelectorAll('[data-g]').forEach(b => b.classList.toggle('sel', b.dataset.g === g));
+  const paint = () => { root.querySelectorAll('[data-g]').forEach(b => b.classList.toggle('sel', b.dataset.g === g)); root.querySelectorAll('[data-l]').forEach(b => b.classList.toggle('sel', b.dataset.l === lg)); };
   root.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { g = b.dataset.g; paint(); });
+  root.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { lg = b.dataset.l; paint(); });
   paint();
   $('#go').onclick = () => {
     const n = $('#nm').value.trim();
-    if (!n) { toast('Khalti attend ton prénom…'); $('#nm').focus(); return; }
-    S.name = n; S.gender = g; save(); home();
+    if (!n) { toast('La famille attend ton prénom…'); $('#nm').focus(); return; }
+    S.name = n; S.gender = g; S.lang = lg; save(); usePack(); home();
   };
 }
 
 function shell(content){
   root.innerHTML = `<div class="top"><div class="brand">Tounsi <span>w</span> Bark</div>
-    <div class="chips"><span class="chip" title="Jours d'affilée">${ICON.flame}${streakNow()}</span><span class="chip" title="Jasmins gagnés">${ICON.jasmine}${S.xp}</span></div></div>
+    <div class="chips"><button class="chip" id="lgchip" title="Changer de langue">${esc(PACK.short)}</button><span class="chip" title="Jours d'affilée">${ICON.flame}${streakNow()}</span><span class="chip" title="Jasmins gagnés">${ICON.jasmine}${S.xp}</span></div></div>
     <div class="main fadein">${content}</div>
     <nav class="nav"><div class="nav-in">
       <button data-tab="learn" class="${tab === 'learn' ? 'on' : ''}">${ICON.learn}Apprendre</button>
@@ -386,15 +419,44 @@ function shell(content){
       <button data-tab="me" class="${tab === 'me' ? 'on' : ''}">${ICON.user}Profil</button>
     </div></nav>`;
   root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; stack = []; home(); });
+  $('#lgchip').onclick = switchLang;
+}
+function switchLang(){
+  S.lang = S.lang === 'kab' ? 'tn' : 'kab'; save(); usePack(); scheduleNotif();
+  toast(S.lang === 'kab' ? 'Azul ! Place au kabyle avec Nanna.' : 'Aslema ! Retour au tunisien avec Khalti.');
+  home();
 }
 
-function khaltiMsg(){
-  if (LEVEL.episodes.every(e => S.done[e.id]) && S.done[LEVEL.boss.id]) return fill(KH.done);
+function mascotMsg(){
+  const lv = PACK.levels.filter(l => l.episodes.length);
+  if (lv.every(l => S.done[l.boss.id])) return fill(KH.done);
   const n = streakNow();
-  if (!S.streak.last) return `Aslema ${esc(S.name)} ! Commence par l’épisode 1, je t’attends à l’aéroport depuis 2 heures.`;
+  if (!S.streak.last) return S.lang === 'kab' ? `Azul ${S.name} ! Commence par l’épisode 1, je t’attends devant la maison depuis l’aube.` : `Aslema ${S.name} ! Commence par l’épisode 1, je t’attends à l’aéroport depuis 2 heures.`;
   if (n === 0) return KH.streak0;
   if (n === 1) return KH.streak1;
   return KH.streakN.replace('{n}', n);
+}
+
+function levelCard(l){
+  const open = levelOpen(l);
+  if (!l.episodes.length || !open) {
+    return `<div class="card locked">${ICON.lock}<div><b>Niveau ${l.num} · ${esc(l.name)}</b><br><small>${esc(l.goal)} · ${l.episodes.length ? 'réussis l’épreuve du niveau ' + (l.num - 1) : 'bientôt'}</small></div></div>`;
+  }
+  const steps = l.episodes.map((e, i) => {
+    const d = S.done[e.id], op = isOpen(l, i);
+    const st = d ? `<span class="stars">${'★'.repeat(d.stars)}${'☆'.repeat(3 - d.stars)}</span>` : op ? '<span class="tag">À toi</span>' : '';
+    return `<button class="step" data-ep="${e.id}" ${op ? '' : 'aria-disabled="true"'}>
+      <span class="dot ${d ? 'done' : op ? 'open' : ''}">${op ? i + 1 : ICON.lock}</span>
+      <span style="flex:1"><b>${esc(e.title)}</b><small>${e.words.length} mots · ${e.exercises.length} exercices</small></span>${st}</button>`;
+  }).join('');
+  const bd = S.done[l.boss.id], bo = bossOpen(l);
+  const boss = `<button class="step" data-boss="${l.id}" ${bo ? '' : 'aria-disabled="true"'}>
+    <span class="dot boss ${bd ? 'done' : bo ? 'open' : ''}">${bo ? '★' : ICON.lock}</span>
+    <span style="flex:1"><b>${esc(l.boss.title)}</b><small>${l.boss.count} questions · il en faut ${l.boss.pass}</small></span>${bd ? '<span class="tag" style="background:var(--good-soft);color:var(--good)">Réussie</span>' : ''}</button>`;
+  return `<div class="card level" style="margin-bottom:14px">
+      <div class="level-head"><svg class="tiles" width="120" height="120" viewBox="0 0 120 120"><g fill="none" stroke="#fff" stroke-width="3"><path d="M60 6 74 46 114 60 74 74 60 114 46 74 6 60 46 46z"/><circle cx="60" cy="60" r="16"/></g></svg>
+        <div class="num">Niveau ${l.num}</div><h2>${esc(l.name)}</h2><p>${esc(l.goal)}</p></div>
+      <div class="path">${steps}${boss}</div></div>`;
 }
 
 function home(){
@@ -403,41 +465,60 @@ function home(){
   if (tab === 'book') return book();
   if (tab === 'chat') return chatHome();
   if (tab === 'me') return profile();
-  const steps = LEVEL.episodes.map((e, i) => {
-    const d = S.done[e.id], open = isOpen(i);
-    const st = d ? `<span class="stars">${'★'.repeat(d.stars)}${'☆'.repeat(3 - d.stars)}</span>` : open ? '<span class="tag">À toi</span>' : '';
-    return `<button class="step" data-ep="${e.id}" ${open ? '' : 'aria-disabled="true"'}>
-      <span class="dot ${d ? 'done' : open ? 'open' : ''}">${open ? i + 1 : ICON.lock}</span>
-      <span style="flex:1"><b>${esc(e.title)}</b><small>${e.words.length} mots · ${e.exercises.length} exercices</small></span>${st}</button>`;
-  }).join('');
-  const bd = S.done[LEVEL.boss.id], bo = bossOpen();
-  const boss = `<button class="step" data-boss="1" ${bo ? '' : 'aria-disabled="true"'}>
-    <span class="dot boss ${bd ? 'done' : bo ? 'open' : ''}">${bo ? '★' : ICON.lock}</span>
-    <span style="flex:1"><b>${esc(LEVEL.boss.title)}</b><small>${LEVEL.boss.count} questions · il en faut ${LEVEL.boss.pass}</small></span>${bd ? '<span class="tag" style="background:var(--good-soft);color:var(--good)">Réussie</span>' : ''}</button>`;
-  const others = PACK.levels.slice(1).map(l => `<div class="card locked">${ICON.lock}<div><b>Niveau ${l.num} · ${esc(l.name)}</b><br><small>${esc(l.goal)} · bientôt</small></div></div>`).join('');
-  shell(`<div class="say">${avatar('khalti', 52)}<div class="bubble">${esc(khaltiMsg())}</div></div>
-    <div class="card level">
-      <div class="level-head"><svg class="tiles" width="120" height="120" viewBox="0 0 120 120"><g fill="none" stroke="#fff" stroke-width="3"><path d="M60 6 74 46 114 60 74 74 60 114 46 74 6 60 46 46z"/><circle cx="60" cy="60" r="16"/></g></svg>
-        <div class="num">Niveau 1</div><h2>${esc(LEVEL.name)}</h2><p>${esc(LEVEL.goal)}</p></div>
-      <div class="path">${steps}${boss}</div>
-    </div>
-    <div class="sec">La suite</div>${others}`);
+  const lv = PACK.levels;
+  const playable = lv.filter(l => l.episodes.length && levelOpen(l));
+  const current = playable.filter(l => !S.done[l.boss.id]);
+  const shown = (current.length ? current : playable.slice(-1));
+  const doneLv = playable.filter(l => S.done[l.boss.id] && !shown.includes(l));
+  const later = lv.filter(l => !shown.includes(l) && !doneLv.includes(l));
+  const nL = learned().length, rDone = S.review === today() + S.lang;
+  const review = nL >= 4 ? `<button class="card step" id="rev" style="margin-bottom:14px;border-top:0">
+      <span class="dot ${rDone ? 'done' : 'open'}">${rDone ? '✓' : '?'}</span>
+      <span style="flex:1"><b>${esc(MN())} t’interroge</b><small>${rDone ? 'Fait aujourd’hui. Tu peux recommencer.' : '8 questions sur les mots que tu oublies · +15 jasmins'}</small></span></button>` : '';
+  shell(`<div class="say">${avatar(PACK.mascot, 52)}<div class="bubble">${esc(mascotMsg())}</div></div>
+    ${PACK.draft ? '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Version brouillon.</b> Les textes kabyles sont en cours de relecture par une locutrice native, et les voix arrivent avec le Studio famille.</div>' : ''}
+    ${review}${shown.map(levelCard).join('')}
+    ${doneLv.length ? `<div class="sec">Niveaux réussis</div>${doneLv.map(levelCard).join('')}` : ''}
+    ${later.length ? `<div class="sec">La suite</div>${later.map(levelCard).join('')}` : ''}`);
   root.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
-    const i = epIndex(b.dataset.ep);
-    if (!isOpen(i)) return toast('Termine d’abord l’épisode ' + i + ', Khalti est stricte.');
-    go(() => intro(LEVEL.episodes[i]));
+    const l = levelOf(b.dataset.ep), i = epIndex(b.dataset.ep);
+    if (!isOpen(l, i)) return toast('Termine d’abord l’épisode ' + i + ', ' + MN() + ' est stricte.');
+    go(() => intro(l.episodes[i]));
   });
-  root.querySelector('[data-boss]').onclick = () => bossOpen() ? startBoss() : toast('Termine les 3 épisodes pour affronter Khalti.');
+  root.querySelectorAll('[data-boss]').forEach(b => b.onclick = () => { const l = lv.find(x => x.id === b.dataset.boss); bossOpen(l) ? startBoss(l) : toast('Termine les épisodes du niveau pour affronter ' + MN() + '.'); });
+  const r = $('#rev'); if (r) r.onclick = startReview;
+}
+
+// ---------- Révision : « Khalti t'interroge » ----------
+function startReview(){
+  const pool = learned();
+  const weak = w => (S.weak[w.id] || 0) + Math.random();
+  const pickd = pool.slice().sort((a, b) => weak(b) - weak(a)).slice(0, 8);
+  const types = ['meaning', 'reverse', 'listen'];
+  const list = shuffle(pickd).map((w, i) => ({ type: types[i % 3], word: w.id }));
+  stack = [];
+  runExercises(list, { review: true });
+}
+function reviewResult(firstTry, total, hontes){
+  const gain = 15 + firstTry * 2;
+  S.xp += gain; S.hontes += hontes; S.review = today() + S.lang; bumpStreak(); save();
+  const msg = hontes === 0 ? 'Rien oublié ! Je suis impressionnée, et un peu déçue de ne rien avoir à te reprocher.' : hontes <= 3 ? 'Pas mal. Les mots oubliés reviendront demain, je les ai notés.' : 'Ta mémoire est en vacances. Les mots oubliés reviendront demain.';
+  lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin-top:12px">Révision terminée</h1>
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(msg)}</div></div>
+      <div class="stats" style="margin-top:8px"><div class="stat"><b>+${gain}</b><span>jasmins</span></div><div class="stat"><b>${firstTry}/${total}</b><span>du premier coup</span></div></div></div>`,
+    `<button class="btn btn-primary btn-block" id="next">Retour au parcours</button>`);
+  screen = 'result';
+  $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
 }
 
 // ---------- Carnet ----------
 let bookFilter = 'all', bookQuery = '';
 function book(){
-  const seen = ALL_WORDS.filter(w => S.done[w.ep] || S.saved.includes(w.id));
+  const seen = allWords().filter(w => S.done[w.ep] || S.saved.includes(w.id));
   const rows = seen.filter(w => bookFilter === 'all' || S.saved.includes(w.id))
     .filter(w => !bookQuery || normLat(w.tn + w.fr).includes(normLat(bookQuery)));
   shell(`<h2 style="font-size:26px;margin:4px 0 4px">Ton carnet</h2>
-    <p class="muted" style="margin:0 0 14px">${seen.length} mot${seen.length > 1 ? 's' : ''} appris. Touche l’étoile pour garder tes préférés.</p>
+    <p class="muted" style="margin:0 0 14px">${seen.length} mot${seen.length > 1 ? 's' : ''} appris en ${esc(PACK.name.toLowerCase())}. Touche l’étoile pour garder tes préférés.</p>
     <input class="field search" id="bq" placeholder="Chercher un mot" value="${esc(bookQuery)}">
     <div class="filters"><button data-f="all" class="${bookFilter === 'all' ? 'on' : ''}">Tous</button><button data-f="saved" class="${bookFilter === 'saved' ? 'on' : ''}">Mes étoiles</button></div>
     <div class="card">${rows.length ? rows.map(wordRow).join('') : `<p class="muted center" style="margin:10px 0">${seen.length ? 'Rien ici pour l’instant.' : 'Termine ton premier épisode pour remplir le carnet.'}</p>`}</div>`);
@@ -447,9 +528,9 @@ function book(){
 }
 function wordRow(w){
   const on = S.saved.includes(w.id);
-  return `<div class="word"><div class="w"><b>${esc(fill(w.tn))}</b> <span class="fr">· ${esc(w.fr)}</span>
-    ${S.opts.ar ? `<div class="ar">${esc(fill(w.ar))}</div>` : ''}<div class="fr" style="margin-top:2px">${esc(fill(w.ex))}</div></div>
-    <button class="icon-btn" data-say="${esc(w.ar)}" aria-label="Écouter">${ICON.speaker}</button>
+  return `<div class="word"><div class="w"><b>${esc(fill(w.tn))}</b> <span class="fr">· ${esc(fill(w.fr))}</span>
+    ${arDiv(w)}<div class="fr" style="margin-top:2px">${esc(fill(w.ex))}</div></div>
+    ${hasVoice(V(w)) ? `<button class="icon-btn" data-say="${esc(V(w))}" aria-label="Écouter">${ICON.speaker}</button>` : ''}
     <button class="star ${on ? 'on' : ''}" data-star="${w.id}" aria-label="Garder">${ICON.star}</button></div>`;
 }
 function bindWords(){
@@ -462,29 +543,137 @@ function bindWords(){
 
 // ---------- Profil ----------
 function profile(){
-  const eps = LEVEL.episodes.filter(e => S.done[e.id]).length;
-  shell(`<div class="say" style="align-items:center">${avatar('me', 64)}<div><h2 style="font-size:24px">${esc(S.name)}</h2><span class="muted">${S.gender === 'f' ? 'La benti' : 'Le wlidi'} de Khalti</span></div></div>
+  const eps = PACK.levels.flatMap(l => l.episodes);
+  const nd = eps.filter(e => S.done[e.id]).length;
+  const hours = [8, 12, 18, 19, 20, 21];
+  shell(`<div class="say" style="align-items:center">${avatar('me', 64)}<div><h2 style="font-size:24px">${esc(S.name)}</h2><span class="muted">Apprend le ${esc(PACK.name.toLowerCase())} avec ${esc(MN())}</span></div></div>
     <div class="stats">
       <div class="stat"><b>${S.xp}</b><span>jasmins gagnés</span></div>
       <div class="stat"><b>${streakNow()}</b><span>jours d’affilée</span></div>
-      <div class="stat"><b>${eps}/${LEVEL.episodes.length}</b><span>épisodes du niveau 1</span></div>
+      <div class="stat"><b>${nd}/${eps.length}</b><span>épisodes terminés</span></div>
       <div class="stat"><b>${S.hontes}</b><span>moments de honte</span></div>
-      <div class="stat"><b>${chatLeft()}</b><span>répliques de discussion restantes aujourd’hui</span></div>
     </div>
+    <div class="sec">Langue apprise</div>
+    <div class="card"><div class="toggle"><span><b>${esc(PACK.label)}</b><br><small class="muted">Ta progression est gardée pour chaque langue.</small></span><button class="btn btn-ghost" id="swl" style="min-height:0;padding:8px 12px">Passer au ${S.lang === 'kab' ? 'tunisien' : 'kabyle'}</button></div></div>
+    <div class="sec">Rappel de ${esc(MN())}</div>
+    <div class="card">
+      <div class="toggle"><span>Un message par jour pour ne pas casser ta série</span><button class="sw ${S.notif.on ? 'on' : ''}" id="ntf" aria-label="Rappel quotidien"></button></div>
+      <div class="toggle"><span>Heure du rappel</span><select class="field" id="nth" style="width:auto;padding:8px 10px">${hours.map(h => `<option value="${h}" ${S.notif.hour === h ? 'selected' : ''}>${h} h</option>`).join('')}</select></div>
+    </div>
+    <div class="sec">Studio famille</div>
+    <button class="card step" id="studio" style="border-top:0"><span class="dot open">${ICON.mic}</span><span style="flex:1"><b>Enregistrer les vraies voix</b><small>Un proche enregistre les phrases ${S.lang === 'kab' ? 'en kabyle' : 'en tunisien'} : elles remplacent la voix du téléphone.</small></span></button>
     <div class="sec">Réglages</div>
     <div class="card">
       <div class="toggle"><span>Afficher la traduction pendant les scènes</span><button class="sw ${S.opts.fr ? 'on' : ''}" data-opt="fr" aria-label="Traduction"></button></div>
-      <div class="toggle"><span>Afficher l’écriture arabe</span><button class="sw ${S.opts.ar ? 'on' : ''}" data-opt="ar" aria-label="Écriture arabe"></button></div>
+      ${PACK.speakField === 'ar' ? `<div class="toggle"><span>Afficher l’écriture arabe</span><button class="sw ${S.opts.ar ? 'on' : ''}" data-opt="ar" aria-label="Écriture arabe"></button></div>` : ''}
       <div class="toggle"><span>Changer de prénom</span><button class="btn btn-ghost" id="rename" style="min-height:0;padding:8px 12px">Modifier</button></div>
     </div>
     <div class="sec">À propos</div>
     <div class="card"><p style="margin:0 0 8px"><b>Tounsi w Bark</b> · version ${window.TWB_BUILD || 'test'}</p>
-      <p class="muted" style="margin:0 0 8px;font-size:14px">La voix est celle du téléphone : l’accent n’est pas encore tunisien. Les vrais audios enregistrés arriveront plus tard.</p>
-      <p class="muted" style="margin:0;font-size:14px">Si tu repères une erreur de tunisien, dis-le : les textes sont en cours de relecture.</p></div>
+      <p class="muted" style="margin:0 0 8px;font-size:14px">${PACK.voice === 'tts' ? 'Sans enregistrement, c’est la voix du téléphone : l’accent n’est pas tunisien.' : 'Le téléphone n’a pas de voix kabyle : les phrases s’écoutent une fois enregistrées dans le Studio famille.'}</p>
+      <p class="muted" style="margin:0;font-size:14px">Si tu repères une erreur de langue, dis-le : les textes sont en cours de relecture.</p></div>
     <button class="btn btn-ghost btn-block" id="reset" style="margin-top:16px;color:var(--terra)">Tout recommencer à zéro</button>`);
   root.querySelectorAll('[data-opt]').forEach(b => b.onclick = () => { S.opts[b.dataset.opt] = !S.opts[b.dataset.opt]; save(); b.classList.toggle('on'); });
+  $('#swl').onclick = switchLang;
+  $('#ntf').onclick = async () => { S.notif.on = !S.notif.on; save(); $('#ntf').classList.toggle('on', S.notif.on); const ok = await scheduleNotif(true); if (S.notif.on && !ok) { S.notif.on = false; save(); $('#ntf').classList.remove('on'); } };
+  $('#nth').onchange = e => { S.notif.hour = +e.target.value; save(); scheduleNotif(); };
+  $('#studio').onclick = () => studio();
   $('#rename').onclick = () => { S.name = ''; save(); onboarding(); };
-  $('#reset').onclick = () => { if (confirm('Effacer toute ta progression ? Khalti va être triste.')) { const keep = { name: S.name, gender: S.gender }; S = Object.assign(blank(), keep); save(); tab = 'learn'; home(); } };
+  $('#reset').onclick = () => { if (confirm('Effacer toute ta progression ? ' + MN() + ' va être triste.')) { const keep = { name: S.name, gender: S.gender, lang: S.lang }; S = Object.assign(blank(), keep); save(); tab = 'learn'; home(); } };
+}
+
+// ---------- Rappel quotidien (notification locale, sans serveur) ----------
+async function scheduleNotif(interactive){
+  const LN = Native.LN;
+  if (!LN) { if (interactive && S.notif.on) toast('Les rappels marchent seulement dans l’appli installée.'); return false; }
+  try {
+    await LN.cancel({ notifications: [{ id: 1 }] });
+    if (!S.notif.on) return true;
+    const p = await LN.requestPermissions();
+    if (p.display !== 'granted') { toast('Notifications refusées : autorise-les dans les réglages Android.'); return false; }
+    await LN.schedule({ notifications: [{ id: 1, title: MN(), body: fill(pick(PACK.notif)), schedule: { on: { hour: S.notif.hour, minute: 0 }, allowWhileIdle: false } }] });
+    if (interactive) toast('C’est noté : ' + MN() + ' te relancera chaque jour à ' + S.notif.hour + ' h.');
+    return true;
+  } catch(e){ if (interactive) toast('Impossible de programmer le rappel.'); return false; }
+}
+
+// ---------- Studio famille : enregistrer les vraies voix ----------
+let recorder = null, recChunks = [], recStream = null, recKey = null;
+function studioItems(){
+  const seen = new Set(), out = [];
+  const add = it => {
+    if (!it || !it.tn || /\{prenom\}/.test(it.tn)) return;
+    const t = fill(V(it)); const k = vkey(t);
+    if (seen.has(k)) return; seen.add(k);
+    out.push({ key: k, text: t, tn: fill(it.tn), fr: fill(it.fr || '') });
+  };
+  PACK.levels.forEach(l => l.episodes.forEach(e => {
+    e.scene.forEach(add); e.words.forEach(add);
+    e.exercises.forEach(x => { if (x.type === 'speak') add(x); if (x.type === 'reply') add(x.line); });
+  }));
+  Object.values(PACK.chat.personas).forEach(p => add(p.hello));
+  return out;
+}
+function stopRec(){ try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch(e){} }
+async function studio(){
+  screen = 'studio';
+  const items = studioItems();
+  const done = items.filter(i => LOCAL.has(i.key)).length;
+  root.innerHTML = `<div class="lesson fadein"><div class="lesson-top"><button class="x" id="quit" aria-label="Fermer">${ICON.close}</button><b style="flex:1">Studio famille · ${esc(PACK.short)}</b></div>
+    <div class="lesson-body">
+      <p class="muted" style="margin:0 0 10px;font-size:14px">Un proche qui parle bien ${S.lang === 'kab' ? 'kabyle' : 'tunisien'} lit chaque phrase : touche <b>●</b>, parle, retouche pour arrêter. Les voix s’entendent tout de suite sur ce téléphone. Ensuite, « Envoyer » crée un fichier à transmettre pour que tout le monde les ait.</p>
+      <label class="q" for="vn">Voix de</label><input class="field" id="vn" placeholder="ex. Maman" value="${esc(S.voiceName || '')}" style="margin-bottom:10px">
+      <div class="card" style="padding:4px 14px">${items.map(i => `<div class="word" data-k="${i.key}"><div class="w"><b>${esc(i.tn)}</b><div class="fr">${esc(i.fr)}</div></div>
+        <button class="icon-btn rec-b" data-rec="${i.key}" aria-label="Enregistrer" style="color:var(--terra)">●</button>
+        <button class="icon-btn" data-play="${i.key}" aria-label="Écouter" ${LOCAL.has(i.key) ? '' : 'hidden'}>${ICON.speaker}</button></div>`).join('')}</div>
+    </div>
+    <div class="lesson-foot"><p class="center muted" style="margin:0 0 8px;font-size:14px" id="sc">${done} / ${items.length} phrases enregistrées</p>
+      <button class="btn btn-primary btn-block" id="exp" ${done ? '' : 'disabled'}>Envoyer les enregistrements</button></div></div>`;
+  window.scrollTo(0, 0);
+  $('#quit').onclick = () => { stopRec(); tab = 'me'; home(); };
+  $('#vn').onchange = e => { S.voiceName = e.target.value.trim(); save(); };
+  root.querySelectorAll('[data-play]').forEach(b => b.onclick = () => playKey(b.dataset.play));
+  root.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => toggleRec(b.dataset.rec, b));
+  $('#exp').onclick = () => exportVoices(items);
+}
+async function toggleRec(key, btn){
+  if (recorder && recorder.state === 'recording') { const same = recKey === key; stopRec(); if (same) return; }
+  try {
+    if (!recStream) recStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch(e){ toast('Micro refusé : autorise-le dans les réglages Android.'); return; }
+  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+  recChunks = []; recKey = key;
+  recorder = new MediaRecorder(recStream, mime ? { mimeType: mime } : undefined);
+  recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+  recorder.onstop = async () => {
+    btn.textContent = '●'; btn.style.color = 'var(--terra)';
+    const blob = new Blob(recChunks, { type: recorder.mimeType || 'audio/webm' });
+    if (blob.size < 1500) { toast('Trop court, réessaie.'); return; }
+    await idbPut(key, blob); LOCAL.set(key, blob);
+    const row = root.querySelector(`[data-k="${key}"]`); if (row) row.querySelector('[data-play]').hidden = false;
+    const n = studioItems().filter(i => LOCAL.has(i.key)).length; const sc = $('#sc'); if (sc) sc.textContent = n + ' / ' + studioItems().length + ' phrases enregistrées';
+    const ex = $('#exp'); if (ex) ex.disabled = false;
+    playKey(key);
+  };
+  recorder.start();
+  btn.textContent = '■'; btn.style.color = 'var(--ink)';
+  setTimeout(() => { if (recorder && recorder.state === 'recording' && recKey === key) stopRec(); }, 12000);
+}
+const toB64 = blob => new Promise(res => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.readAsDataURL(blob); });
+async function exportVoices(items){
+  const rec = items.filter(i => LOCAL.has(i.key));
+  const out = { format: 'twb-voices-1', lang: S.lang, voice: S.voiceName || '', date: new Date().toISOString(), items: [] };
+  for (const i of rec) { const b = LOCAL.get(i.key); out.items.push({ key: i.key, text: i.text, tn: i.tn, fr: i.fr, mime: b.type, data: await toB64(b) }); }
+  const name = `voix-${S.lang}-${(S.voiceName || 'famille').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${today()}.json`;
+  const json = JSON.stringify(out);
+  if (Native.FS && Native.Share) {
+    try {
+      const w = await Native.FS.writeFile({ path: name, data: json, directory: 'CACHE', encoding: 'utf8' });
+      await Native.Share.share({ title: 'Voix pour Tounsi w Bark', text: rec.length + ' phrases enregistrées', files: [w.uri], dialogTitle: 'Envoyer les voix' });
+      return;
+    } catch(e){ if (!/cancel/i.test(String(e && e.message))) toast('Partage impossible : ' + (e && e.message || 'erreur')); return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = name; a.click();
 }
 
 // ---------- Épisode : intro, scène, mots ----------
@@ -499,7 +688,7 @@ function lessonFrame(progress, body, foot, opts){
   window.scrollTo(0, 0);
 }
 function confirmQuit(){
-  if (screen !== 'lesson' || confirm('Tu abandonnes ? Khalti a déjà mis la table…')) { stack = []; home(); }
+  if (screen !== 'lesson' || confirm('Tu abandonnes ? ' + MN() + ' a déjà mis la table…')) { stack = []; home(); }
 }
 
 function intro(ep){
@@ -514,8 +703,8 @@ function intro(ep){
 
 function lineHTML(l){
   const showFr = S.opts.fr;
-  const inner = `<div>${esc(fill(l.tn))}</div>${S.opts.ar ? `<div class="ar">${esc(fill(l.ar))}</div>` : ''}
-    <div class="fr" ${showFr ? '' : 'hidden'}>${esc(fill(l.fr))}</div>${sayBtn(l.ar)}`;
+  const inner = `<div>${esc(fill(l.tn))}</div>${arDiv(l)}
+    <div class="fr" ${showFr ? '' : 'hidden'}>${esc(fill(l.fr))}</div>${sayBtn(V(l))}`;
   if (l.who === 'me') return `<div class="scene-me fadein"><div class="bubble">${inner}</div></div>`;
   return `<div class="say fadein">${avatar(l.who, 44)}<div class="bubble"><div class="who">${esc(CAST[l.who].name)}</div>${inner}${l.note ? `<div class="note">${esc(fill(l.note))}</div>` : ''}</div></div>`;
 }
@@ -526,7 +715,7 @@ function scene(ep, n){
     `<button class="btn btn-primary btn-block" id="next">${last ? 'Apprendre les mots' : 'Suite'}</button>`);
   if (S.opts.fr) {} else root.querySelectorAll('.bubble').forEach(b => b.onclick = () => { const f = b.querySelector('.fr'); if (f) f.hidden = false; });
   const all = root.querySelectorAll('.say, .scene-me'); if (all.length) all[all.length - 1].scrollIntoView({ block: 'end', behavior: 'smooth' });
-  if (canSpeak() && n > 0) speak(ep.scene[n].ar);
+  if (n > 0 && hasVoice(V(ep.scene[n]))) speak(V(ep.scene[n]));
   $('#next').onclick = () => last ? words(ep) : scene(ep, n + 1);
 }
 
@@ -534,7 +723,7 @@ function words(ep){
   lessonFrame(0.35, `<div class="q">Les mots de l’épisode · touche l’étoile pour les garder</div><div class="card">${ep.words.map(wordRow).join('')}</div>`,
     `<button class="btn btn-primary btn-block" id="next">C’est parti pour les exercices</button>`);
   bindWords();
-  $('#next').onclick = () => runExercises(ep.exercises.map(x => Object.assign({}, x)), { ep, words: ep.words });
+  $('#next').onclick = () => runExercises(ep.exercises.map(x => Object.assign({}, x)), { ep, level: levelOf(ep.id) });
 }
 
 // ---------- Exercices ----------
@@ -542,7 +731,8 @@ function others(word, field, pool, n){
   return shuffle(pool.filter(w => w.id !== word.id && w[field] !== word[field])).slice(0, n);
 }
 function buildQ(x, ctx){
-  const pool = ALL_WORDS.filter(w => w.ep.startsWith(LEVEL.id));
+  let pool = ctx.level ? allWords().filter(w => w.lvl === ctx.level.id) : learned();
+  if (pool.length < 4) pool = allWords();
   if (x.type === 'meaning' || x.type === 'listen' || x.type === 'reverse') {
     const w = wordById(x.word);
     const field = x.type === 'reverse' ? 'tn' : 'fr';
@@ -568,34 +758,36 @@ function runExercises(list, ctx){
     show(x, buildQ(x, ctx));
   };
   const answered = (x, ok, info) => {
+    if (x.word) { S.weak[x.word] = Math.max(0, (S.weak[x.word] || 0) + (ok ? -1 : 1)); }
     if (ok) { doneCount++; if (!retried.has(x)) firstTry++; }
     else { hontes++; if (!ctx.boss && !retried.has(x)) { retried.add(x); queue.push(x); } else doneCount++; }
     feedback(ok, info, next);
   };
   const progress = () => 0.4 + 0.6 * doneCount / total;
-  const finish = () => ctx.boss ? bossResult(firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
+  const finish = () => ctx.boss ? bossResult(ctx.level, firstTry, total, hontes) : ctx.review ? reviewResult(firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
 
   function show(x, q){
     const check = `<button class="btn btn-primary btn-block" id="check" disabled>Vérifier</button>`;
     if (q.type === 'meaning' || q.type === 'reverse' || q.type === 'listen') {
       let prompt;
-      if (q.type === 'meaning') prompt = `<div class="q">Ça veut dire quoi ?</div><div class="big">${esc(fill(q.w.tn))}</div>${S.opts.ar ? `<div class="ar">${esc(fill(q.w.ar))}</div>` : ''}${sayBtn(q.w.ar)}`;
+      if (q.type === 'meaning') prompt = `<div class="q">Ça veut dire quoi ?</div><div class="big">${esc(fill(q.w.tn))}</div>${arDiv(q.w)}${sayBtn(V(q.w))}`;
       if (q.type === 'reverse') prompt = `<div class="q">Comment on dit en tunisien ?</div><div class="big">${esc(q.w.fr)}</div>`;
-      if (q.type === 'listen') prompt = canSpeak()
-        ? `<div class="q">Écoute et choisis la traduction</div><div class="center" style="margin:16px 0">${sayBtn(q.w.ar, 'Réécouter')}</div><button class="btn btn-ghost" id="peek" style="min-height:0;padding:8px 12px;font-size:14px">Je n’ai pas de son : afficher le mot</button><div class="big" id="peekw" hidden>${esc(fill(q.w.tn))}</div>`
+      const hv = hasVoice(V(q.w));
+      if (q.type === 'listen') prompt = hv
+        ? `<div class="q">Écoute et choisis la traduction</div><div class="center" style="margin:16px 0">${sayBtn(V(q.w), 'Réécouter')}</div><button class="btn btn-ghost" id="peek" style="min-height:0;padding:8px 12px;font-size:14px">Je n’ai pas de son : afficher le mot</button><div class="big" id="peekw" hidden>${esc(fill(q.w.tn))}</div>`
         : `<div class="q">Choisis la traduction</div><div class="big">${esc(fill(q.w.tn))}</div>`;
       lessonFrame(progress(), prompt + `<div style="margin-top:18px">${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o.label)}</button>`).join('')}</div>`, check);
-      if (q.type === 'listen' && canSpeak()) { speak(q.w.ar); const p = $('#peek'); if (p) p.onclick = () => { $('#peekw').hidden = false; p.remove(); }; }
+      if (q.type === 'listen' && hv) { speak(V(q.w)); const p = $('#peek'); if (p) p.onclick = () => { $('#peekw').hidden = false; p.remove(); }; }
       choose(q.opts, i => {
         const ok = q.opts[i].ok;
         markOpts(q.opts);
-        answered(x, ok, { answer: q.answer, sub: fill(q.w.tn) + ' = ' + q.w.fr, ar: q.w.ar });
+        answered(x, ok, { answer: q.answer, sub: fill(q.w.tn) + ' = ' + fill(q.w.fr), ar: V(q.w) });
       });
     }
     if (q.type === 'reply') {
       const l = q.x.line;
       lessonFrame(progress(), `<div class="q">Réponds à ${esc(CAST[q.x.who].name)}</div>
-        <div class="say">${avatar(q.x.who, 48)}<div class="bubble"><div>${esc(fill(l.tn))}</div>${S.opts.ar ? `<div class="ar">${esc(fill(l.ar))}</div>` : ''}<div class="fr" ${S.opts.fr ? '' : 'hidden'}>${esc(fill(l.fr))}</div>${sayBtn(l.ar)}</div></div>
+        <div class="say">${avatar(q.x.who, 48)}<div class="bubble"><div>${esc(fill(l.tn))}</div>${arDiv(l)}<div class="fr" ${S.opts.fr ? '' : 'hidden'}>${esc(fill(l.fr))}</div>${sayBtn(V(l))}</div></div>
         ${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(fill(o.tn))}<small hidden>${esc(fill(o.fr))}</small></button>`).join('')}`, check);
       choose(q.opts, i => {
         const o = q.opts[i];
@@ -622,11 +814,11 @@ function runExercises(list, ctx){
     }
     if (q.type === 'speak') {
       const can = canListen();
-      lessonFrame(progress(), `<div class="q">Dis-le à voix haute</div><div class="big">${esc(fill(q.x.tn))}</div>${S.opts.ar ? `<div class="ar">${esc(fill(q.x.ar))}</div>` : ''}<div class="fr">${esc(q.x.fr)}</div>${sayBtn(q.x.ar)}
-        ${can ? `<button class="mic" id="mic" aria-label="Parler">${ICON.mic}</button><p class="center muted" id="heard" style="font-size:14px">Touche le micro et parle</p>` : `<p class="muted" style="margin-top:20px">Le micro n’est pas disponible ici. Dis la phrase à voix haute quand même, Khalti t’écoute.</p>`}`,
+      lessonFrame(progress(), `<div class="q">Dis-le à voix haute</div><div class="big">${esc(fill(q.x.tn))}</div>${arDiv(q.x)}<div class="fr">${esc(fill(q.x.fr))}</div>${sayBtn(V(q.x))}
+        ${can ? `<button class="mic" id="mic" aria-label="Parler">${ICON.mic}</button><p class="center muted" id="heard" style="font-size:14px">Touche le micro et parle</p>` : `<p class="muted" style="margin-top:20px">Le micro n’est pas disponible ici. Dis la phrase à voix haute quand même, ${esc(MN())} t’écoute.</p>`}`,
         `<div class="seg"><button class="btn btn-ghost" id="skip">Pas maintenant</button><button class="btn btn-ghost" id="self">${can ? 'Je l’ai bien dit' : 'C’est fait'}</button></div>`);
       $('#skip').onclick = () => { doneCount++; next(); };
-      $('#self').onclick = () => answered(x, true, { answer: q.answer, sub: 'Khalti te fait confiance. Pour cette fois.', ar: null });
+      $('#self').onclick = () => answered(x, true, { answer: q.answer, sub: MN() + ' te fait confiance. Pour cette fois.', ar: null });
       const m = $('#mic');
       if (m) m.onclick = async () => {
         m.classList.add('live'); $('#heard').textContent = 'Je t’écoute…';
@@ -661,12 +853,12 @@ function feedback(ok, info, onNext){
   const f = document.createElement('div');
   f.className = 'feedback ' + (ok ? 'good' : 'bad');
   const msg = fill(pick(ok ? KH.right : KH.wrong));
-  f.innerHTML = `<div class="in"><div class="head">${avatar('khalti', 44)}<div><h3>${ok ? 'Mrigel !' : 'Ya hasra…'}</h3><p>${esc(msg)}</p></div></div>
+  f.innerHTML = `<div class="in"><div class="head">${avatar(PACK.mascot, 44)}<div><h3>${ok ? (S.lang === 'kab' ? 'Ayuz !' : 'Mrigel !') : (S.lang === 'kab' ? 'A yemma…' : 'Ya hasra…')}</h3><p>${esc(msg)}</p></div></div>
     ${!ok ? `<p style="margin:0 0 4px"><b>Bonne réponse :</b> ${esc(info.answer)}</p>` : ''}${info.sub ? `<p class="muted" style="margin:0 0 10px;font-size:14px">${esc(info.sub)}</p>` : '<div style="height:6px"></div>'}
     <button class="btn ${ok ? 'btn-good' : 'btn-bad'} btn-block" id="cont">Continuer</button></div>`;
   document.body.appendChild(f);
   const foot = root.querySelector('.lesson-foot'); if (foot) foot.style.visibility = 'hidden';
-  if (info.ar && canSpeak() && !ok) speak(info.ar);
+  if (info.ar && !ok && hasVoice(info.ar)) speak(info.ar);
   if (navigator.vibrate && !ok) navigator.vibrate(60);
   f.querySelector('#cont').onclick = () => { f.remove(); onNext(); };
 }
@@ -678,12 +870,13 @@ function epResult(ep, firstTry, total, hontes){
   const prev = S.done[ep.id];
   S.done[ep.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
   S.xp += gain; S.hontes += hontes; bumpStreak(); save();
-  const msg = stars === 3 ? 'Zéro faute ! Je vais le raconter à toute la famille, même à ceux qui ne t’ont rien demandé.' : stars === 2 ? 'Pas mal du tout. Quelques petites hontes, mais on n’en parlera pas au mariage.' : 'On a souffert ensemble. Mais tu es allé jusqu’au bout, et ça, c’est tounsi.';
-  const nextEp = LEVEL.episodes[epIndex(ep.id) + 1];
-  lessonFrame(1, `<div class="result">${avatar('khalti', 110)}
+  const msg = stars === 3 ? 'Zéro faute ! Je vais le raconter à toute la famille, même à ceux qui ne t’ont rien demandé.' : stars === 2 ? 'Pas mal du tout. Quelques petites hontes, mais on n’en parlera pas au mariage.' : 'On a souffert ensemble. Mais tu es allé' + fill('{e}') + ' jusqu’au bout, et ça, c’est la famille.';
+  const lvl = levelOf(ep.id);
+  const nextEp = lvl.episodes[epIndex(ep.id) + 1];
+  lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}
       <div class="bigstars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
       <h1 style="font-size:28px">Épisode terminé !</h1>
-      <div class="say" style="margin-top:16px;text-align:left">${avatar('khalti', 40)}<div class="bubble">${esc(msg)}</div></div>
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(msg)}</div></div>
       <div class="stats" style="margin-top:8px"><div class="stat"><b>+${gain}</b><span>jasmins</span></div><div class="stat"><b>${hontes}</b><span>moment${hontes > 1 ? 's' : ''} de honte</span></div></div></div>`,
     `<button class="btn btn-primary btn-block" id="next">${nextEp ? 'Épisode suivant' : 'Retour au parcours'}</button>`);
   $('#quit').onclick = () => { stack = []; home(); };
@@ -691,32 +884,34 @@ function epResult(ep, firstTry, total, hontes){
   $('#next').onclick = () => { stack = []; if (nextEp) go(() => intro(nextEp)); else home(); };
 }
 
-function startBoss(){
-  const pool = shuffle(ALL_WORDS.filter(w => w.ep.startsWith(LEVEL.id)));
+function startBoss(level){
+  const pool = shuffle(allWords().filter(w => w.lvl === level.id));
   const types = ['meaning', 'reverse', 'listen'];
-  const list = pool.slice(0, LEVEL.boss.count).map((w, i) => ({ type: types[i % 3], word: w.id }));
+  const list = pool.slice(0, level.boss.count).map((w, i) => ({ type: types[i % 3], word: w.id }));
   stack = [];
-  lessonFrame(0, `<div class="center" style="padding-top:12px">${avatar('khalti', 110)}<h1 style="font-size:28px;margin:14px 0 8px">${esc(LEVEL.boss.title)}</h1>
-      <p class="muted">${esc(LEVEL.boss.pitch)}</p>
-      <div class="say" style="text-align:left;margin-top:18px">${avatar('khalti', 40)}<div class="bubble">Pas de deuxième chance ici, ya ${S.gender === 'f' ? 'benti' : 'wlidi'}. Concentre-toi.</div></div></div>`,
-    `<button class="btn btn-primary btn-block" id="next">Je suis prêt${S.gender === 'f' ? 'e' : ''}</button>`);
-  $('#next').onclick = () => runExercises(list, { boss: true });
+  const pet = S.lang === 'kab' ? fill('{mmi}') : 'ya ' + fill('{petit}');
+  lessonFrame(0, `<div class="center" style="padding-top:12px">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin:14px 0 8px">${esc(level.boss.title)}</h1>
+      <p class="muted">${esc(level.boss.pitch)}</p>
+      <div class="say" style="text-align:left;margin-top:18px">${avatar(PACK.mascot, 40)}<div class="bubble">Pas de deuxième chance ici, ${esc(pet)}. Concentre-toi.</div></div></div>`,
+    `<button class="btn btn-primary btn-block" id="next">Je suis prêt${fill('{e}')}</button>`);
+  $('#next').onclick = () => runExercises(list, { boss: true, level });
 }
-function bossResult(score, total, hontes){
-  const pass = score >= LEVEL.boss.pass;
-  if (pass) { S.done[LEVEL.boss.id] = { stars: 3, at: today() }; S.xp += 50; }
+function bossResult(level, score, total, hontes){
+  const pass = score >= level.boss.pass;
+  if (pass) { S.done[level.boss.id] = { stars: 3, at: today() }; S.xp += 50; }
   S.hontes += hontes; bumpStreak(); save();
-  lessonFrame(1, `<div class="result">${avatar('khalti', 110)}
+  const nxt = PACK.levels[PACK.levels.indexOf(level) + 1];
+  const ok = (S.lang === 'kab' ? 'Ayuz ! ' : 'Mrigel ! ') + 'Tu as réussi mon épreuve. ' + (nxt && nxt.episodes.length ? 'Le niveau ' + nxt.num + ' « ' + nxt.name + ' » est ouvert !' : 'La suite arrive bientôt.');
+  lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}
       <h1 style="font-size:30px;margin-top:14px">${score} / ${total}</h1>
-      <div class="say" style="margin-top:16px;text-align:left">${avatar('khalti', 40)}<div class="bubble">${pass ? 'Mrigel ! Tu as réussi mon épreuve. Le niveau 2 arrive bientôt : prépare-toi pour les cousins.' : 'Pas encore… Révise ton carnet, bois un thé, et reviens me voir. Il en faut ' + LEVEL.boss.pass + '.'}</div></div>
-      ${pass ? '<div class="stats" style="margin-top:8px"><div class="stat"><b>+50</b><span>jasmins</span></div><div class="stat"><b>Niveau 1</b><span>terminé</span></div></div>' : ''}</div>`,
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(pass ? ok : 'Pas encore… Révise ton carnet, bois un thé, et reviens me voir. Il en faut ' + level.boss.pass + '.')}</div></div>
+      ${pass ? `<div class="stats" style="margin-top:8px"><div class="stat"><b>+50</b><span>jasmins</span></div><div class="stat"><b>Niveau ${level.num}</b><span>terminé</span></div></div>` : ''}</div>`,
     `<button class="btn btn-primary btn-block" id="next">${pass ? 'Retour au parcours' : 'Réessayer plus tard'}</button>`);
   screen = 'result';
   $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
 }
 
 // ---------- Discussion libre (Gemini, offre gratuite) ----------
-const CHAT = window.TWB_CHAT;
 const GEMINI_KEY = window.TWB_GEMINI_KEY || '';
 let chatRun = 0, chatState = null;
 function chatLeft(){
@@ -727,7 +922,8 @@ function chatHome(){
   const ok = !!GEMINI_KEY;
   const cards = Object.keys(CHAT.personas).map(k => `<button class="persona" data-p="${k}">${avatar(k, 64)}<b>${esc(CAST[k].name)}</b><small>${esc(CAST[k].role)}</small></button>`).join('');
   shell(`<h2 style="font-size:26px;margin:4px 0 4px">Discuter</h2>
-    <p class="muted" style="margin:0 0 14px">Parle tunisien à voix haute, ils te répondent. Active « mains libres » pour enchaîner sans toucher l’écran.</p>
+    <p class="muted" style="margin:0 0 14px">${PACK.srLang ? 'Parle tunisien à voix haute, ils te répondent. Active « mains libres » pour enchaîner sans toucher l’écran.' : 'Écris en kabyle (ou parle en français au micro), ils te répondent en kabyle.'}</p>
+    ${PACK.draft ? '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Bêta.</b> L’IA connaît moins bien le kabyle que le tunisien : elle peut faire des fautes. Le téléphone ne comprend pas le kabyle à l’oral, et les réponses ne sont pas lues à voix haute.</div>' : ''}
     ${ok ? '' : '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold)"><b>Pas encore activé</b><p class="muted" style="margin:4px 0 0;font-size:14px">La clé Gemini n’est pas encore installée dans cette version de l’appli.</p></div>'}
     <div class="personas">${cards}</div>
     <p class="muted center" style="font-size:13px;margin-top:16px">${chatLeft()} répliques restantes aujourd’hui · ne raconte rien de personnel : en version gratuite, Google peut lire les échanges.</p>`);
@@ -737,7 +933,7 @@ function chatHome(){
 function openChat(key){
   const run = ++chatRun;
   const p = CHAT.personas[key];
-  chatState = { key, run, msgs: [Object.assign({ role: 'ai' }, p.hello, { correction: '', sugg: null })], hands: false, lang: 'ar-TN', busy: false, listening: false, status: '' };
+  chatState = { key, run, msgs: [Object.assign({ role: 'ai' }, p.hello, { correction: '', sugg: null })], hands: false, lang: PACK.srLang || 'fr-FR', busy: false, listening: false, status: '' };
   screen = 'chat';
   root.innerHTML = `<div class="chat">
     <div class="chat-top"><button class="x" id="cx" aria-label="Fermer">${ICON.close}</button>${avatar(key, 40)}
@@ -745,10 +941,10 @@ function openChat(key){
       <span class="hf">Mains libres<button class="sw" id="hf" aria-label="Mains libres"></button></span></div>
     <div class="chat-body" id="cb"></div>
     <div class="chat-foot"><div id="sg"></div>
-      <div class="inrow"><input class="field" id="ti" placeholder="Écris en tunisien…" autocomplete="off" enterkeyhint="send">
+      <div class="inrow"><input class="field" id="ti" placeholder="Écris en ${esc(PACK.name.toLowerCase())}…" autocomplete="off" enterkeyhint="send">
         <button class="round" id="send" aria-label="Envoyer">${ICON.send}</button>
         <button class="round" id="mc" aria-label="Parler">${ICON.mic}</button></div>
-      <div class="langs"><span class="muted" style="align-self:center">Je parle :</span><button data-l="ar-TN" class="on">Tounsi</button><button data-l="fr-FR">Français</button></div>
+      <div class="langs"><span class="muted" style="align-self:center">Je parle :</span>${PACK.srLang ? `<button data-l="${PACK.srLang}" class="on">${esc(PACK.short)}</button><button data-l="fr-FR">Français</button>` : '<button data-l="fr-FR" class="on">Français</button>'}</div>
       <div class="status" id="st"></div></div></div>`;
   $('#cx').onclick = () => { chatRun++; stack = []; tab = 'chat'; home(); };
   $('#hf').onclick = () => { chatState.hands = !chatState.hands; $('#hf').classList.toggle('on', chatState.hands); if (chatState.hands && !chatState.busy && !chatState.listening) hear(run); };
@@ -757,7 +953,7 @@ function openChat(key){
   $('#mc').onclick = () => { if (!chatState.busy && !chatState.listening) hear(run); };
   root.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { chatState.lang = b.dataset.l; root.querySelectorAll('[data-l]').forEach(x => x.classList.toggle('on', x === b)); });
   drawChat();
-  speak(p.hello.ar);
+  speak(V(p.hello));
 }
 function setStatus(t){ chatState.status = t; const e = $('#st'); if (e) e.textContent = t; }
 function drawChat(){
@@ -765,8 +961,8 @@ function drawChat(){
   const html = st.msgs.map((m, i) => m.role === 'me'
     ? `<div class="me-msg"><div class="bubble">${esc(m.text)}</div></div>`
     : m.err ? `<div class="say">${avatar(k, 36)}<div class="bubble" style="background:var(--gold-soft)">${esc(m.err)}</div></div>`
-    : `<div class="say">${avatar(k, 36)}<div class="bubble" data-m="${i}"><div>${esc(fill(m.tn))}</div>${S.opts.ar ? `<div class="ar">${esc(fill(m.ar))}</div>` : ''}
-        <div class="fr" ${S.opts.fr ? '' : 'hidden'}>${esc(fill(m.fr))}</div>${sayBtn(m.ar)}${m.correction ? `<div class="corr"><b>Correction :</b> ${esc(m.correction)}</div>` : ''}</div></div>`).join('')
+    : `<div class="say">${avatar(k, 36)}<div class="bubble" data-m="${i}"><div>${esc(fill(m.tn))}</div>${arDiv(m)}
+        <div class="fr" ${S.opts.fr ? '' : 'hidden'}>${esc(fill(m.fr))}</div>${sayBtn(V(m))}${m.correction ? `<div class="corr"><b>Correction :</b> ${esc(m.correction)}</div>` : ''}</div></div>`).join('')
     + (st.busy ? `<div class="say">${avatar(k, 36)}<div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div></div>` : '');
   const cb = $('#cb'); if (!cb) return;
   cb.innerHTML = html;
@@ -781,7 +977,7 @@ function drawChat(){
 
 async function hear(run){
   const st = chatState;
-  if (!canListen()) { setStatus('Micro indisponible ici : écris ta réponse.'); return; }
+  if (!(Native.Speech || SR)) { setStatus('Micro indisponible ici : écris ta réponse.'); return; }
   st.listening = true; drawChat(); setStatus('Je t’écoute…');
   let heard = [];
   try { heard = await listen({ lang: st.lang, popup: !st.hands }); }
@@ -795,7 +991,7 @@ async function hear(run){
 
 async function turn(text, run){
   const st = chatState;
-  if (chatLeft() <= 0) { st.msgs.push({ role: 'ai', err: 'Khalti est fatiguée pour aujourd’hui (limite gratuite atteinte). Reviens demain, ou révise ton carnet !' }); drawChat(); return; }
+  if (chatLeft() <= 0) { st.msgs.push({ role: 'ai', err: MN() + ' est fatiguée pour aujourd’hui (limite gratuite atteinte). Reviens demain, ou révise ton carnet !' }); drawChat(); return; }
   st.msgs.push({ role: 'me', text }); st.busy = true; drawChat(); setStatus('');
   S.chat.count++; save();
   let r;
@@ -806,7 +1002,7 @@ async function turn(text, run){
   if (r.err) { st.msgs.push({ role: 'ai', err: r.err }); drawChat(); return; }
   st.msgs.push({ role: 'ai', tn: r.tn, ar: r.ar, fr: r.fr, correction: r.correction || '', sugg: { tn: r.suggestion_tn, fr: r.suggestion_fr } });
   drawChat();
-  await speak(r.ar);
+  await speak(V(r));
   if (run === chatRun && st.hands) hear(run);
 }
 
@@ -832,7 +1028,7 @@ async function gemini(key, msgs){
     const j = await res.json();
     const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
     const txt = parts.filter(x => !x.thought).map(x => x.text || '').join('').replace(/^```(json)?|```$/g, '').trim();
-    try { const o = JSON.parse(txt); if (o.tn && o.ar) return o; } catch(e){}
+    try { const o = JSON.parse(txt); if (o.tn) { if (!o.ar) o.ar = o.tn; return o; } } catch(e){}
     last = 'autre';
   }
   throw new Error(last);
@@ -841,4 +1037,6 @@ async function gemini(key, msgs){
 // ---------- Démarrage ----------
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
 home();
+loadVoices().then(() => { if (screen === 'home') home(); });
+if (S.notif.on) scheduleNotif();
 </script>

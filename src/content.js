@@ -154,7 +154,147 @@ window.TWB_CONTENT = {
           count: 10, pass: 7
         }
       },
-      { id: 'n2', num: 2, name: 'Cousin de France', goal: 'Répondre à la famille sans paniquer', episodes: [] },
+      {
+        id: 'n2', num: 2, name: 'Cousin de France',
+        goal: 'Répondre à la famille sans paniquer',
+        episodes: [
+          // ---------------------------------------------------------------- Niveau 2, épisode 1
+          {
+            id: 'n2e1', title: 'Le repas chez Khalti',
+            pitch: 'Khalti a cuisiné pour 12. Vous êtes 3. Personne ne quittera la table avant d’avoir fini.',
+            cast: ['khalti'],
+            scene: [
+              { who: 'khalti', tn: 'Okood, kol! Aamaltlek kosksi.', ar: 'اقعد، كول! عملتلك كسكسي.', fr: 'Assieds-toi, mange ! Je t’ai fait un couscous.' },
+              { who: 'me', tn: 'Yaatik essaha ya Khalti, bnin barcha!', ar: 'يعطيك الصحة يا خالتي، بنين برشة!', fr: 'Merci tata, c’est vraiment délicieux !' },
+              { who: 'khalti', tn: 'Zid chwaya!', ar: 'زيد شويّة!', fr: 'Reprends-en un peu !' },
+              { who: 'me', tn: 'La, yezzi, chbaat.', ar: 'لا، يزّي، شبعت.', fr: 'Non, ça suffit, je n’ai plus faim.' },
+              { who: 'khalti', tn: 'Chbaat? Ma klit chay! Zid!', ar: 'شبعت؟ ما كليت شي! زيد!', fr: 'Plus faim ? Tu n’as rien mangé ! Ressers-toi !', note: 'Tu as mangé deux assiettes. Pour Khalti, ça ne compte pas.' },
+              { who: 'me', tn: 'Behi… chwaya barka.', ar: 'باهي… شويّة بركة.', fr: 'D’accord… juste un peu.' },
+              { who: 'khalti', tn: 'Hakka nhebbek!', ar: 'هكّا نحبك!', fr: 'C’est comme ça que je t’aime !' }
+            ],
+            words: [
+              { id: 'okood', tn: 'Okood', ar: 'اقعد', fr: 'Assieds-toi', ex: 'Okood, kol!' },
+              { id: 'kol', tn: 'Kol', ar: 'كول', fr: 'Mange', ex: 'Le mot préféré de Khalti.' },
+              { id: 'bnin', tn: 'Bnin', ar: 'بنين', fr: 'Délicieux', ex: 'Bnin barcha! = Trop bon !' },
+              { id: 'yaatikessaha', tn: 'Yaatik essaha', ar: 'يعطيك الصحة', fr: 'Merci, bravo (pour le travail fait)', ex: 'À dire à celle qui a cuisiné.' },
+              { id: 'zid', tn: 'Zid', ar: 'زيد', fr: 'Encore, ajoute', ex: 'Zid chwaya! = Reprends un peu !' },
+              { id: 'chwaya', tn: 'Chwaya', ar: 'شويّة', fr: 'Un peu', ex: 'Chwaya barka = juste un peu.' },
+              { id: 'chbaat', tn: 'Chbaat', ar: 'شبعت', fr: 'Je n’ai plus faim (je suis rassasié)', ex: 'Ne marche jamais avec Khalti.' },
+              { id: 'barka', tn: 'Barka', ar: 'بركة', fr: 'Seulement, juste', ex: 'Wahed barka = un seul.' },
+              { id: 'hakka', tn: 'Hakka', ar: 'هكّا', fr: 'Comme ça', ex: 'Hakka nhebbek!' },
+              { id: 'nhebbek', tn: 'Nhebbek', ar: 'نحبك', fr: 'Je t’aime', ex: 'Pour la famille, pas que pour les amoureux.' }
+            ],
+            exercises: [
+              { type: 'meaning', word: 'kol' },
+              { type: 'reply', who: 'khalti', line: { tn: 'Zid chwaya!', ar: 'زيد شويّة!', fr: 'Reprends-en un peu !' },
+                options: [
+                  { tn: 'La, yezzi, chbaat.', fr: 'Non, ça suffit, je n’ai plus faim.', ok: true },
+                  { tn: 'Kaddech?', fr: 'Combien ?', why: 'Tu demandes le prix du couscous à ta tata. Elle est vexée pour trois générations.' },
+                  { tn: 'Win mechi?', fr: 'Tu vas où ?', why: 'Elle ne va nulle part : elle reste là jusqu’à ce que tu finisses ton assiette.' }
+                ] },
+              { type: 'reverse', word: 'bnin' },
+              { type: 'listen', word: 'chwaya' },
+              { type: 'order', tn: 'Yaatik essaha ya Khalti bnin barcha', fr: 'Merci tata, c’est vraiment délicieux', tokens: ['Yaatik', 'essaha', 'ya', 'Khalti', 'bnin', 'barcha'] },
+              { type: 'speak', tn: 'La, yezzi, chbaat', ar: 'لا، يزّي، شبعت', fr: 'Non, ça suffit, je n’ai plus faim' },
+              { type: 'meaning', word: 'nhebbek' }
+            ]
+          },
+          // ---------------------------------------------------------------- Niveau 2, épisode 2
+          {
+            id: 'n2e2', title: 'L’interrogatoire des cousins',
+            pitch: 'Skander a une liste de questions. Elle a été écrite par Khalti.',
+            cast: ['skander'],
+            scene: [
+              { who: 'skander', tn: 'Ahla {cousin}! Waktech jit?', ar: 'أهلا {cousinAr}! وقتاش جيت؟', fr: 'Salut {cousin} ! Tu es arrivé{e} quand ?' },
+              { who: 'me', tn: 'Jit lbereh.', ar: 'جيت البارح.', fr: 'Je suis arrivé{e} hier.' },
+              { who: 'skander', tn: 'Kaddech bech tokood?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?' },
+              { who: 'me', tn: 'Jemaatin.', ar: 'جمعتين.', fr: 'Deux semaines.' },
+              { who: 'skander', tn: 'Tekhdem wala takra?', ar: 'تخدم ولا تقرا؟', fr: 'Tu travailles ou tu étudies ?' },
+              { who: 'me', tn: 'Nekhdem.', ar: 'نخدم.', fr: 'Je travaille.' },
+              { who: 'skander', tn: 'Behi. Ama mazelt ma tzawajtech?', ar: 'باهي. أما مازلت ما تزوجتش؟', fr: 'D’accord. Et toujours pas marié{e} ?', note: 'La question qui tombe à chaque été, depuis tes 18 ans.' },
+              { who: 'me', tn: 'Ya Skander, yezzi!', ar: 'يا سكندر، يزّي!', fr: 'Skander, arrête !' },
+              { who: 'skander', tn: 'Khalti hiya elli kalitli nsaalek!', ar: 'خالتي هي اللي قالتلي نسألك!', fr: 'C’est Khalti qui m’a dit de te demander !' }
+            ],
+            words: [
+              { id: 'waktech', tn: 'Waktech?', ar: 'وقتاش؟', fr: 'Quand ?', ex: 'Waktech jit? = Tu es arrivé{e} quand ?' },
+              { id: 'jit', tn: 'Jit', ar: 'جيت', fr: 'Je suis venu(e), arrivé(e)', ex: 'Jit lbereh.' },
+              { id: 'lbereh', tn: 'Lbereh', ar: 'البارح', fr: 'Hier', ex: 'Jit lbereh.' },
+              { id: 'tokood', tn: 'Kaddech bech tokood?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?', ex: 'Bech = va (futur).' },
+              { id: 'jemaa', tn: 'Jemaa', ar: 'جمعة', fr: 'Semaine', ex: 'Jemaatin = deux semaines.' },
+              { id: 'nekhdem', tn: 'Nekhdem', ar: 'نخدم', fr: 'Je travaille', ex: 'Tekhdem? = tu travailles ?' },
+              { id: 'nakra', tn: 'Nakra', ar: 'نقرا', fr: 'J’étudie', ex: 'Takra? = tu étudies ?' },
+              { id: 'mazelt', tn: 'Mazelt', ar: 'مازلت', fr: 'Encore, toujours pas', ex: 'Mazelt ma klit = je n’ai pas encore mangé.' },
+              { id: 'tzawajt', tn: 'Tzawajt', ar: 'تزوجت', fr: 'Tu t’es marié(e)', ex: 'La question préférée des tatas.' }
+            ],
+            exercises: [
+              { type: 'meaning', word: 'waktech' },
+              { type: 'reply', who: 'skander', line: { tn: 'Kaddech bech tokood?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?' },
+                options: [
+                  { tn: 'Jemaatin.', fr: 'Deux semaines.', ok: true },
+                  { tn: 'Bnin barcha!', fr: 'C’est délicieux !', why: 'Skander ne t’a rien fait goûter. Il voulait savoir combien de temps tu restes.' },
+                  { tn: 'Nhebbek.', fr: 'Je t’aime.', why: 'Skander est touché, mais il attend toujours ta réponse.' }
+                ] },
+              { type: 'reverse', word: 'lbereh' },
+              { type: 'listen', word: 'nekhdem' },
+              { type: 'order', tn: 'Waktech jit', fr: 'Tu es arrivé{e} quand ?', tokens: ['Waktech', 'jit'] },
+              { type: 'speak', tn: 'Ya Skander, yezzi!', ar: 'يا سكندر، يزّي!', fr: 'Skander, arrête !' },
+              { type: 'reply', who: 'skander', line: { tn: 'Ama mazelt ma tzawajtech?', ar: 'أما مازلت ما تزوجتش؟', fr: 'Et toujours pas marié{e} ?' },
+                options: [
+                  { tn: 'Ya Skander, yezzi!', fr: 'Skander, arrête !', ok: true },
+                  { tn: 'Ey, jemaatin.', fr: 'Oui, deux semaines.', why: 'Marié depuis deux semaines ? Toute la famille va débarquer avec des cadeaux.' },
+                  { tn: 'Aatini zouz khobzat.', fr: 'Donne-moi deux baguettes.', why: 'Belle tentative pour changer de sujet. Ça ne marchera pas.' }
+                ] }
+            ]
+          },
+          // ---------------------------------------------------------------- Niveau 2, épisode 3
+          {
+            id: 'n2e3', title: 'Mamie au téléphone',
+            pitch: 'Jedda appelle. Elle entend mal, elle parle fort, et elle t’aime très fort.',
+            cast: ['jedda'],
+            scene: [
+              { who: 'jedda', tn: 'Alou? Chkoun?', ar: 'ألو؟ شكون؟', fr: 'Allô ? C’est qui ?' },
+              { who: 'me', tn: 'Ena {prenom}, ya Jedda!', ar: 'أنا {prenom}، يا جدّة!', fr: 'C’est moi, {prenom}, mamie !' },
+              { who: 'jedda', tn: 'Chkoun? Ma nesmaach mliih!', ar: 'شكون؟ ما نسمعش مليح!', fr: 'Qui ? Je n’entends pas bien !' },
+              { who: 'me', tn: 'Tesmaani tawa?', ar: 'تسمعني توّا؟', fr: 'Tu m’entends maintenant ?' },
+              { who: 'jedda', tn: 'Ey, tawa nesmaak! Waktech {jay} lel dar?', ar: 'إيه، توّا نسمعك! وقتاش {jayAr} للدار؟', fr: 'Oui, maintenant je t’entends ! Tu viens quand à la maison ?' },
+              { who: 'me', tn: 'Ghodwa, inchallah.', ar: 'غدوة، إن شاء الله.', fr: 'Demain, si Dieu le veut.' },
+              { who: 'jedda', tn: 'Rabbi yhannik. Nhebbek barcha.', ar: 'ربّي يهنّيك. نحبك برشة.', fr: 'Que Dieu te protège. Je t’aime très fort.', note: 'Elle a raccroché avant ta réponse, puis rappelé deux fois.' },
+              { who: 'me', tn: 'Ena zeda. Bslema ya Jedda!', ar: 'أنا زادة. بالسلامة يا جدّة!', fr: 'Moi aussi. Au revoir mamie !' }
+            ],
+            words: [
+              { id: 'alou', tn: 'Alou?', ar: 'ألو؟', fr: 'Allô ?', ex: 'Toujours crié, jamais dit.' },
+              { id: 'chkoun', tn: 'Chkoun?', ar: 'شكون؟', fr: 'Qui ?', ex: 'Chkoun enti? = Qui es-tu ?' },
+              { id: 'ena', tn: 'Ena', ar: 'أنا', fr: 'Moi, je', ex: 'Ena {prenom}.' },
+              { id: 'nesmaa', tn: 'Nesmaa', ar: 'نسمع', fr: 'J’entends', ex: 'Ma nesmaach = je n’entends pas.' },
+              { id: 'tawa', tn: 'Tawa', ar: 'توّا', fr: 'Maintenant', ex: 'Tawa nji = j’arrive tout de suite (enfin, en théorie).' },
+              { id: 'ghodwa', tn: 'Ghodwa', ar: 'غدوة', fr: 'Demain', ex: 'Ghodwa, inchallah.' },
+              { id: 'inchallah', tn: 'Inchallah', ar: 'إن شاء الله', fr: 'Si Dieu le veut', ex: 'Peut vouloir dire oui, non ou peut-être.' },
+              { id: 'yhannik', tn: 'Rabbi yhannik', ar: 'ربّي يهنّيك', fr: 'Que Dieu te protège, te donne la paix', ex: 'Une bénédiction de mamie.' },
+              { id: 'zeda', tn: 'Zeda', ar: 'زادة', fr: 'Aussi', ex: 'Ena zeda = moi aussi.' },
+              { id: 'bslema', tn: 'Bslema', ar: 'بالسلامة', fr: 'Au revoir', ex: 'Bslema ya Jedda!' }
+            ],
+            exercises: [
+              { type: 'meaning', word: 'chkoun' },
+              { type: 'reverse', word: 'tawa' },
+              { type: 'reply', who: 'jedda', line: { tn: 'Alou? Chkoun?', ar: 'ألو؟ شكون؟', fr: 'Allô ? C’est qui ?' },
+                options: [
+                  { tn: 'Ena {prenom}, ya Jedda!', fr: 'C’est moi, {prenom}, mamie !', ok: true },
+                  { tn: 'Chkoun?', fr: 'Qui ?', why: 'C’est toi qui appelles… enfin, c’est elle. Bref, quelqu’un doit répondre.' },
+                  { tn: 'Kaddech?', fr: 'Combien ?', why: 'Tu demandes un prix à ta grand-mère. Elle va le raconter au marché.' }
+                ] },
+              { type: 'listen', word: 'ghodwa' },
+              { type: 'order', tn: 'Ena zeda bslema ya Jedda', fr: 'Moi aussi, au revoir mamie', tokens: ['Ena', 'zeda', 'bslema', 'ya', 'Jedda'] },
+              { type: 'speak', tn: 'Tesmaani tawa?', ar: 'تسمعني توّا؟', fr: 'Tu m’entends maintenant ?' },
+              { type: 'meaning', word: 'yhannik' }
+            ]
+          }
+        ],
+        boss: {
+          id: 'n2boss', title: "L'épreuve de la famille",
+          pitch: '10 questions. Toute la famille regarde. Il en faut 7.',
+          count: 10, pass: 7
+        }
+      },
       { id: 'n3', num: 3, name: 'Invité au mariage', goal: 'Tenir une vraie conversation', episodes: [] },
       { id: 'n4', num: 4, name: 'Négociateur du souk', goal: 'Argumenter et plaisanter', episodes: [] },
       { id: 'n5', num: 5, name: 'Tata officielle', goal: 'Parler comme Khalti', episodes: [] }
@@ -168,6 +308,10 @@ window.TWB_CAST = {
   hedi: { name: 'Am Hédi', role: 'Chauffeur de taxi', skin: '#b5774f', cap: '#f1c40f', moustache: true },
   lamine: { name: 'Si Lamine', role: 'Épicier du quartier', skin: '#a86b45', chechia: '#9b1c1c', moustache: true },
   skander: { name: 'Skander', role: 'Ton cousin de 19 ans', skin: '#c08457', curls: '#2b1d16', jersey: '#c8102e' },
+  jedda: { name: 'Jedda', role: 'Ta grand-mère', skin: '#b98260', scarf: '#f4efe6', glasses: true, robe: '#2e6b5e' },
+  nanna: { name: 'Nanna', role: 'Ta grand-mère, au village', skin: '#c48b63', scarf: '#e9b32a', glasses: false, robe: '#c0392b' },
+  mokrane: { name: 'Dda Mokrane', role: 'Vendeur au marché', skin: '#b07a52', cap: '#5c6b7a', moustache: true },
+  massi: { name: 'Massi', role: 'Ton cousin du village', skin: '#c99068', curls: '#4a2f1d', jersey: '#2a7d4f' },
   me: { name: 'Toi', role: '' }
 };
 
@@ -208,6 +352,11 @@ CHAMPS À REMPLIR :
       prompt: "Tu es Skander, le cousin de 19 ans : il chambre gentiment, parle foot (Espérance de Tunis), plage et sorties, avec les expressions des jeunes de Tunis, toujours sans vulgarité.",
       hello: { tn: 'Ahla {cousin}! Labes? Chbik ma jitech lel plage lbereh?', ar: 'أهلا {cousinAr}! لاباس؟ شبيك ما جيتش للبلاج البارح؟', fr: 'Salut {cousin} ! Ça va ? Pourquoi tu n’étais pas à la plage hier ?' },
       topics: ['Le foot', 'La plage', 'Ce que tu fais en France']
+    },
+    jedda: {
+      prompt: "Tu es Jedda, la grand-mère de l'élève : très tendre, elle entend un peu mal et fait répéter, elle bénit tout le monde (« Rabbi yhannik »), parle de sa santé, de la famille et demande quand l'élève vient la voir.",
+      hello: { tn: 'Alou? Ya {petit}, waktech {jay} tchoufni?', ar: 'ألو؟ يا {petitAr}، وقتاش {jayAr} تشوفني؟', fr: 'Allô ? Mon petit, quand est-ce que tu viens me voir ?' },
+      topics: ['Prendre des nouvelles', 'Annoncer ta venue', 'Lui dire que tu l’aimes']
     }
   }
 };
@@ -236,3 +385,17 @@ window.TWB_KHALTI = {
   streakN: '{n} jours d’affilée ! Je commence à être fière de toi.',
   done: 'Tu as fini tout le niveau 1. La suite arrive bientôt, en attendant révise ton carnet.'
 };
+
+// Réglages du paquet tunisien
+Object.assign(window.TWB_CONTENT.tn, {
+  short: 'Tounsi', label: 'Darija tunisien', mascot: 'khalti',
+  voice: 'tts', ttsLangs: ['ar-TN', 'ar-SA', 'ar'], srLang: 'ar-TN', speakField: 'ar',
+  lines: window.TWB_KHALTI, chat: window.TWB_CHAT,
+  notif: [
+    'Khalti t’attend : 5 minutes de tounsi ?',
+    'Ya {petit}, tu m’as oubliée ? Une petite leçon et je te pardonne.',
+    'Si Lamine demande de tes nouvelles. Réponds-lui en tounsi !',
+    'Ta série va s’éteindre… Khalti a déjà prévenu ta mère.',
+    'Skander dit que tu as abandonné. Prouve-lui le contraire.'
+  ]
+});
