@@ -9,7 +9,7 @@ fs.writeFileSync(path.join(www, 'index.html'),
   '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n' +
   '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n' +
   '<meta name="theme-color" content="#1d5aa6">\n<title>Tounsi w Bark</title>\n' +
-  '<script src="vendor/capacitor.js"></script>\n<script>window.TWB_BUILD = ' + build + ';</script>\n' +
+  '<script src="vendor/capacitor.js"></script>\n<script>window.TWB_BUILD = ' + build + '; window.TWB_GEMINI_KEY = ' + JSON.stringify(process.env.GEMINI_KEY || '') + ';</script>\n' +
   '<style>body{margin:0}[hidden]{display:none!important}</style>\n</head>\n<body>\n' +
   body + '\n</body>\n</html>\n');
 fs.copyFileSync(path.join(root, 'src/content.js'), path.join(www, 'content.js'));

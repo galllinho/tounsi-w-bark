@@ -64,7 +64,7 @@ h1,h2,h3{margin:0;font-family:Georgia,"Times New Roman",serif;font-weight:700;le
 .opt.ko{border-color:var(--terra);background:var(--terra-soft)}
 .opt:disabled{opacity:1}
 .nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
-.nav-in{max-width:560px;width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+.nav-in{max-width:560px;width:100%;display:grid;grid-template-columns:repeat(4,1fr)}
 .nav button{padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--mute)}
 .nav button svg{width:24px;height:24px}
 .nav button.on{color:var(--blue)}
@@ -139,6 +139,37 @@ h1,h2,h3{margin:0;font-family:Georgia,"Times New Roman",serif;font-weight:700;le
 .who{font-size:12px;font-weight:700;color:var(--mute);margin-bottom:2px}
 .fadein{animation:fade .25s ease-out}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.personas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.persona{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 12px;text-align:center}
+.persona b{display:block;margin-top:8px}
+.persona small{color:var(--mute);font-size:13px;line-height:1.3;display:block}
+.chat{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-top:env(safe-area-inset-top)}
+.chat-top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--card)}
+.chat-top .t{flex:1;line-height:1.2}
+.chat-top .t small{color:var(--mute);font-size:12px}
+.hf{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--mute)}
+.chat-body{flex:1;overflow-y:auto;padding:14px 12px 8px}
+.chat-foot{border-top:1px solid var(--line);background:var(--card);padding:8px 12px calc(10px + env(safe-area-inset-bottom))}
+.me-msg{display:flex;justify-content:flex-end;margin:4px 0 14px}
+.me-msg .bubble{background:var(--blue);color:#fff;border-color:var(--blue);max-width:80%}
+.corr{font-size:13px;background:var(--terra-soft);color:#8a3322;border-radius:10px;padding:7px 10px;margin-top:8px}
+.sugg{display:flex;align-items:center;gap:8px;background:var(--gold-soft);border-radius:12px;padding:8px 10px;margin-bottom:8px;font-size:14px}
+.sugg button.use{flex:1;text-align:left}
+.sugg small{color:#8a6200;display:block;font-size:12px}
+.typing{display:inline-flex;gap:4px;padding:6px 2px}
+.typing i{width:8px;height:8px;border-radius:50%;background:var(--mute);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{50%{opacity:.25}}
+.inrow{display:flex;gap:8px;align-items:center}
+.inrow .field{padding:11px 12px}
+.round{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff}
+.round svg{width:22px;height:22px}
+.round.live{background:var(--terra);animation:pulse 1s infinite}
+.langs{display:flex;gap:6px;justify-content:center;margin-top:8px;font-size:12px}
+.langs button{padding:4px 10px;border-radius:99px;border:1px solid var(--line);font-weight:700;color:var(--mute)}
+.langs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.status{text-align:center;font-size:13px;color:var(--mute);min-height:18px;margin-top:6px}
 </style>
 
 <div id="root" class="app"></div>
@@ -180,7 +211,9 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.ge
 const yesterday = () => { const d = new Date(Date.now() - 864e5); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 function fill(s){
   const petit = S.gender === 'f' ? 'benti' : 'wlidi', petitAr = S.gender === 'f' ? 'بنتي' : 'وليدي';
-  return String(s).replace(/\{petitAr\}/g, petitAr).replace(/\{petit\}/g, petit).replace(/\{prenom\}/g, S.name || 'Nour');
+  const f = S.gender === 'f';
+  return String(s).replace(/\{petitAr\}/g, petitAr).replace(/\{petit\}/g, petit).replace(/\{prenom\}/g, S.name || 'Nour')
+    .replace(/\{petitFr\}/g, f ? 'ma petite' : 'mon petit').replace(/\{cousinAr\}/g, f ? 'كوزينة' : 'كوزان').replace(/\{cousin\}/g, f ? 'cousine' : 'cousin').replace(/\{genre\}/g, f ? 'une fille' : 'un garçon');
 }
 function toast(msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 
@@ -193,6 +226,8 @@ const ICON = {
   star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"/></svg>',
   learn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5V20H3z"/><path d="M9.5 20v-6h5v6"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v16H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M4 20.5A1.5 1.5 0 0 0 5.5 22H20"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5l2.5 8.5zM5.5 12H13"/></svg>',
   user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
   lock: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
 };
@@ -208,15 +243,16 @@ function avatar(key, size){
   let head = '';
   if (c.scarf) head = `<path d="M22 60c0-24 12-36 28-36s28 12 28 36c0 6-2 12-6 16H28c-4-4-6-10-6-16z" fill="${c.scarf}"/><path d="M30 26q20-10 40 0" stroke="#fff" stroke-opacity=".35" stroke-width="3" fill="none"/>`;
   if (c.cap) head = `<path d="M30 44c0-12 9-18 20-18s20 6 20 18z" fill="${c.cap}"/><rect x="48" y="40" width="30" height="6" rx="3" fill="${c.cap}"/>`;
+  if (c.curls) head = `<g fill="${c.curls}"><circle cx="34" cy="40" r="9"/><circle cx="44" cy="34" r="10"/><circle cx="56" cy="34" r="10"/><circle cx="66" cy="40" r="9"/></g>`;
   if (c.chechia) head = `<rect x="34" y="22" width="32" height="20" rx="5" fill="${c.chechia}"/><path d="M50 22c6-4 10-2 12 4" stroke="#1f2430" stroke-width="2" fill="none"/>`;
   const face = `<circle cx="50" cy="56" r="21" fill="${c.skin || '#c98b62'}"/>`;
   const eyes = c.glasses
     ? `<circle cx="42" cy="55" r="6" fill="#fff" fill-opacity=".5" stroke="#1f2430" stroke-width="2"/><circle cx="58" cy="55" r="6" fill="#fff" fill-opacity=".5" stroke="#1f2430" stroke-width="2"/><path d="M48 55h4" stroke="#1f2430" stroke-width="2"/><circle cx="42" cy="55" r="2.2" fill="#1f2430"/><circle cx="58" cy="55" r="2.2" fill="#1f2430"/>`
     : `<circle cx="42" cy="54" r="2.6" fill="#1f2430"/><circle cx="58" cy="54" r="2.6" fill="#1f2430"/>`;
   const mouth = c.moustache ? `<path d="M40 64q10-6 20 0q-10 2-20 0z" fill="#2b1d16"/><path d="M45 69q5 3 10 0" stroke="#1f2430" stroke-width="2" fill="none" stroke-linecap="round"/>` : `<path d="M43 65q7 5 14 0" stroke="#1f2430" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="36" cy="62" r="3" fill="#e57373" fill-opacity=".45"/><circle cx="64" cy="62" r="3" fill="#e57373" fill-opacity=".45"/>`;
-  const body = `<path d="M14 100c4-18 18-26 36-26s32 8 36 26z" fill="${c.scarf ? '#7a4b8c' : c.cap ? '#5c6b7a' : '#e8e1d5'}"/>`;
+  const body = `<path d="M14 100c4-18 18-26 36-26s32 8 36 26z" fill="${c.jersey || (c.scarf ? '#7a4b8c' : c.cap ? '#5c6b7a' : '#e8e1d5')}"/>${c.jersey ? '<path d="M38 76h24l-4 24H42z" fill="#f1c40f"/>' : ''}`;
   const bg = c.scarf ? '#fbe7e1' : c.cap ? '#fdf3d7' : '#e3edf8';
-  return `<svg class="av" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="${bg}"/>${body}${face}${c.scarf ? head : ''}${eyes}${mouth}${c.scarf ? '' : head}</svg>`;
+  return `<svg class="av" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="${bg}"/>${body}${c.scarf ? head : ''}${face}${eyes}${mouth}${c.scarf ? '' : head}</svg>`;
 }
 
 // ---------- Voix du téléphone ----------
@@ -233,7 +269,7 @@ async function speak(ar){
     const u = new SpeechSynthesisUtterance(ar);
     const v = speechSynthesis.getVoices().find(v => /^ar/i.test(v.lang));
     if (v) u.voice = v; u.lang = v ? v.lang : 'ar-TN'; u.rate = 0.85;
-    speechSynthesis.cancel(); speechSynthesis.speak(u); return true;
+    return new Promise(res => { u.onend = u.onerror = () => res(true); speechSynthesis.cancel(); speechSynthesis.speak(u); setTimeout(() => res(true), 12000); });
   }
   toast('Pas de voix disponible sur cet appareil'); return false;
 }
@@ -247,18 +283,19 @@ const sayBtn = (ar, label) => `<button class="listen" data-say="${esc(ar)}">${IC
 // ---------- Micro ----------
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const canListen = () => !!(Native.Speech || SR);
-async function listen(){
+async function listen(o){
+  o = o || {};
   if (Native.Speech) {
     const R = Native.Speech;
     const { available } = await R.available();
     if (!available) throw new Error('indispo');
     const perm = await R.requestPermissions();
     if (perm.speechRecognition && perm.speechRecognition !== 'granted') throw new Error('refus');
-    const r = await R.start({ language: 'ar-TN', maxResults: 5, prompt: 'Ahki! (Parle !)', partialResults: false, popup: true });
+    const r = await R.start({ language: o.lang || 'ar-TN', maxResults: 5, prompt: 'Ahki! (Parle !)', partialResults: false, popup: o.popup !== false });
     return (r && r.matches) || [];
   }
   return new Promise((res, rej) => {
-    const rec = new SR(); rec.lang = 'ar-TN'; rec.interimResults = false; rec.maxAlternatives = 5;
+    const rec = new SR(); rec.lang = o.lang || 'ar-TN'; rec.interimResults = false; rec.maxAlternatives = 5;
     rec.onresult = e => res(Array.from(e.results[0]).map(a => a.transcript));
     rec.onerror = e => rej(new Error(e.error === 'not-allowed' ? 'refus' : 'rien'));
     rec.onend = () => res([]);
@@ -306,7 +343,7 @@ function back(){
   if (f) f(); else home();
 }
 if (Native.App) Native.App.addListener('backButton', () => {
-  if (screen === 'home') Native.App.exitApp(); else if (screen === 'lesson') confirmQuit(); else { stack = []; home(); }
+  if (screen === 'home') Native.App.exitApp(); else if (screen === 'lesson') confirmQuit(); else { chatRun++; stack = []; home(); }
 });
 
 // ---------- Accueil ----------
@@ -344,6 +381,7 @@ function shell(content){
     <div class="main fadein">${content}</div>
     <nav class="nav"><div class="nav-in">
       <button data-tab="learn" class="${tab === 'learn' ? 'on' : ''}">${ICON.learn}Apprendre</button>
+      <button data-tab="chat" class="${tab === 'chat' ? 'on' : ''}">${ICON.chat}Discuter</button>
       <button data-tab="book" class="${tab === 'book' ? 'on' : ''}">${ICON.book}Carnet</button>
       <button data-tab="me" class="${tab === 'me' ? 'on' : ''}">${ICON.user}Profil</button>
     </div></nav>`;
@@ -363,6 +401,7 @@ function home(){
   if (!S.name) return onboarding();
   screen = 'home';
   if (tab === 'book') return book();
+  if (tab === 'chat') return chatHome();
   if (tab === 'me') return profile();
   const steps = LEVEL.episodes.map((e, i) => {
     const d = S.done[e.id], open = isOpen(i);
@@ -430,6 +469,7 @@ function profile(){
       <div class="stat"><b>${streakNow()}</b><span>jours d’affilée</span></div>
       <div class="stat"><b>${eps}/${LEVEL.episodes.length}</b><span>épisodes du niveau 1</span></div>
       <div class="stat"><b>${S.hontes}</b><span>moments de honte</span></div>
+      <div class="stat"><b>${chatLeft()}</b><span>répliques de discussion restantes aujourd’hui</span></div>
     </div>
     <div class="sec">Réglages</div>
     <div class="card">
@@ -673,6 +713,129 @@ function bossResult(score, total, hontes){
     `<button class="btn btn-primary btn-block" id="next">${pass ? 'Retour au parcours' : 'Réessayer plus tard'}</button>`);
   screen = 'result';
   $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
+}
+
+// ---------- Discussion libre (Gemini, offre gratuite) ----------
+const CHAT = window.TWB_CHAT;
+const GEMINI_KEY = window.TWB_GEMINI_KEY || '';
+let chatRun = 0, chatState = null;
+function chatLeft(){
+  if (!S.chat || S.chat.day !== today()) S.chat = { day: today(), count: 0 };
+  return Math.max(0, CHAT.dailyLimit - S.chat.count);
+}
+function chatHome(){
+  const ok = !!GEMINI_KEY;
+  const cards = Object.keys(CHAT.personas).map(k => `<button class="persona" data-p="${k}">${avatar(k, 64)}<b>${esc(CAST[k].name)}</b><small>${esc(CAST[k].role)}</small></button>`).join('');
+  shell(`<h2 style="font-size:26px;margin:4px 0 4px">Discuter</h2>
+    <p class="muted" style="margin:0 0 14px">Parle tunisien à voix haute, ils te répondent. Active « mains libres » pour enchaîner sans toucher l’écran.</p>
+    ${ok ? '' : '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold)"><b>Pas encore activé</b><p class="muted" style="margin:4px 0 0;font-size:14px">La clé Gemini n’est pas encore installée dans cette version de l’appli.</p></div>'}
+    <div class="personas">${cards}</div>
+    <p class="muted center" style="font-size:13px;margin-top:16px">${chatLeft()} répliques restantes aujourd’hui · ne raconte rien de personnel : en version gratuite, Google peut lire les échanges.</p>`);
+  root.querySelectorAll('[data-p]').forEach(b => b.onclick = () => ok ? openChat(b.dataset.p) : toast('La discussion arrive dans la prochaine version.'));
+}
+
+function openChat(key){
+  const run = ++chatRun;
+  const p = CHAT.personas[key];
+  chatState = { key, run, msgs: [Object.assign({ role: 'ai' }, p.hello, { correction: '', sugg: null })], hands: false, lang: 'ar-TN', busy: false, listening: false, status: '' };
+  screen = 'chat';
+  root.innerHTML = `<div class="chat">
+    <div class="chat-top"><button class="x" id="cx" aria-label="Fermer">${ICON.close}</button>${avatar(key, 40)}
+      <div class="t"><b>${esc(CAST[key].name)}</b><br><small>${esc(CAST[key].role)}</small></div>
+      <span class="hf">Mains libres<button class="sw" id="hf" aria-label="Mains libres"></button></span></div>
+    <div class="chat-body" id="cb"></div>
+    <div class="chat-foot"><div id="sg"></div>
+      <div class="inrow"><input class="field" id="ti" placeholder="Écris en tunisien…" autocomplete="off" enterkeyhint="send">
+        <button class="round" id="send" aria-label="Envoyer">${ICON.send}</button>
+        <button class="round" id="mc" aria-label="Parler">${ICON.mic}</button></div>
+      <div class="langs"><span class="muted" style="align-self:center">Je parle :</span><button data-l="ar-TN" class="on">Tounsi</button><button data-l="fr-FR">Français</button></div>
+      <div class="status" id="st"></div></div></div>`;
+  $('#cx').onclick = () => { chatRun++; stack = []; tab = 'chat'; home(); };
+  $('#hf').onclick = () => { chatState.hands = !chatState.hands; $('#hf').classList.toggle('on', chatState.hands); if (chatState.hands && !chatState.busy && !chatState.listening) hear(run); };
+  $('#send').onclick = () => { const v = $('#ti').value.trim(); if (v) { $('#ti').value = ''; turn(v, run); } };
+  $('#ti').onkeydown = e => { if (e.key === 'Enter') $('#send').click(); };
+  $('#mc').onclick = () => { if (!chatState.busy && !chatState.listening) hear(run); };
+  root.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { chatState.lang = b.dataset.l; root.querySelectorAll('[data-l]').forEach(x => x.classList.toggle('on', x === b)); });
+  drawChat();
+  speak(p.hello.ar);
+}
+function setStatus(t){ chatState.status = t; const e = $('#st'); if (e) e.textContent = t; }
+function drawChat(){
+  const st = chatState, k = st.key;
+  const html = st.msgs.map((m, i) => m.role === 'me'
+    ? `<div class="me-msg"><div class="bubble">${esc(m.text)}</div></div>`
+    : m.err ? `<div class="say">${avatar(k, 36)}<div class="bubble" style="background:var(--gold-soft)">${esc(m.err)}</div></div>`
+    : `<div class="say">${avatar(k, 36)}<div class="bubble" data-m="${i}"><div>${esc(fill(m.tn))}</div>${S.opts.ar ? `<div class="ar">${esc(fill(m.ar))}</div>` : ''}
+        <div class="fr" ${S.opts.fr ? '' : 'hidden'}>${esc(fill(m.fr))}</div>${sayBtn(m.ar)}${m.correction ? `<div class="corr"><b>Correction :</b> ${esc(m.correction)}</div>` : ''}</div></div>`).join('')
+    + (st.busy ? `<div class="say">${avatar(k, 36)}<div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div></div>` : '');
+  const cb = $('#cb'); if (!cb) return;
+  cb.innerHTML = html;
+  cb.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const f = b.querySelector('.fr'); if (f) f.hidden = false; });
+  cb.scrollTop = cb.scrollHeight;
+  const last = st.msgs[st.msgs.length - 1];
+  const sg = $('#sg');
+  sg.innerHTML = last && last.sugg && last.sugg.tn ? `<div class="sugg"><button class="use" id="su"><small>Tu pourrais répondre :</small><b>${esc(last.sugg.tn)}</b> · ${esc(last.sugg.fr || '')}</button></div>` : '';
+  const su = $('#su'); if (su) su.onclick = () => { $('#ti').value = last.sugg.tn; $('#ti').focus(); };
+  $('#mc').classList.toggle('live', st.listening);
+}
+
+async function hear(run){
+  const st = chatState;
+  if (!canListen()) { setStatus('Micro indisponible ici : écris ta réponse.'); return; }
+  st.listening = true; drawChat(); setStatus('Je t’écoute…');
+  let heard = [];
+  try { heard = await listen({ lang: st.lang, popup: !st.hands }); }
+  catch(e){ setStatus(e.message === 'refus' ? 'Micro refusé : autorise-le dans les réglages Android.' : 'Je n’ai pas compris.'); }
+  if (run !== chatRun) return;
+  st.listening = false; drawChat();
+  if (heard.length) return turn(heard[0], run);
+  if (st.hands) { st.hands = false; $('#hf').classList.remove('on'); setStatus('Pause : touche le micro ou réactive « mains libres ».'); }
+  else setStatus('Je n’ai rien entendu. Réessaie.');
+}
+
+async function turn(text, run){
+  const st = chatState;
+  if (chatLeft() <= 0) { st.msgs.push({ role: 'ai', err: 'Khalti est fatiguée pour aujourd’hui (limite gratuite atteinte). Reviens demain, ou révise ton carnet !' }); drawChat(); return; }
+  st.msgs.push({ role: 'me', text }); st.busy = true; drawChat(); setStatus('');
+  S.chat.count++; save();
+  let r;
+  try { r = await gemini(st.key, st.msgs); }
+  catch(e){ r = { err: e.message === 'quota' ? 'Trop de monde parle à la famille en ce moment (limite gratuite). Réessaie dans une minute.' : e.message === 'reseau' ? 'Pas de connexion internet : la discussion a besoin du réseau.' : 'Petit souci de réseau, répète ta phrase.' }; }
+  if (run !== chatRun) return;
+  st.busy = false;
+  if (r.err) { st.msgs.push({ role: 'ai', err: r.err }); drawChat(); return; }
+  st.msgs.push({ role: 'ai', tn: r.tn, ar: r.ar, fr: r.fr, correction: r.correction || '', sugg: { tn: r.suggestion_tn, fr: r.suggestion_fr } });
+  drawChat();
+  await speak(r.ar);
+  if (run === chatRun && st.hands) hear(run);
+}
+
+async function gemini(key, msgs){
+  const p = CHAT.personas[key];
+  const sys = fill(CHAT.rules + '\n\nTON PERSONNAGE : ' + p.prompt);
+  const contents = [{ role: 'user', parts: [{ text: '(L’élève ouvre l’appli et arrive dans la conversation.)' }] }]
+    .concat(msgs.filter(m => !m.err).slice(-16).map(m => m.role === 'me'
+      ? { role: 'user', parts: [{ text: m.text }] }
+      : { role: 'model', parts: [{ text: JSON.stringify({ tn: m.tn, ar: m.ar, fr: m.fr }) }] }));
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: sys }] }, contents,
+    generationConfig: { temperature: 0.9, maxOutputTokens: 2048, responseMimeType: 'application/json',
+      responseSchema: { type: 'OBJECT', properties: { tn: { type: 'STRING' }, ar: { type: 'STRING' }, fr: { type: 'STRING' }, correction: { type: 'STRING' }, suggestion_tn: { type: 'STRING' }, suggestion_fr: { type: 'STRING' } },
+        required: ['tn', 'ar', 'fr', 'correction', 'suggestion_tn', 'suggestion_fr'] } }
+  });
+  let last = 'autre';
+  for (const model of CHAT.models) {
+    let res;
+    try { res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }); }
+    catch(e){ throw new Error('reseau'); }
+    if (!res.ok) { last = res.status === 429 ? 'quota' : 'autre'; continue; }
+    const j = await res.json();
+    const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+    const txt = parts.filter(x => !x.thought).map(x => x.text || '').join('').replace(/^```(json)?|```$/g, '').trim();
+    try { const o = JSON.parse(txt); if (o.tn && o.ar) return o; } catch(e){}
+    last = 'autre';
+  }
+  throw new Error(last);
 }
 
 // ---------- Démarrage ----------
