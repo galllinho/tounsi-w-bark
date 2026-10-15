@@ -193,7 +193,7 @@ const Native = (() => {
   const C = window.Capacitor;
   const isNative = !!(C && C.isNativePlatform && C.isNativePlatform());
   const plug = n => (isNative && C.registerPlugin && C.isPluginAvailable(n)) ? C.registerPlugin(n) : null;
-  return { isNative, Speech: plug('SpeechRecognition'), TTS: plug('TextToSpeech'), App: plug('App'), LN: plug('LocalNotifications'), FS: plug('Filesystem'), Share: plug('Share') };
+  return { isNative, Speech: plug('SpeechRecognition'), TTS: plug('TextToSpeech'), App: plug('App'), LN: plug('LocalNotifications'), FS: plug('Filesystem'), Share: plug('Share'), Prefs: plug('Preferences') };
 })();
 
 // ---------- État ----------
@@ -205,7 +205,20 @@ function usePack(){
   CHAT = Object.assign({}, window.TWB_CHAT, { rules: PACK.chat.rules, personas: PACK.chat.personas });
 }
 usePack();
-function save(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch(e){} }
+// Sauvegarde : stockage natif d'Android (Preferences) qui survit à la fermeture de l'appli, + copie dans localStorage.
+function save(){
+  const v = JSON.stringify(S);
+  try { localStorage.setItem(LS, v); } catch(e){}
+  if (Native.Prefs) Native.Prefs.set({ key: LS, value: v }).catch(() => {});
+}
+async function restore(){
+  if (!Native.Prefs) return;
+  try {
+    const { value } = await Native.Prefs.get({ key: LS });
+    if (value) S = Object.assign(blank(), JSON.parse(value));
+    else if (S.name) save();   // ancienne version : on recopie le profil dans le stockage natif
+  } catch(e){}
+}
 
 // ---------- Outils ----------
 const $ = s => document.querySelector(s);
@@ -1036,7 +1049,11 @@ async function gemini(key, msgs){
 
 // ---------- Démarrage ----------
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
-home();
-loadVoices().then(() => { if (screen === 'home') home(); });
-if (S.notif.on) scheduleNotif();
+restore().then(() => {
+  usePack(); home();
+  loadVoices().then(() => { if (screen === 'home') home(); });
+  if (S.notif.on) scheduleNotif();
+});
+if (Native.App) Native.App.addListener('pause', save);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
 </script>
