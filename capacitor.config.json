@@ -1,0 +1,6 @@
+{
+  "appId": "fr.galllinho.tounsiwbark",
+  "appName": "Tounsi w Bark",
+  "webDir": "www",
+  "android": { "allowMixedContent": false }
+}
