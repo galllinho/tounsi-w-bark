@@ -175,6 +175,7 @@ h1,h2,h3{margin:0;font-family:Georgia,"Times New Roman",serif;font-weight:700;le
 <div id="root" class="app"></div>
 
 <script src="content.js"></script>
+<script src="content-tn-more.js"></script>
 <script src="content-kab.js"></script>
 <script>
 /* =========================================================
@@ -197,7 +198,7 @@ const Native = (() => {
 })();
 
 // ---------- État ----------
-const blank = () => ({ name: '', gender: 'm', lang: 'tn', xp: 0, done: {}, saved: [], weak: {}, review: '', streak: { last: '', count: 0 }, hontes: 0, opts: { fr: true, ar: false }, notif: { on: false, hour: 19 }, voiceName: '' });
+const blank = () => ({ name: '', gender: 'm', lang: 'tn', xp: 0, done: {}, saved: [], weak: {}, review: '', streak: { last: '', count: 0 }, hontes: 0, opts: { fr: true, ar: false }, notif: { on: false, hour: 19 }, voiceName: '', missions: {} });
 let S = load();
 function load(){ try { return Object.assign(blank(), JSON.parse(localStorage.getItem(LS) || '{}')); } catch(e){ return blank(); } }
 function usePack(){
@@ -237,6 +238,9 @@ function fill(s){
     .replace(/\{petitFr\}/g, f ? 'ma petite' : 'mon petit')
     .replace(/\{mechiAr\}/g, f ? 'ماشية' : 'ماشي').replace(/\{mechi\}/g, f ? 'mechya' : 'mechi')
     .replace(/\{tounsiAr\}/g, f ? 'تونسية' : 'تونسي').replace(/\{tounsi\}/g, f ? 'tounsiya' : 'tounsi')
+    .replace(/\{jdidAr\}/g, f ? 'جديدة' : 'جديد').replace(/\{jdid\}/g, f ? 'jdida' : 'jdid')
+    .replace(/\{khouyaAr\}/g, f ? 'أختي' : 'خويا').replace(/\{khouya\}/g, f ? 'okhti' : 'khouya')
+    .replace(/\{asliAr\}/g, f ? 'أصليّة' : 'أصلي').replace(/\{asli\}/g, f ? 'asliya' : 'asli')
     .replace(/\{taalAr\}/g, f ? 'تعالي' : 'تعال').replace(/\{taal\}/g, f ? 'Taali' : 'Taal').replace(/\{ne\}/g, f ? 'ne' : '').replace(/\{cousinAr\}/g, f ? 'كوزينة' : 'كوزان').replace(/\{cousin\}/g, f ? 'cousine' : 'cousin').replace(/\{genre\}/g, f ? 'une fille' : 'un garçon');
 }
 function toast(msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
@@ -268,6 +272,7 @@ function avatar(key, size){
   if (c.scarf) head = `<path d="M22 60c0-24 12-36 28-36s28 12 28 36c0 6-2 12-6 16H28c-4-4-6-10-6-16z" fill="${c.scarf}"/><path d="M30 26q20-10 40 0" stroke="#fff" stroke-opacity=".35" stroke-width="3" fill="none"/>`;
   if (c.cap) head = `<path d="M30 44c0-12 9-18 20-18s20 6 20 18z" fill="${c.cap}"/><rect x="48" y="40" width="30" height="6" rx="3" fill="${c.cap}"/>`;
   if (c.curls) head = `<g fill="${c.curls}"><circle cx="34" cy="40" r="9"/><circle cx="44" cy="34" r="10"/><circle cx="56" cy="34" r="10"/><circle cx="66" cy="40" r="9"/></g>`;
+  if (c.hair) head = `<path d="M27 58c-4-18 4-34 23-34s27 16 23 34c-4-10-10-16-23-16s-19 6-23 16z" fill="${c.hair}"/><path d="M28 56c-3 14 0 26 6 32M72 56c3 14 0 26-6 32" stroke="${c.hair}" stroke-width="8" fill="none" stroke-linecap="round"/>`;
   if (c.chechia) head = `<rect x="34" y="22" width="32" height="20" rx="5" fill="${c.chechia}"/><path d="M50 22c6-4 10-2 12 4" stroke="#1f2430" stroke-width="2" fill="none"/>`;
   const face = `<circle cx="50" cy="56" r="21" fill="${c.skin || '#c98b62'}"/>`;
   const eyes = c.glasses
@@ -461,9 +466,12 @@ function levelCard(l){
   const steps = l.episodes.map((e, i) => {
     const d = S.done[e.id], op = isOpen(l, i);
     const st = d ? `<span class="stars">${'★'.repeat(d.stars)}${'☆'.repeat(3 - d.stars)}</span>` : op ? '<span class="tag">À toi</span>' : '';
-    return `<button class="step" data-ep="${e.id}" ${op ? '' : 'aria-disabled="true"'}>
+    const ms = e.mission && d ? (S.missions[e.id] ? ' · mission réussie' : ' · mission à tenter') : '';
+    const step = `<button class="step" data-ep="${e.id}" ${op ? '' : 'aria-disabled="true"'}>
       <span class="dot ${d ? 'done' : op ? 'open' : ''}">${op ? i + 1 : ICON.lock}</span>
-      <span style="flex:1"><b>${esc(e.title)}</b><small>${e.words.length} mots · ${e.exercises.length} exercices</small></span>${st}</button>`;
+      <span style="flex:1"><b>${esc(e.title)}</b><small>${e.words.length} mots${ms}</small></span>${st}</button>`;
+    const g = l.grammar && i === 1 ? grammarStep(l) : '';
+    return step + g;
   }).join('');
   const bd = S.done[l.boss.id], bo = bossOpen(l);
   const boss = `<button class="step" data-boss="${l.id}" ${bo ? '' : 'aria-disabled="true"'}>
@@ -475,6 +483,12 @@ function levelCard(l){
       <div class="path">${steps}${boss}</div></div>`;
 }
 
+function grammarStep(l){
+  const g = l.grammar, d = S.done[g.id], op = !!S.done[l.episodes[0].id];
+  return `<button class="step" data-gram="${l.id}" ${op ? '' : 'aria-disabled="true"'}>
+      <span class="dot ${d ? 'done' : op ? 'open' : ''}" style="border-radius:12px;font-family:Georgia,serif">${op ? 'G' : ICON.lock}</span>
+      <span style="flex:1"><b>Le coin de ${esc(MN())}</b><small>${esc(g.title)}</small></span>${d ? '<span class="tag" style="background:var(--good-soft);color:var(--good)">Vu</span>' : op ? '<span class="tag">Grammaire</span>' : ''}</button>`;
+}
 function home(){
   if (!S.name) return onboarding();
   screen = 'home';
@@ -503,6 +517,7 @@ function home(){
   });
   root.querySelectorAll('[data-boss]').forEach(b => b.onclick = () => { const l = lv.find(x => x.id === b.dataset.boss); bossOpen(l) ? startBoss(l) : toast('Termine les épisodes du niveau pour affronter ' + MN() + '.'); });
   const r = $('#rev'); if (r) r.onclick = startReview;
+  root.querySelectorAll('[data-gram]').forEach(b => b.onclick = () => { const l = lv.find(x => x.id === b.dataset.gram); if (!S.done[l.episodes[0].id]) return toast('Termine d’abord l’épisode 1 du niveau.'); grammarLesson(l, 0); });
 }
 
 // ---------- Révision : « Khalti t'interroge » ----------
@@ -510,7 +525,7 @@ function startReview(){
   const pool = learned();
   const weak = w => (S.weak[w.id] || 0) + Math.random();
   const pickd = pool.slice().sort((a, b) => weak(b) - weak(a)).slice(0, 8);
-  const types = ['meaning', 'reverse', 'listen'];
+  const types = ['meaning', 'write', 'reverse', 'listen'];
   const list = shuffle(pickd).map((w, i) => ({ type: types[i % 3], word: w.id }));
   stack = [];
   runExercises(list, { review: true });
@@ -712,24 +727,29 @@ function intro(ep){
   lessonFrame(0, `<div class="center" style="padding-top:12px"><span class="tag">Épisode ${epIndex(ep.id) + 1}</span>
       <h1 style="font-size:30px;margin:10px 0 8px">${esc(ep.title)}</h1><p class="muted" style="margin:0 0 18px">${esc(ep.pitch)}</p></div>
       <div class="sec">Dans cet épisode</div><div class="card" style="padding:6px 14px">${cast}</div>
-      <p class="muted" style="font-size:14px;margin-top:16px">1. La scène · 2. Les mots · 3. Les exercices</p>`,
-    `<button class="btn btn-primary btn-block" id="next">Voir la scène</button>`);
+      <p class="muted" style="font-size:14px;margin-top:16px">1. La scène · 2. Les mots · 3. ${buildLesson(ep, levelOf(ep.id)).length} exercices${levelOf(ep.id).num >= 4 ? ' · traductions cachées : touche une bulle pour la voir' : ''}</p>`,
+    ep.mission && S.done[ep.id]
+      ? `<div class="seg"><button class="btn btn-ghost" id="next">Revoir l’épisode</button><button class="btn btn-primary" id="mis">${S.missions[ep.id] ? 'Rejouer la mission' : 'Mission bonus'}</button></div>`
+      : `<button class="btn btn-primary btn-block" id="next">Voir la scène</button>`);
   $('#next').onclick = () => scene(ep, 0);
+  const mb = $('#mis'); if (mb) mb.onclick = () => startMission(ep);
 }
 
+let sceneLevel = 1;
 function lineHTML(l){
-  const showFr = S.opts.fr;
+  const showFr = S.opts.fr && sceneLevel < 4;
   const inner = `<div>${esc(fill(l.tn))}</div>${arDiv(l)}
     <div class="fr" ${showFr ? '' : 'hidden'}>${esc(fill(l.fr))}</div>${sayBtn(V(l))}`;
   if (l.who === 'me') return `<div class="scene-me fadein"><div class="bubble">${inner}</div></div>`;
   return `<div class="say fadein">${avatar(l.who, 44)}<div class="bubble"><div class="who">${esc(CAST[l.who].name)}</div>${inner}${l.note ? `<div class="note">${esc(fill(l.note))}</div>` : ''}</div></div>`;
 }
 function scene(ep, n){
+  sceneLevel = levelOf(ep.id).num;
   const lines = ep.scene.slice(0, n + 1);
   const last = n >= ep.scene.length - 1;
   lessonFrame(0.1 + 0.2 * (n + 1) / ep.scene.length, `<div class="q">La scène · touche les bulles pour écouter</div>${lines.map(lineHTML).join('')}`,
     `<button class="btn btn-primary btn-block" id="next">${last ? 'Apprendre les mots' : 'Suite'}</button>`);
-  if (S.opts.fr) {} else root.querySelectorAll('.bubble').forEach(b => b.onclick = () => { const f = b.querySelector('.fr'); if (f) f.hidden = false; });
+  if (!(S.opts.fr && sceneLevel < 4)) root.querySelectorAll('.bubble').forEach(b => b.onclick = () => { const f = b.querySelector('.fr'); if (f) f.hidden = false; });
   const all = root.querySelectorAll('.say, .scene-me'); if (all.length) all[all.length - 1].scrollIntoView({ block: 'end', behavior: 'smooth' });
   if (n > 0 && hasVoice(V(ep.scene[n]))) speak(V(ep.scene[n]));
   $('#next').onclick = () => last ? words(ep) : scene(ep, n + 1);
@@ -739,7 +759,102 @@ function words(ep){
   lessonFrame(0.35, `<div class="q">Les mots de l’épisode · touche l’étoile pour les garder</div><div class="card">${ep.words.map(wordRow).join('')}</div>`,
     `<button class="btn btn-primary btn-block" id="next">C’est parti pour les exercices</button>`);
   bindWords();
-  $('#next').onclick = () => runExercises(ep.exercises.map(x => Object.assign({}, x)), { ep, level: levelOf(ep.id) });
+  $('#next').onclick = () => runExercises(buildLesson(ep, levelOf(ep.id)), { ep, level: levelOf(ep.id) });
+}
+
+// ---------- Construction d'une leçon : 12 à 15 exercices, difficulté selon le niveau ----------
+const WRONG_REPLY = [
+  'Réponse hors sujet : {who} te regarde comme si tu parlais chinois.',
+  '{who} hoche la tête poliment, mais n’a rien compris.',
+  'Ça ne répond pas du tout à la question. {who} répète, plus fort.',
+  'Belle phrase, mauvais moment. {who} est perdu.'
+];
+function tokensOf(t){ return fill(t).replace(/[!?.,;:…«»"]/g, ' ').split(/\s+/).filter(Boolean); }
+function singleWord(w){ return tokensOf(w.tn).length === 1 && !/[\/…]/.test(w.tn); }
+function meLines(){
+  return PACK.levels.flatMap(l => l.episodes.flatMap(e => e.scene.filter(x => x.who === 'me').map(x => Object.assign({ ep: e.id }, x))));
+}
+function genReplies(ep, n){
+  const out = [], all = meLines();
+  ep.scene.forEach((ln, i) => {
+    const prev = ep.scene[i - 1];
+    if (ln.who !== 'me' || !prev || prev.who === 'me' || /\{prenom\}/.test(ln.tn)) return;
+    const wrong = shuffle(all.filter(m => m.ep !== ep.id && normLat(m.tn) !== normLat(ln.tn) && !/\{prenom\}/.test(m.tn))).slice(0, 2);
+    if (wrong.length < 2) return;
+    const name = CAST[prev.who].name;
+    out.push({ type: 'reply', gen: true, who: prev.who, line: prev,
+      options: [{ tn: ln.tn, fr: ln.fr, ok: true }].concat(wrong.map(w => ({ tn: w.tn, fr: w.fr, why: pick(WRONG_REPLY).replace('{who}', name) }))) });
+  });
+  return shuffle(out).slice(0, n);
+}
+function genGaps(ep, level, n){
+  const pool = allWords().filter(w => w.lvl === level.id && singleWord(w));
+  const own = ep.words.filter(singleWord);
+  const out = [];
+  shuffle(ep.scene).forEach(ln => {
+    if (out.length >= n) return;
+    const toks = tokensOf(ln.tn);
+    if (toks.length < 3) return;
+    const hit = own.find(w => toks.some(t => normLat(t) === normLat(fill(w.tn))));
+    if (!hit) return;
+    const others = shuffle(pool.filter(w => normLat(w.tn) !== normLat(hit.tn))).slice(0, 3);
+    if (others.length < 3) return;
+    out.push({ type: 'gap', word: hit.id, line: ln, missing: fill(hit.tn), opts: shuffle([hit].concat(others)).map(o => ({ label: fill(o.tn), ok: o.id === hit.id })) });
+  });
+  return out;
+}
+function genTypeSentences(ep, n){
+  return shuffle(ep.scene.filter(l => l.who === 'me' && tokensOf(l.tn).length <= 6 && !/\{prenom\}/.test(l.tn))).slice(0, n)
+    .map(l => ({ type: 'write', tn: l.tn, ar: l.ar, fr: l.fr, sentence: true }));
+}
+function buildLesson(ep, level){
+  const lv = level.num, fixed = [];
+  const authored = ep.exercises.map(x => Object.assign({}, x));
+  const words = ep.words;
+  // Exercices écrits à la main (répliques, ordre, à voix haute)
+  fixed.push(...authored);
+  // Associer les paires
+  if (words.length >= 4) fixed.push({ type: 'pairs', words: shuffle(words).slice(0, 5).map(w => w.id) });
+  // Mot manquant et scène jouée
+  fixed.push(...genGaps(ep, level, lv >= 3 ? 2 : 1));
+  fixed.push(...genReplies(ep, lv >= 2 ? 2 : 1));
+  // Écrire des phrases entières (dès le niveau 3)
+  if (lv >= 3) fixed.push(...genTypeSentences(ep, lv >= 4 ? 2 : 1));
+  // Révision de mots déjà appris dans les épisodes précédents (les plus oubliés d'abord)
+  const old = shuffle(learned().filter(w => w.ep !== ep.id)).sort((a, b) => (S.weak[b.id] || 0) - (S.weak[a.id] || 0)).slice(0, lv >= 3 ? 3 : 2);
+  old.forEach((w, i) => fixed.push({ type: lv >= 2 && i === 0 ? 'write' : 'reverse', word: w.id, old: true }));
+  // Nouveaux mots : chacun vu au moins une fois, la difficulté monte avec le niveau
+  const wordTypes = lv === 1 ? ['meaning', 'reverse', 'meaning', 'listen'] : lv === 2 ? ['meaning', 'write', 'reverse', 'listen'] : lv === 3 ? ['write', 'reverse', 'dictation', 'meaning'] : ['write', 'dictation', 'write', 'reverse'];
+  const covered = new Set(authored.filter(x => x.word).map(x => x.word));
+  const room = Math.max(4, 16 - fixed.length);
+  const wordEx = shuffle(words.filter(w => !covered.has(w.id))).slice(0, room).map((w, i) => ({ type: wordTypes[i % wordTypes.length], word: w.id }));
+  // Ordre : d'abord les mots, puis les phrases et les répliques
+  const rank = x => ({ meaning: 0, listen: 1, reverse: 1.5, pairs: 2.5, gap: 3.5, dictation: 4, write: x.sentence ? 7 : 4, order: 5, choice: 4, reply: 6, speak: 8 }[x.type] ?? 5) + (x.old ? 3 : 0);
+  return wordEx.concat(fixed).map(x => [rank(x) + Math.random() * 3, x]).sort((a, b) => a[0] - b[0]).map(p => p[1]);
+}
+function buildBoss(level){
+  const lv = level.num, list = [];
+  const pool = shuffle(allWords().filter(w => w.lvl === level.id));
+  const types = lv === 1 ? ['meaning', 'reverse', 'listen'] : lv === 2 ? ['meaning', 'reverse', 'write'] : ['reverse', 'write', 'dictation'];
+  pool.slice(0, level.boss.count - 3).forEach((w, i) => list.push({ type: types[i % types.length], word: w.id }));
+  const eps = shuffle(level.episodes);
+  eps.slice(0, 2).forEach(e => list.push(...genReplies(e, 1)));
+  list.push(...genGaps(eps[eps.length - 1], level, 1));
+  return shuffle(list).slice(0, level.boss.count);
+}
+
+// Correction tolérante pour les réponses écrites
+function skel(s){ return normLat(String(s).replace(/3/g, 'a').replace(/7/g, 'h').replace(/9/g, 'k').replace(/5/g, 'kh')).replace(/sh/g, 'ch').replace(/ou/g, 'u').replace(/[aeiouy]+/g, ''); }
+function lat(s){ return normLat(String(s).replace(/3/g, 'a').replace(/7/g, 'h').replace(/9/g, 'k').replace(/5/g, 'kh')).replace(/sh/g, 'ch'); }
+function checkWritten(input, item){
+  const targets = [fill(item.tn)].concat((item.alt || []).map(fill));
+  let best = 0, exact = false;
+  for (const t of targets) {
+    if (lat(input) === lat(t)) exact = true;
+    const s = Math.max(sim(lat(input), lat(t)), skel(input) === skel(t) ? 0.85 : 0);
+    best = Math.max(best, s);
+  }
+  return { ok: exact || best >= 0.8, exact, close: !exact && best >= 0.8 };
 }
 
 // ---------- Exercices ----------
@@ -749,6 +864,14 @@ function others(word, field, pool, n){
 function buildQ(x, ctx){
   let pool = ctx.level ? allWords().filter(w => w.lvl === ctx.level.id) : learned();
   if (pool.length < 4) pool = allWords();
+  if (x.type === 'write' || x.type === 'dictation') {
+    const it = x.word ? wordById(x.word) : x;
+    const dict = x.type === 'dictation' && hasVoice(V(it));
+    return { type: 'write', it, dict, answer: fill(it.tn) };
+  }
+  if (x.type === 'pairs') return { type: 'pairs', ws: x.words.map(wordById).filter(Boolean) };
+  if (x.type === 'gap') return { type: 'gap', x, opts: x.opts, answer: x.missing };
+  if (x.type === 'choice') return { type: 'choice', x, opts: shuffle(x.options.map(o => ({ label: fill(o.t), ok: !!o.ok }))), answer: fill(x.options.find(o => o.ok).t) };
   if (x.type === 'meaning' || x.type === 'listen' || x.type === 'reverse') {
     const w = wordById(x.word);
     const field = x.type === 'reverse' ? 'tn' : 'fr';
@@ -780,7 +903,7 @@ function runExercises(list, ctx){
     feedback(ok, info, next);
   };
   const progress = () => 0.4 + 0.6 * doneCount / total;
-  const finish = () => ctx.boss ? bossResult(ctx.level, firstTry, total, hontes) : ctx.review ? reviewResult(firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
+  const finish = () => ctx.boss ? bossResult(ctx.level, firstTry, total, hontes) : ctx.review ? reviewResult(firstTry, total, hontes) : ctx.grammar ? grammarResult(ctx.grammar, firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
 
   function show(x, q){
     const check = `<button class="btn btn-primary btn-block" id="check" disabled>Vérifier</button>`;
@@ -799,6 +922,61 @@ function runExercises(list, ctx){
         markOpts(q.opts);
         answered(x, ok, { answer: q.answer, sub: fill(q.w.tn) + ' = ' + fill(q.w.fr), ar: V(q.w) });
       });
+    }
+    if (q.type === 'write') {
+      const it = q.it;
+      const head = q.dict
+        ? `<div class="q">Écoute et écris ce que tu entends</div><div class="center" style="margin:14px 0">${sayBtn(V(it), 'Réécouter')}</div>`
+        : `<div class="q">${x.sentence ? 'Traduis en tunisien' : 'Écris en tunisien'}${x.old ? ' · révision' : ''}</div><div class="big" style="${x.sentence ? 'font-size:24px' : ''}">${esc(fill(it.fr))}</div>`;
+      lessonFrame(progress(), head + `<input class="field" id="wr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Écris en lettres latines" style="margin-top:16px;font-size:18px">
+        <p class="muted" style="font-size:13px;margin:8px 2px 0">Comme sur WhatsApp : « aa » ou « 3 » pour ع, « h » ou « 7 » pour ح, « k » ou « 9 » pour ق.</p>`, check);
+      if (q.dict) speak(V(it));
+      const inp = $('#wr'); inp.focus();
+      inp.oninput = () => { $('#check').disabled = !inp.value.trim(); };
+      inp.onkeydown = e => { if (e.key === 'Enter' && inp.value.trim()) $('#check').click(); };
+      $('#check').onclick = () => {
+        inp.disabled = true;
+        const r = checkWritten(inp.value, it);
+        answered(x, r.ok, { answer: fill(it.tn), sub: r.close ? 'Presque parfait ! On écrit : ' + fill(it.tn) + ' (' + fill(it.fr) + ')' : fill(it.tn) + ' = ' + fill(it.fr), ar: V(it) });
+      };
+    }
+    if (q.type === 'pairs') {
+      const L = shuffle(q.ws), R = shuffle(q.ws);
+      let pickL = null, pickR = null, found = 0, miss = 0;
+      lessonFrame(progress(), `<div class="q">Associe les paires</div><div class="seg" style="gap:10px">
+        <div>${L.map(w => `<button class="opt" data-pl="${w.id}" style="text-align:center">${esc(fill(w.tn))}</button>`).join('')}</div>
+        <div>${R.map(w => `<button class="opt" data-pr="${w.id}" style="text-align:center;font-weight:500">${esc(fill(w.fr))}</button>`).join('')}</div></div>`,
+        `<p class="center muted" style="margin:0" id="pst">Touche un mot, puis sa traduction</p>`);
+      const tryMatch = () => {
+        if (!pickL || !pickR) return;
+        const a = root.querySelector(`[data-pl="${pickL}"]`), b = root.querySelector(`[data-pr="${pickR}"]`);
+        if (pickL === pickR) {
+          [a, b].forEach(e => { e.classList.remove('sel'); e.classList.add('ok'); e.disabled = true; });
+          found++; if (hasVoice(V(wordById(pickL)))) speak(V(wordById(pickL)));
+          if (found === q.ws.length) setTimeout(() => answered(x, miss <= 1, { answer: 'Toutes les paires', sub: miss ? miss + ' erreur' + (miss > 1 ? 's' : '') + ' en route.' : 'Sans une seule erreur !', ar: null }), 350);
+        } else {
+          miss++; [a, b].forEach(e => { e.classList.remove('sel'); e.classList.add('ko'); setTimeout(() => e.classList.remove('ko'), 500); });
+          if (navigator.vibrate) navigator.vibrate(40);
+        }
+        pickL = pickR = null;
+      };
+      root.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { root.querySelectorAll('[data-pl]').forEach(e => e.classList.remove('sel')); b.classList.add('sel'); pickL = b.dataset.pl; tryMatch(); });
+      root.querySelectorAll('[data-pr]').forEach(b => b.onclick = () => { root.querySelectorAll('[data-pr]').forEach(e => e.classList.remove('sel')); b.classList.add('sel'); pickR = b.dataset.pr; tryMatch(); });
+    }
+    if (q.type === 'gap') {
+      const l = q.x.line;
+      const esc_re = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp('(^|[^a-z])(' + esc_re(esc(q.answer)) + ')(?=[^a-z]|$)', 'i');
+      const shown = esc(fill(l.tn)).replace(re, '$1<span class="tag" style="min-width:64px;display:inline-block">&nbsp;?&nbsp;</span>');
+      lessonFrame(progress(), `<div class="q">Complète la phrase</div>
+        <div class="say">${avatar(l.who, 44)}<div class="bubble"><div style="font-size:18px">${shown}</div><div class="fr">${esc(fill(l.fr))}</div></div></div>
+        ${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o.label)}</button>`).join('')}`, check);
+      choose(q.opts, i => { markOpts(q.opts); answered(x, q.opts[i].ok, { answer: fill(l.tn), sub: fill(l.fr), ar: V(l) }); });
+    }
+    if (q.type === 'choice') {
+      lessonFrame(progress(), `<div class="q">${esc(fill(q.x.q))}</div>${q.x.tn ? `<div class="big">${esc(fill(q.x.tn))}</div>` : ''}
+        <div style="margin-top:14px">${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${esc(o.label)}</button>`).join('')}</div>`, check);
+      choose(q.opts, i => { markOpts(q.opts); answered(x, q.opts[i].ok, { answer: q.answer, sub: fill(q.x.explain || ''), ar: null }); });
     }
     if (q.type === 'reply') {
       const l = q.x.line;
@@ -894,16 +1072,16 @@ function epResult(ep, firstTry, total, hontes){
       <h1 style="font-size:28px">Épisode terminé !</h1>
       <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(msg)}</div></div>
       <div class="stats" style="margin-top:8px"><div class="stat"><b>+${gain}</b><span>jasmins</span></div><div class="stat"><b>${hontes}</b><span>moment${hontes > 1 ? 's' : ''} de honte</span></div></div></div>`,
+    (ep.mission ? `<button class="btn btn-ghost btn-block" id="mis" style="margin-bottom:10px">Mission bonus avec ${esc(CAST[ep.mission.who].name)} · +30 jasmins</button>` : '') +
     `<button class="btn btn-primary btn-block" id="next">${nextEp ? 'Épisode suivant' : 'Retour au parcours'}</button>`);
   $('#quit').onclick = () => { stack = []; home(); };
+  const mb = $('#mis'); if (mb) mb.onclick = () => startMission(ep);
   screen = 'result';
   $('#next').onclick = () => { stack = []; if (nextEp) go(() => intro(nextEp)); else home(); };
 }
 
 function startBoss(level){
-  const pool = shuffle(allWords().filter(w => w.lvl === level.id));
-  const types = ['meaning', 'reverse', 'listen'];
-  const list = pool.slice(0, level.boss.count).map((w, i) => ({ type: types[i % 3], word: w.id }));
+  const list = buildBoss(level);
   stack = [];
   const pet = S.lang === 'kab' ? fill('{mmi}') : 'ya ' + fill('{petit}');
   lessonFrame(0, `<div class="center" style="padding-top:12px">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin:14px 0 8px">${esc(level.boss.title)}</h1>
@@ -927,6 +1105,34 @@ function bossResult(level, score, total, hontes){
   $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
 }
 
+// ---------- Le coin de Khalti : leçons de grammaire ----------
+function grammarLesson(level, i){
+  const g = level.grammar, c = g.cards[i], last = i === g.cards.length - 1;
+  const table = c.table ? `<div class="card" style="padding:4px 14px;margin-top:12px">${c.table.map(r => `<div class="toggle" style="padding:9px 0"><b>${esc(r[0])}</b><span class="muted" style="text-align:right">${esc(r[1])}</span></div>`).join('')}</div>` : '';
+  lessonFrame(0.3 * (i + 1) / g.cards.length, `<div class="say">${avatar(PACK.mascot, 44)}<div class="bubble"><div class="who">Le coin de ${esc(MN())}</div><b>${esc(g.title)}</b></div></div>
+      <h2 style="font-size:22px;margin:4px 0 8px">${esc(c.title)}</h2><p style="margin:0">${esc(c.text)}</p>${table}`,
+    `<button class="btn btn-primary btn-block" id="next">${last ? 'À toi de jouer' : 'Suite'}</button>`);
+  $('#next').onclick = () => last ? runExercises(shuffle(g.exercises.map(x => Object.assign({}, x))), { grammar: g, level }) : grammarLesson(level, i + 1);
+}
+function grammarResult(g, firstTry, total, hontes){
+  const stars = hontes === 0 ? 3 : hontes <= 2 ? 2 : 1;
+  const prev = S.done[g.id]; S.done[g.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
+  S.xp += 20 + firstTry * 2; bumpStreak(); save();
+  lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin-top:12px">${firstTry} / ${total}</h1>
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${hontes === 0 ? 'Parfait ! Tu pourrais donner des cours à Skander.' : 'Bien. Relis le tableau une fois ce soir, et ça rentrera.'}</div></div></div>`,
+    `<button class="btn btn-primary btn-block" id="next">Retour au parcours</button>`);
+  screen = 'result';
+  $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
+}
+
+// ---------- Missions : jeu de rôle avec objectif ----------
+const MISSION_TURNS = 8;
+function startMission(ep){
+  if (!GEMINI_KEY) return toast('Les missions ont besoin de la discussion IA, pas encore activée dans cette version.');
+  const m = ep.mission, hello = ep.scene.find(x => x.who === m.who) || { tn: 'Aslema!', ar: 'أسلامة!', fr: 'Bonjour !' };
+  stack = [];
+  openChat(m.who, { ep, goal: m.goal, win: m.win, hello });
+}
 // ---------- Discussion libre (Gemini, offre gratuite) ----------
 const GEMINI_KEY = window.TWB_GEMINI_KEY || '';
 let chatRun = 0, chatState = null;
@@ -946,15 +1152,20 @@ function chatHome(){
   root.querySelectorAll('[data-p]').forEach(b => b.onclick = () => ok ? openChat(b.dataset.p) : toast('La discussion arrive dans la prochaine version.'));
 }
 
-function openChat(key){
+function personaOf(key){
+  return CHAT.personas[key] || { prompt: 'Tu es ' + CAST[key].name + ' (' + CAST[key].role + '), un personnage drôle et bienveillant de la famille ou du quartier.', hello: { tn: 'Aslema!', ar: 'أسلامة!', fr: 'Bonjour !' } };
+}
+function openChat(key, mission){
   const run = ++chatRun;
-  const p = CHAT.personas[key];
-  chatState = { key, run, msgs: [Object.assign({ role: 'ai' }, p.hello, { correction: '', sugg: null })], hands: false, lang: PACK.srLang || 'fr-FR', busy: false, listening: false, status: '' };
+  const p = personaOf(key);
+  const first = mission ? mission.hello : p.hello;
+  chatState = { key, run, mission: mission || null, turns: 0, done: false, msgs: [Object.assign({ role: 'ai' }, first, { correction: '', sugg: null })], hands: false, lang: PACK.srLang || 'fr-FR', busy: false, listening: false, status: '' };
   screen = 'chat';
   root.innerHTML = `<div class="chat">
     <div class="chat-top"><button class="x" id="cx" aria-label="Fermer">${ICON.close}</button>${avatar(key, 40)}
       <div class="t"><b>${esc(CAST[key].name)}</b><br><small>${esc(CAST[key].role)}</small></div>
       <span class="hf">Mains libres<button class="sw" id="hf" aria-label="Mains libres"></button></span></div>
+    ${mission ? `<div style="background:var(--gold-soft);border-bottom:1px solid var(--gold);padding:10px 14px;font-size:14px"><b>Mission :</b> ${esc(mission.goal)} <span class="muted" id="mturns">· ${MISSION_TURNS} répliques max</span></div>` : ''}
     <div class="chat-body" id="cb"></div>
     <div class="chat-foot"><div id="sg"></div>
       <div class="inrow"><input class="field" id="ti" placeholder="Écris en ${esc(PACK.name.toLowerCase())}…" autocomplete="off" enterkeyhint="send">
@@ -962,14 +1173,14 @@ function openChat(key){
         <button class="round" id="mc" aria-label="Parler">${ICON.mic}</button></div>
       <div class="langs"><span class="muted" style="align-self:center">Je parle :</span>${PACK.srLang ? `<button data-l="${PACK.srLang}" class="on">${esc(PACK.short)}</button><button data-l="fr-FR">Français</button>` : '<button data-l="fr-FR" class="on">Français</button>'}</div>
       <div class="status" id="st"></div></div></div>`;
-  $('#cx').onclick = () => { chatRun++; stack = []; tab = 'chat'; home(); };
+  $('#cx').onclick = () => { chatRun++; stack = []; tab = mission ? 'learn' : 'chat'; home(); };
   $('#hf').onclick = () => { chatState.hands = !chatState.hands; $('#hf').classList.toggle('on', chatState.hands); if (chatState.hands && !chatState.busy && !chatState.listening) hear(run); };
   $('#send').onclick = () => { const v = $('#ti').value.trim(); if (v) { $('#ti').value = ''; turn(v, run); } };
   $('#ti').onkeydown = e => { if (e.key === 'Enter') $('#send').click(); };
   $('#mc').onclick = () => { if (!chatState.busy && !chatState.listening) hear(run); };
   root.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { chatState.lang = b.dataset.l; root.querySelectorAll('[data-l]').forEach(x => x.classList.toggle('on', x === b)); });
   drawChat();
-  speak(V(p.hello));
+  speak(V(first));
 }
 function setStatus(t){ chatState.status = t; const e = $('#st'); if (e) e.textContent = t; }
 function drawChat(){
@@ -1019,12 +1230,31 @@ async function turn(text, run){
   st.msgs.push({ role: 'ai', tn: r.tn, ar: r.ar, fr: r.fr, correction: r.correction || '', sugg: { tn: r.suggestion_tn, fr: r.suggestion_fr } });
   drawChat();
   await speak(V(r));
+  if (st.mission && !st.done) {
+    st.turns++;
+    const left = MISSION_TURNS - st.turns, mt = $('#mturns'); if (mt) mt.textContent = '· ' + Math.max(0, left) + ' réplique' + (left > 1 ? 's' : '') + ' restante' + (left > 1 ? 's' : '');
+    if (r.mission_status === 'reussie') return missionEnd(true, r.mission_feedback);
+    if (left <= 0) return missionEnd(false, r.mission_feedback);
+  }
   if (run === chatRun && st.hands) hear(run);
 }
 
+function missionEnd(win, feedbackText){
+  const st = chatState, ep = st.mission.ep;
+  st.done = true; st.hands = false;
+  if (win) { const first = !S.missions[ep.id]; S.missions[ep.id] = true; if (first) S.xp += 30; bumpStreak(); save(); }
+  const f = document.createElement('div');
+  f.className = 'feedback ' + (win ? 'good' : 'bad');
+  f.innerHTML = `<div class="in"><div class="head">${avatar(st.key, 44)}<div><h3>${win ? 'Mission réussie !' : 'Mission pas encore réussie'}</h3><p>${esc(feedbackText || (win ? 'Bravo, tout en tunisien !' : 'Tu y étais presque.'))}</p></div></div>
+    ${win && !S.missions['_shown_' + ep.id] ? '<p class="muted" style="margin:0 0 10px;font-size:14px">+30 jasmins</p>' : ''}
+    <div class="seg"><button class="btn btn-ghost" id="mre">${win ? 'Continuer à discuter' : 'Réessayer'}</button><button class="btn ${win ? 'btn-good' : 'btn-bad'}" id="mok">Retour au parcours</button></div></div>`;
+  document.body.appendChild(f);
+  f.querySelector('#mok').onclick = () => { f.remove(); chatRun++; stack = []; tab = 'learn'; home(); };
+  f.querySelector('#mre').onclick = () => { f.remove(); if (win) { st.mission = null; const b = document.querySelector('#mturns'); if (b) b.parentElement.remove(); } else startMission(ep); };
+}
 async function gemini(key, msgs){
-  const p = CHAT.personas[key];
-  const sys = fill(CHAT.rules + '\n\nTON PERSONNAGE : ' + p.prompt);
+  const p = personaOf(key), mis = chatState && chatState.mission;
+  const sys = fill(CHAT.rules + '\n\nTON PERSONNAGE : ' + p.prompt + (mis ? `\n\nMISSION DE L'ÉLÈVE : ${mis.goal}\nCRITÈRE DE RÉUSSITE : ${mis.win}\nReste dans ton personnage et ne lui donne pas la solution trop vite (un marchand négocie, une tata insiste). Remplis aussi :\n- mission_status : « reussie » dès que le critère est atteint, sinon « en_cours ».\n- mission_feedback : une phrase en français, drôle et encourageante, qui dit ce qui a été réussi ou ce qui manque encore.` : ''));
   const contents = [{ role: 'user', parts: [{ text: '(L’élève ouvre l’appli et arrive dans la conversation.)' }] }]
     .concat(msgs.filter(m => !m.err).slice(-16).map(m => m.role === 'me'
       ? { role: 'user', parts: [{ text: m.text }] }
@@ -1032,8 +1262,9 @@ async function gemini(key, msgs){
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: sys }] }, contents,
     generationConfig: { temperature: 0.9, maxOutputTokens: 2048, responseMimeType: 'application/json',
-      responseSchema: { type: 'OBJECT', properties: { tn: { type: 'STRING' }, ar: { type: 'STRING' }, fr: { type: 'STRING' }, correction: { type: 'STRING' }, suggestion_tn: { type: 'STRING' }, suggestion_fr: { type: 'STRING' } },
-        required: ['tn', 'ar', 'fr', 'correction', 'suggestion_tn', 'suggestion_fr'] } }
+      responseSchema: { type: 'OBJECT', properties: Object.assign({ tn: { type: 'STRING' }, ar: { type: 'STRING' }, fr: { type: 'STRING' }, correction: { type: 'STRING' }, suggestion_tn: { type: 'STRING' }, suggestion_fr: { type: 'STRING' } },
+          mis ? { mission_status: { type: 'STRING', enum: ['en_cours', 'reussie'] }, mission_feedback: { type: 'STRING' } } : {}),
+        required: ['tn', 'ar', 'fr', 'correction', 'suggestion_tn', 'suggestion_fr'].concat(mis ? ['mission_status', 'mission_feedback'] : []) } }
   });
   let last = 'autre';
   for (const model of CHAT.models) {
