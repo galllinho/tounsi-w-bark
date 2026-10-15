@@ -28,7 +28,7 @@ window.TWB_CONTENT = {
               { who: 'me', tn: 'Aslema Khalti! Chniya ahwelek?', ar: 'أسلامة خالتي! شنية أحوالك؟', fr: 'Salut tata ! Comment ça va ?' },
               { who: 'khalti', tn: 'Labes, el hamdoullah. Chnoua esmek? Nsitou!', ar: 'لاباس، الحمد لله. شنوة اسمك؟ نسيتو!', fr: 'Ça va, Dieu merci. C’est quoi ton prénom déjà ? Je l’ai oublié !', note: 'Elle ne l’a pas oublié. Elle teste ton tunisien.' },
               { who: 'me', tn: 'Esmi {prenom}, ya Khalti!', ar: 'اسمي {prenom}، يا خالتي!', fr: 'Je m’appelle {prenom}, tata !' },
-              { who: 'khalti', tn: 'Behi, behi. Yezzi mel francais, hna nahkiw tounsi!', ar: 'باهي، باهي. يزّي مالفرنساوي، هنا نحكيو تونسي!', fr: 'D’accord, d’accord. Fini le français, ici on parle tunisien !' },
+              { who: 'khalti', tn: 'Behi, behi. Yezzi mel fransé, houni nahkiw tounsi!', ar: 'باهي، باهي. يزّي مالفرانسي، هوني نحكيو تونسي!', fr: 'D’accord, d’accord. Fini le français, ici on parle tunisien !' },
               { who: 'me', tn: 'Aychek ya Khalti.', ar: 'عيشك يا خالتي.', fr: 'Merci tata.' }
             ],
             words: [
@@ -63,18 +63,18 @@ window.TWB_CONTENT = {
             pitch: 'Am Hédi, chauffeur de taxi, 30 ans de métier, 0 seconde de silence.',
             cast: ['hedi'],
             scene: [
-              { who: 'hedi', tn: 'Aslema! Win mechi?', ar: 'أسلامة! وين ماشي؟', fr: 'Salut ! Tu vas où ?' },
+              { who: 'hedi', tn: 'Aslema! Win {mechi}?', ar: 'أسلامة! وين {mechiAr}؟', fr: 'Salut ! Tu vas où ?' },
               { who: 'me', tn: 'Nheb nemchi lel Marsa.', ar: 'نحب نمشي للمرسى.', fr: 'Je veux aller à La Marsa.' },
-              { who: 'hedi', tn: 'Behi. Enti mel France? Bayen alik!', ar: 'باهي. إنتي مالفرانسا؟ باين عليك!', fr: 'D’accord. Tu viens de France ? Ça se voit !', note: 'Tu n’as rien dit. Il a deviné à tes baskets.' },
+              { who: 'hedi', tn: 'Behi. Enti men Fransa? Bayen alik!', ar: 'باهي. إنتي من فرنسا؟ باين عليك!', fr: 'D’accord. Tu viens de France ? Ça se voit !', note: 'Tu n’as rien dit. Il a deviné à tes baskets.' },
               { who: 'me', tn: 'Ahki bechwaya, ma fhemtech.', ar: 'احكي بشويّة، ما فهمتش.', fr: 'Parle doucement, je n’ai pas compris.' },
               { who: 'hedi', tn: 'Wselna!', ar: 'وصلنا!', fr: 'On est arrivés !', note: 'Il a accéléré au lieu de ralentir.' },
               { who: 'me', tn: 'Kaddech?', ar: 'قدّاش؟', fr: 'Combien ?' },
-              { who: 'hedi', tn: 'Ichrin dinar.', ar: 'عشرين دينار.', fr: 'Vingt dinars.' },
+              { who: 'hedi', tn: 'Aachrin dinar.', ar: 'عشرين دينار.', fr: 'Vingt dinars.' },
               { who: 'me', tn: 'Ghali barcha!', ar: 'غالي برشة!', fr: 'C’est très cher !' },
-              { who: 'hedi', tn: 'Enti touriste wala tounsi?', ar: 'إنتي توريست ولا تونسي؟', fr: 'T’es touriste ou tunisien ?' }
+              { who: 'hedi', tn: 'Enti touriste wala {tounsi}?', ar: 'إنتي توريست ولا {tounsiAr}؟', fr: 'T’es touriste ou tunisien{ne} ?' }
             ],
             words: [
-              { id: 'winmechi', tn: 'Win mechi?', ar: 'وين ماشي؟', fr: 'Tu vas où ?', ex: 'Win = où.' },
+              { id: 'winmechi', tn: 'Win {mechi}?', ar: 'وين {mechiAr}؟', fr: 'Tu vas où ?', ex: 'Win = où. Mechi à un garçon, mechya à une fille.' },
               { id: 'nheb', tn: 'Nheb nemchi l…', ar: 'نحب نمشي ل…', fr: 'Je veux aller à…', ex: 'Nheb nemchi lel Marsa.' },
               { id: 'bechwaya', tn: 'Ahki bechwaya', ar: 'احكي بشويّة', fr: 'Parle doucement', ex: 'Ton meilleur ami au bled.' },
               { id: 'fhemtech', tn: 'Ma fhemtech', ar: 'ما فهمتش', fr: 'Je n’ai pas compris', ex: 'Ton deuxième meilleur ami.' },
@@ -82,11 +82,11 @@ window.TWB_CONTENT = {
               { id: 'kaddech', tn: 'Kaddech?', ar: 'قدّاش؟', fr: 'Combien ?', ex: 'Kaddech el taxi?' },
               { id: 'ghali', tn: 'Ghali', ar: 'غالي', fr: 'Cher', ex: 'Ghali barcha = très cher.' },
               { id: 'barcha', tn: 'Barcha', ar: 'برشة', fr: 'Beaucoup, très', ex: 'Le mot le plus tunisien qui existe.' },
-              { id: 'wala', tn: 'Wala', ar: 'ولا', fr: 'Ou', ex: 'Touriste wala tounsi?' }
+              { id: 'wala', tn: 'Wala', ar: 'ولا', fr: 'Ou', ex: 'Touriste wala {tounsi}?' }
             ],
             exercises: [
               { type: 'meaning', word: 'winmechi' },
-              { type: 'reply', who: 'hedi', line: { tn: 'Win mechi?', ar: 'وين ماشي؟', fr: 'Tu vas où ?' },
+              { type: 'reply', who: 'hedi', line: { tn: 'Win {mechi}?', ar: 'وين {mechiAr}؟', fr: 'Tu vas où ?' },
                 options: [
                   { tn: 'Nheb nemchi lel Marsa.', fr: 'Je veux aller à La Marsa.', ok: true },
                   { tn: 'Esmi Hédi.', fr: 'Je m’appelle Hédi.', why: 'C’est LUI qui s’appelle Hédi. Il te demande où tu vas.' },
@@ -96,7 +96,7 @@ window.TWB_CONTENT = {
               { type: 'listen', word: 'barcha' },
               { type: 'order', tn: 'Nheb nemchi lel Marsa', fr: 'Je veux aller à La Marsa', tokens: ['Nheb', 'nemchi', 'lel', 'Marsa'] },
               { type: 'speak', tn: 'Ahki bechwaya', ar: 'احكي بشويّة', fr: 'Parle doucement' },
-              { type: 'reply', who: 'hedi', line: { tn: 'Ichrin dinar.', ar: 'عشرين دينار.', fr: 'Vingt dinars.' },
+              { type: 'reply', who: 'hedi', line: { tn: 'Aachrin dinar.', ar: 'عشرين دينار.', fr: 'Vingt dinars.' },
                 options: [
                   { tn: 'Ghali barcha!', fr: 'C’est très cher !', ok: true },
                   { tn: 'Aslema!', fr: 'Bonjour !', why: 'Dire bonjour en fin de course, c’est original. Mais tu dois toujours 20 dinars.' },
@@ -111,35 +111,35 @@ window.TWB_CONTENT = {
             cast: ['lamine'],
             scene: [
               { who: 'lamine', tn: 'Aslema! Chnoua theb?', ar: 'أسلامة! شنوة تحب؟', fr: 'Salut ! Qu’est-ce que tu veux ?' },
-              { who: 'me', tn: 'Aatini zouz khobzat, yaychek.', ar: 'اعطيني زوز خبزات، يعيشك.', fr: 'Donne-moi deux baguettes, s’il te plaît.' },
+              { who: 'me', tn: 'Aatini zouz khobzet, yaychek.', ar: 'اعطيني زوز خبزات، يعيشك.', fr: 'Donne-moi deux baguettes, s’il te plaît.' },
               { who: 'lamine', tn: 'Famma haja okhra?', ar: 'فمّا حاجة أخرى؟', fr: 'Il y a autre chose ?' },
               { who: 'me', tn: 'Famma lben?', ar: 'فمّا لبن؟', fr: 'Il y a du lben ?', note: 'Le lben : du lait fermenté. Khalti en boit à chaque repas.' },
               { who: 'lamine', tn: 'Ey, famma. Kaddech?', ar: 'إيه، فمّا. قدّاش؟', fr: 'Oui, il y en a. Combien ?' },
-              { who: 'me', tn: 'Thletha… la, arbaa!', ar: 'ثلاثة… لا، أربعة!', fr: 'Trois… non, quatre !' },
-              { who: 'lamine', tn: 'Mrigel. Khamsa dinar.', ar: 'مريڨل. خمسة دينار.', fr: 'Parfait. Cinq dinars.' }
+              { who: 'me', tn: 'Thletha… le, arbaa!', ar: 'ثلاثة… لا، أربعة!', fr: 'Trois… non, quatre !' },
+              { who: 'lamine', tn: 'Mrigel. Khamsa dinarat.', ar: 'مريڨل. خمسة دينارات.', fr: 'Parfait. Cinq dinars.' }
             ],
             words: [
-              { id: 'wahed', tn: 'Wahed', ar: 'واحد', fr: 'Un', ex: 'Wahed khobza = une baguette.' },
-              { id: 'zouz', tn: 'Zouz', ar: 'زوز', fr: 'Deux', ex: 'Zouz, pas « tnin » : ça, c’est en arabe classique.' },
-              { id: 'thletha', tn: 'Thletha', ar: 'ثلاثة', fr: 'Trois', ex: 'Thletha lben.' },
-              { id: 'arbaa', tn: 'Arbaa', ar: 'أربعة', fr: 'Quatre', ex: 'Thletha… la, arbaa!' },
-              { id: 'khamsa', tn: 'Khamsa', ar: 'خمسة', fr: 'Cinq', ex: 'Khamsa dinar.' },
-              { id: 'aachra', tn: 'Aachra', ar: 'عشرة', fr: 'Dix', ex: 'Aachra dinar.' },
-              { id: 'aatini', tn: 'Aatini', ar: 'اعطيني', fr: 'Donne-moi', ex: 'Aatini zouz khobzat.' },
-              { id: 'yaychek', tn: 'Yaychek', ar: 'يعيشك', fr: 'S’il te plaît', ex: 'À ne pas confondre avec aychek (merci).' },
+              { id: 'wahed', tn: 'Wahed', ar: 'واحد', fr: 'Un', ex: 'Khobza wahda = une baguette (wahed devient wahda au féminin).' },
+              { id: 'zouz', tn: 'Zouz', ar: 'زوز', fr: 'Deux', ex: 'Zouz khobzet = deux baguettes. On dit « thnin » seulement quand on compte à voix haute.' },
+              { id: 'thletha', tn: 'Thletha', ar: 'ثلاثة', fr: 'Trois', ex: 'Thletha khobzet.' },
+              { id: 'arbaa', tn: 'Arbaa', ar: 'أربعة', fr: 'Quatre', ex: 'Thletha… le, arbaa!' },
+              { id: 'khamsa', tn: 'Khamsa', ar: 'خمسة', fr: 'Cinq', ex: 'Khamsa dinarat (mais aachrin dinar : après 10, dinar reste au singulier).' },
+              { id: 'aachra', tn: 'Aachra', ar: 'عشرة', fr: 'Dix', ex: 'Aachra dinarat.' },
+              { id: 'aatini', tn: 'Aatini', ar: 'اعطيني', fr: 'Donne-moi', ex: 'Aatini zouz khobzet.' },
+              { id: 'yaychek', tn: 'Yaychek', ar: 'يعيشك', fr: 'S’il te plaît', ex: 'Sert aussi à dire merci, comme aychek.' },
               { id: 'famma', tn: 'Famma', ar: 'فمّا', fr: 'Il y a', ex: 'Famma lben?' },
-              { id: 'ey', tn: 'Ey / La', ar: 'إيه / لا', fr: 'Oui / Non', ex: 'Ey, famma.' },
+              { id: 'ey', tn: 'Ey / Le', ar: 'إيه / لا', fr: 'Oui / Non', ex: 'Ey, famma.' },
               { id: 'mrigel', tn: 'Mrigel', ar: 'مريڨل', fr: 'Parfait, nickel', ex: 'Tout est mrigel.' },
-              { id: 'yezzi', tn: 'Yezzi', ar: 'يزّي', fr: 'Ça suffit, stop', ex: 'Yezzi mel francais!' }
+              { id: 'yezzi', tn: 'Yezzi', ar: 'يزّي', fr: 'Ça suffit, stop', ex: 'Yezzi mel fransé! = Fini le français !' }
             ],
             exercises: [
               { type: 'meaning', word: 'zouz' },
               { type: 'reverse', word: 'khamsa' },
-              { type: 'order', tn: 'Aatini zouz khobzat yaychek', fr: 'Donne-moi deux baguettes, s’il te plaît', tokens: ['Aatini', 'zouz', 'khobzat', 'yaychek'] },
+              { type: 'order', tn: 'Aatini zouz khobzet yaychek', fr: 'Donne-moi deux baguettes, s’il te plaît', tokens: ['Aatini', 'zouz', 'khobzet', 'yaychek'] },
               { type: 'listen', word: 'famma' },
               { type: 'reply', who: 'lamine', line: { tn: 'Famma haja okhra?', ar: 'فمّا حاجة أخرى؟', fr: 'Il y a autre chose ?' },
                 options: [
-                  { tn: 'La, yezzi. Aychek.', fr: 'Non, ça suffit. Merci.', ok: true },
+                  { tn: 'Le, yezzi. Aychek.', fr: 'Non, ça suffit. Merci.', ok: true },
                   { tn: 'Twahachtek!', fr: 'Tu m’as manqué !', why: 'Si Lamine te connaît depuis 4 minutes. Il ne t’a pas manqué.' },
                   { tn: 'Win mechi?', fr: 'Tu vas où ?', why: 'Il ne va nulle part, c’est son magasin.' }
                 ] },
@@ -164,17 +164,17 @@ window.TWB_CONTENT = {
             pitch: 'Khalti a cuisiné pour 12. Vous êtes 3. Personne ne quittera la table avant d’avoir fini.',
             cast: ['khalti'],
             scene: [
-              { who: 'khalti', tn: 'Okood, kol! Aamaltlek kosksi.', ar: 'اقعد، كول! عملتلك كسكسي.', fr: 'Assieds-toi, mange ! Je t’ai fait un couscous.' },
+              { who: 'khalti', tn: 'Okaad, koul! Amaltlek kosksi.', ar: 'اقعد، كول! عملتلك كسكسي.', fr: 'Assieds-toi, mange ! Je t’ai fait un couscous.' },
               { who: 'me', tn: 'Yaatik essaha ya Khalti, bnin barcha!', ar: 'يعطيك الصحة يا خالتي، بنين برشة!', fr: 'Merci tata, c’est vraiment délicieux !' },
               { who: 'khalti', tn: 'Zid chwaya!', ar: 'زيد شويّة!', fr: 'Reprends-en un peu !' },
-              { who: 'me', tn: 'La, yezzi, chbaat.', ar: 'لا، يزّي، شبعت.', fr: 'Non, ça suffit, je n’ai plus faim.' },
+              { who: 'me', tn: 'Le, yezzi, chbaat.', ar: 'لا، يزّي، شبعت.', fr: 'Non, ça suffit, je n’ai plus faim.' },
               { who: 'khalti', tn: 'Chbaat? Ma klit chay! Zid!', ar: 'شبعت؟ ما كليت شي! زيد!', fr: 'Plus faim ? Tu n’as rien mangé ! Ressers-toi !', note: 'Tu as mangé deux assiettes. Pour Khalti, ça ne compte pas.' },
               { who: 'me', tn: 'Behi… chwaya barka.', ar: 'باهي… شويّة بركة.', fr: 'D’accord… juste un peu.' },
               { who: 'khalti', tn: 'Hakka nhebbek!', ar: 'هكّا نحبك!', fr: 'C’est comme ça que je t’aime !' }
             ],
             words: [
-              { id: 'okood', tn: 'Okood', ar: 'اقعد', fr: 'Assieds-toi', ex: 'Okood, kol!' },
-              { id: 'kol', tn: 'Kol', ar: 'كول', fr: 'Mange', ex: 'Le mot préféré de Khalti.' },
+              { id: 'okood', tn: 'Okaad', ar: 'اقعد', fr: 'Assieds-toi', ex: 'Okaad, koul!' },
+              { id: 'kol', tn: 'Koul', ar: 'كول', fr: 'Mange', ex: 'Le mot préféré de Khalti.' },
               { id: 'bnin', tn: 'Bnin', ar: 'بنين', fr: 'Délicieux', ex: 'Bnin barcha! = Trop bon !' },
               { id: 'yaatikessaha', tn: 'Yaatik essaha', ar: 'يعطيك الصحة', fr: 'Merci, bravo (pour le travail fait)', ex: 'À dire à celle qui a cuisiné.' },
               { id: 'zid', tn: 'Zid', ar: 'زيد', fr: 'Encore, ajoute', ex: 'Zid chwaya! = Reprends un peu !' },
@@ -188,14 +188,14 @@ window.TWB_CONTENT = {
               { type: 'meaning', word: 'kol' },
               { type: 'reply', who: 'khalti', line: { tn: 'Zid chwaya!', ar: 'زيد شويّة!', fr: 'Reprends-en un peu !' },
                 options: [
-                  { tn: 'La, yezzi, chbaat.', fr: 'Non, ça suffit, je n’ai plus faim.', ok: true },
+                  { tn: 'Le, yezzi, chbaat.', fr: 'Non, ça suffit, je n’ai plus faim.', ok: true },
                   { tn: 'Kaddech?', fr: 'Combien ?', why: 'Tu demandes le prix du couscous à ta tata. Elle est vexée pour trois générations.' },
                   { tn: 'Win mechi?', fr: 'Tu vas où ?', why: 'Elle ne va nulle part : elle reste là jusqu’à ce que tu finisses ton assiette.' }
                 ] },
               { type: 'reverse', word: 'bnin' },
               { type: 'listen', word: 'chwaya' },
               { type: 'order', tn: 'Yaatik essaha ya Khalti bnin barcha', fr: 'Merci tata, c’est vraiment délicieux', tokens: ['Yaatik', 'essaha', 'ya', 'Khalti', 'bnin', 'barcha'] },
-              { type: 'speak', tn: 'La, yezzi, chbaat', ar: 'لا، يزّي، شبعت', fr: 'Non, ça suffit, je n’ai plus faim' },
+              { type: 'speak', tn: 'Le, yezzi, chbaat', ar: 'لا، يزّي، شبعت', fr: 'Non, ça suffit, je n’ai plus faim' },
               { type: 'meaning', word: 'nhebbek' }
             ]
           },
@@ -207,28 +207,28 @@ window.TWB_CONTENT = {
             scene: [
               { who: 'skander', tn: 'Ahla {cousin}! Waktech jit?', ar: 'أهلا {cousinAr}! وقتاش جيت؟', fr: 'Salut {cousin} ! Tu es arrivé{e} quand ?' },
               { who: 'me', tn: 'Jit lbereh.', ar: 'جيت البارح.', fr: 'Je suis arrivé{e} hier.' },
-              { who: 'skander', tn: 'Kaddech bech tokood?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?' },
+              { who: 'skander', tn: 'Kaddech bech tokaad?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?' },
               { who: 'me', tn: 'Jemaatin.', ar: 'جمعتين.', fr: 'Deux semaines.' },
-              { who: 'skander', tn: 'Tekhdem wala takra?', ar: 'تخدم ولا تقرا؟', fr: 'Tu travailles ou tu étudies ?' },
+              { who: 'skander', tn: 'Tekhdem wala tekra?', ar: 'تخدم ولا تقرا؟', fr: 'Tu travailles ou tu étudies ?' },
               { who: 'me', tn: 'Nekhdem.', ar: 'نخدم.', fr: 'Je travaille.' },
-              { who: 'skander', tn: 'Behi. Ama mazelt ma tzawajtech?', ar: 'باهي. أما مازلت ما تزوجتش؟', fr: 'D’accord. Et toujours pas marié{e} ?', note: 'La question qui tombe à chaque été, depuis tes 18 ans.' },
+              { who: 'skander', tn: 'Behi. W mazelt ma tzawejtech?', ar: 'باهي. ومازلت ما تزوجتش؟', fr: 'D’accord. Et toujours pas marié{e} ?', note: 'La question qui tombe à chaque été, depuis tes 18 ans.' },
               { who: 'me', tn: 'Ya Skander, yezzi!', ar: 'يا سكندر، يزّي!', fr: 'Skander, arrête !' },
-              { who: 'skander', tn: 'Khalti hiya elli kalitli nsaalek!', ar: 'خالتي هي اللي قالتلي نسألك!', fr: 'C’est Khalti qui m’a dit de te demander !' }
+              { who: 'skander', tn: 'Khalti hiya elli kaletli nesalek!', ar: 'خالتي هي اللي قالتلي نسألك!', fr: 'C’est Khalti qui m’a dit de te demander !' }
             ],
             words: [
               { id: 'waktech', tn: 'Waktech?', ar: 'وقتاش؟', fr: 'Quand ?', ex: 'Waktech jit? = Tu es arrivé{e} quand ?' },
               { id: 'jit', tn: 'Jit', ar: 'جيت', fr: 'Je suis venu(e), arrivé(e)', ex: 'Jit lbereh.' },
               { id: 'lbereh', tn: 'Lbereh', ar: 'البارح', fr: 'Hier', ex: 'Jit lbereh.' },
-              { id: 'tokood', tn: 'Kaddech bech tokood?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?', ex: 'Bech = va (futur).' },
+              { id: 'tokood', tn: 'Kaddech bech tokaad?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?', ex: 'Bech = va (futur).' },
               { id: 'jemaa', tn: 'Jemaa', ar: 'جمعة', fr: 'Semaine', ex: 'Jemaatin = deux semaines.' },
               { id: 'nekhdem', tn: 'Nekhdem', ar: 'نخدم', fr: 'Je travaille', ex: 'Tekhdem? = tu travailles ?' },
-              { id: 'nakra', tn: 'Nakra', ar: 'نقرا', fr: 'J’étudie', ex: 'Takra? = tu étudies ?' },
+              { id: 'nakra', tn: 'Nekra', ar: 'نقرا', fr: 'J’étudie', ex: 'Tekra? = tu étudies ?' },
               { id: 'mazelt', tn: 'Mazelt', ar: 'مازلت', fr: 'Encore, toujours pas', ex: 'Mazelt ma klit = je n’ai pas encore mangé.' },
-              { id: 'tzawajt', tn: 'Tzawajt', ar: 'تزوجت', fr: 'Tu t’es marié(e)', ex: 'La question préférée des tatas.' }
+              { id: 'tzawajt', tn: 'Tzawejt', ar: 'تزوجت', fr: 'Tu t’es marié(e)', ex: 'La question préférée des tatas.' }
             ],
             exercises: [
               { type: 'meaning', word: 'waktech' },
-              { type: 'reply', who: 'skander', line: { tn: 'Kaddech bech tokood?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?' },
+              { type: 'reply', who: 'skander', line: { tn: 'Kaddech bech tokaad?', ar: 'قدّاش باش تقعد؟', fr: 'Tu restes combien de temps ?' },
                 options: [
                   { tn: 'Jemaatin.', fr: 'Deux semaines.', ok: true },
                   { tn: 'Bnin barcha!', fr: 'C’est délicieux !', why: 'Skander ne t’a rien fait goûter. Il voulait savoir combien de temps tu restes.' },
@@ -238,11 +238,11 @@ window.TWB_CONTENT = {
               { type: 'listen', word: 'nekhdem' },
               { type: 'order', tn: 'Waktech jit', fr: 'Tu es arrivé{e} quand ?', tokens: ['Waktech', 'jit'] },
               { type: 'speak', tn: 'Ya Skander, yezzi!', ar: 'يا سكندر، يزّي!', fr: 'Skander, arrête !' },
-              { type: 'reply', who: 'skander', line: { tn: 'Ama mazelt ma tzawajtech?', ar: 'أما مازلت ما تزوجتش؟', fr: 'Et toujours pas marié{e} ?' },
+              { type: 'reply', who: 'skander', line: { tn: 'W mazelt ma tzawejtech?', ar: 'ومازلت ما تزوجتش؟', fr: 'Et toujours pas marié{e} ?' },
                 options: [
                   { tn: 'Ya Skander, yezzi!', fr: 'Skander, arrête !', ok: true },
                   { tn: 'Ey, jemaatin.', fr: 'Oui, deux semaines.', why: 'Marié depuis deux semaines ? Toute la famille va débarquer avec des cadeaux.' },
-                  { tn: 'Aatini zouz khobzat.', fr: 'Donne-moi deux baguettes.', why: 'Belle tentative pour changer de sujet. Ça ne marchera pas.' }
+                  { tn: 'Aatini zouz khobzet.', fr: 'Donne-moi deux baguettes.', why: 'Belle tentative pour changer de sujet. Ça ne marchera pas.' }
                 ] }
             ]
           },
@@ -325,6 +325,7 @@ RÈGLES ABSOLUES :
 - Tu parles UNIQUEMENT le darija tunisien du quotidien. Jamais d'arabe standard, jamais de darija marocain ou algérien, jamais de français dans ta réplique.
 - Réplique très courte : 1 ou 2 phrases simples, 20 mots maximum. Termine presque toujours par une question simple pour relancer.
 - Humour tendre et taquin, comme dans une famille. Jamais vulgaire, jamais méchant, jamais de moquerie sur une région, un pays ou la religion.
+- Grammaire tunisienne : « enti » sert pour un garçon comme pour une fille, mais accorde les participes et adjectifs au genre de l'élève (mechi/mechya, jay/jaya, tounsi/tounsiya, taal/taali). Utilise le vocabulaire de Tunis : houni (ici), barcha, famma, chnoua, kaddech, tawa, zeda, behi, le (non), ey (oui).
 - Les messages de l'élève viennent souvent d'une reconnaissance vocale en écriture arabe, avec des erreurs : devine ce qu'il a voulu dire. S'il écrit en français, réponds quand même en tunisien et encourage-le à essayer en tunisien.
 CHAMPS À REMPLIR :
 - tn : ta réplique en tunisien, écrite en lettres latines comme la diaspora sur WhatsApp, SANS chiffres (écris « aa » pour ع, « h » pour ح, « kh », « gh », « ch »).
@@ -335,12 +336,12 @@ CHAMPS À REMPLIR :
   personas: {
     khalti: {
       prompt: "Tu es Khalti, la tata de l'élève : chaleureuse, commère, un peu dramatique, tu veux toujours le faire manger et tu le compares à ses cousins. Tu l'appelles « ya {petit} ».",
-      hello: { tn: 'Aslema ya {petit}! Taal, ahkili, chniya ahwelek?', ar: 'أسلامة يا {petitAr}! تعال، احكيلي، شنية أحوالك؟', fr: 'Coucou {petitFr} ! Viens, raconte-moi, comment ça va ?' },
+      hello: { tn: 'Aslema ya {petit}! {taal}, ahkili, chniya ahwelek?', ar: 'أسلامة يا {petitAr}! {taalAr}، احكيلي، شنية أحوالك؟', fr: 'Coucou {petitFr} ! Viens, raconte-moi, comment ça va ?' },
       topics: ['Raconte ta journée', 'Le repas de ce soir', 'Les cousins', 'Le mariage cet été']
     },
     hedi: {
       prompt: "Tu es Am Hédi, chauffeur de taxi à Tunis depuis 30 ans : bavard, curieux, tu poses des questions personnelles, tu parles du prix de la course, des embouteillages et de ton fils qui vit à Marseille.",
-      hello: { tn: 'Aslema! Win mechi lyoum?', ar: 'أسلامة! وين ماشي اليوم؟', fr: 'Salut ! Tu vas où aujourd’hui ?' },
+      hello: { tn: 'Aslema! Win {mechi} lyoum?', ar: 'أسلامة! وين {mechiAr} اليوم؟', fr: 'Salut ! Tu vas où aujourd’hui ?' },
       topics: ['Donner une adresse', 'Négocier le prix', 'Parler de la France']
     },
     lamine: {

@@ -234,7 +234,10 @@ function fill(s){
   return String(s).replace(/\{petitAr\}/g, petitAr).replace(/\{petit\}/g, petit).replace(/\{prenom\}/g, S.name || 'Nour')
     .replace(/\{mmi\}/g, f ? 'a yelli' : 'a mmi').replace(/\{k\}/g, f ? 'm' : 'k').replace(/\{e\}/g, f ? 'e' : '')
     .replace(/\{jayAr\}/g, f ? 'جاية' : 'جاي').replace(/\{jay\}/g, f ? 'jaya' : 'jay')
-    .replace(/\{petitFr\}/g, f ? 'ma petite' : 'mon petit').replace(/\{cousinAr\}/g, f ? 'كوزينة' : 'كوزان').replace(/\{cousin\}/g, f ? 'cousine' : 'cousin').replace(/\{genre\}/g, f ? 'une fille' : 'un garçon');
+    .replace(/\{petitFr\}/g, f ? 'ma petite' : 'mon petit')
+    .replace(/\{mechiAr\}/g, f ? 'ماشية' : 'ماشي').replace(/\{mechi\}/g, f ? 'mechya' : 'mechi')
+    .replace(/\{tounsiAr\}/g, f ? 'تونسية' : 'تونسي').replace(/\{tounsi\}/g, f ? 'tounsiya' : 'tounsi')
+    .replace(/\{taalAr\}/g, f ? 'تعالي' : 'تعال').replace(/\{taal\}/g, f ? 'Taali' : 'Taal').replace(/\{ne\}/g, f ? 'ne' : '').replace(/\{cousinAr\}/g, f ? 'كوزينة' : 'كوزان').replace(/\{cousin\}/g, f ? 'cousine' : 'cousin').replace(/\{genre\}/g, f ? 'une fille' : 'un garçon');
 }
 function toast(msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 
@@ -784,7 +787,7 @@ function runExercises(list, ctx){
     if (q.type === 'meaning' || q.type === 'reverse' || q.type === 'listen') {
       let prompt;
       if (q.type === 'meaning') prompt = `<div class="q">Ça veut dire quoi ?</div><div class="big">${esc(fill(q.w.tn))}</div>${arDiv(q.w)}${sayBtn(V(q.w))}`;
-      if (q.type === 'reverse') prompt = `<div class="q">Comment on dit en tunisien ?</div><div class="big">${esc(q.w.fr)}</div>`;
+      if (q.type === 'reverse') prompt = `<div class="q">Comment on dit en tunisien ?</div><div class="big">${esc(fill(q.w.fr))}</div>`;
       const hv = hasVoice(V(q.w));
       if (q.type === 'listen') prompt = hv
         ? `<div class="q">Écoute et choisis la traduction</div><div class="center" style="margin:16px 0">${sayBtn(V(q.w), 'Réécouter')}</div><button class="btn btn-ghost" id="peek" style="min-height:0;padding:8px 12px;font-size:14px">Je n’ai pas de son : afficher le mot</button><div class="big" id="peekw" hidden>${esc(fill(q.w.tn))}</div>`
@@ -816,13 +819,13 @@ function runExercises(list, ctx){
         root.querySelectorAll('#built .tok').forEach(b => b.onclick = () => { built.splice(+b.dataset.k, 1); draw(); });
         $('#check').disabled = built.length !== q.pool.length;
       };
-      lessonFrame(progress(), `<div class="q">Remets la phrase dans l’ordre</div><div class="big" style="font-size:22px">${esc(q.x.fr)}</div>
+      lessonFrame(progress(), `<div class="q">Remets la phrase dans l’ordre</div><div class="big" style="font-size:22px">${esc(fill(q.x.fr))}</div>
         <div class="tokens" id="built"></div><div class="pool">${q.pool.map((t, i) => `<button class="tok" data-t="${i}">${esc(t)}</button>`).join('')}</div>`, check);
       root.querySelectorAll('.pool .tok').forEach(b => b.onclick = () => { const t = +b.dataset.t; if (!built.includes(t)) { built.push(t); draw(); } });
       draw();
       $('#check').onclick = () => {
         const said = built.map(i => q.pool[i]).join(' ');
-        answered(x, normLat(said) === normLat(q.answer), { answer: q.answer, sub: q.x.fr, ar: null });
+        answered(x, normLat(said) === normLat(q.answer), { answer: q.answer, sub: fill(q.x.fr), ar: null });
       };
     }
     if (q.type === 'speak') {
