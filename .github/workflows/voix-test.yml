@@ -1,0 +1,38 @@
+name: Voix tunisienne (test)
+on:
+  workflow_dispatch:
+    inputs:
+      phrases:
+        description: Fichier de phrases
+        default: tools/tts/test-phrases.json
+permissions: { contents: write }
+jobs:
+  voix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Installer SILMA TTS (sans les outils d'arabe standard)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "numpy<=1.26.4" cached_path ema_pytorch hydra-core omegaconf librosa pydub safetensors soundfile tqdm transformers vocos "x_transformers>=1.31.14" torchdiffeq unidecode matplotlib huggingface_hub
+          pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
+      - name: Générer les voix
+        run: python tools/tts/generate.py "${{ inputs.phrases }}" voix
+      - name: Convertir en mp3
+        run: |
+          cd voix && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 64k "${f%.wav}.mp3"; done && ls -la
+      - uses: actions/upload-artifact@v4
+        with: { name: voix-test, path: voix/*.mp3 }
+      - name: Publier pour écoute
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: voix-test-${{ github.run_number }}
+          name: Test de la voix tunisienne (${{ github.run_number }})
+          prerelease: true
+          make_latest: false
+          body: "Écoute les fichiers ci-dessous. Voix générée par SILMA TTS Derja (Ghazouaniwala/silma-tts-derja), entraînée sur le corpus LinTO de Linagora (CC BY 4.0)."
+          files: voix/*.mp3

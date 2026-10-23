@@ -1,0 +1,52 @@
+[
+ {
+  "key": "test01",
+  "tn": "Aslema ya wlidi! Wallah twahachtek!",
+  "text": "أسلامة يا وليدي! والله توحشتك!"
+ },
+ {
+  "key": "test02",
+  "tn": "Labes, el hamdoullah. Chnoua esmek? Nsitou!",
+  "text": "لاباس، الحمد لله. شنوة اسمك؟ نسيتو!"
+ },
+ {
+  "key": "test03",
+  "tn": "Nheb nemchi lel Marsa.",
+  "text": "نحب نمشي للمرسى."
+ },
+ {
+  "key": "test04",
+  "tn": "Ghali barcha!",
+  "text": "غالي برشة!"
+ },
+ {
+  "key": "test05",
+  "tn": "Aatini zouz khobzet, brabbi.",
+  "text": "اعطيني زوز خبزات، بربّي."
+ },
+ {
+  "key": "test06",
+  "tn": "Okaad, koul! Amaltlek kosksi.",
+  "text": "اقعد، كول! عملتلك كسكسي."
+ },
+ {
+  "key": "test07",
+  "tn": "Ma fammech sarf? Behi, nrajjaalek arbaa dinarat w thmenmya.",
+  "text": "ما فمّاش صرف؟ باهي، نرجعلك أربعة دينارات وثمنمية."
+ },
+ {
+  "key": "test08",
+  "tn": "Mabrouk! Waktech el aars?",
+  "text": "مبروك! وقتاش العرس؟"
+ },
+ {
+  "key": "test09",
+  "tn": "Ochrob el ma, w ma tokhrojch fel chams!",
+  "text": "اشرب الماء، وما تخرجش في الشمس!"
+ },
+ {
+  "key": "test10",
+  "tn": "Tawa tahki tounsi kima ena. Ena fakhoura bik!",
+  "text": "توّا تحكي تونسي كيما أنا. أنا فخورة بيك!"
+ }
+]
