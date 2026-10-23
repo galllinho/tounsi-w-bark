@@ -42,6 +42,14 @@ Règles et vocabulaire vérifiés contre les sources ci-dessous. Tout texte tuni
 
 aslema (bonjour), bislema (au revoir), ahla (salut), labes (ça va), el hamdoullah, chnoua esmek / esmi, netcharfou (enchanté), yaychek / aychek (merci), le yaychek (non merci), brabbi (s'il te plaît), samahni (pardon), sbeh el khir (bonjour le matin), msa el khir (bonsoir), ey / le, chwaya, barcha, bnin / bnina (délicieux), ghali (cher), rkhis (pas cher), bkaddech (c'est combien), aatini (donne-moi), kahwa (café), tey (thé), ma (eau), khobz / khobza (pain), makla (nourriture), el hsab (l'addition), lyouma (aujourd'hui), ghodwa (demain), lbareh (hier), tawa (maintenant), aachiya (après-midi, soir), ymin (droite), ysar (gauche), toul (tout droit), houni (ici), baid (loin), dar (maison), souk, hanout, khouya (mon frère), behi (bien, d'accord), mrigel (nickel), yezzi (ça suffit), famma (il y a), harr (piquant).
 
+## Lire et écrire (alphabet arabe pour le tunisien)
+
+- L'arabe se lit de droite à gauche ; la plupart des lettres changent de forme selon leur place (seule, début, milieu, fin).
+- Six lettres ne s'attachent jamais à la suivante : ا د ذ ر ز و (et ة, qui n'existe qu'en fin de mot).
+- Lettres spécifiques ou prononciations tunisiennes : ڨ = g (mrigel) ; ض et ظ se prononcent pareil (dh lourd) ; ث = th, ذ = dh.
+- Écriture SMS : 2 = ء, 3 = ع, 5 = خ, 7 = ح, 8 = غ, 9 = ق.
+- Voyelles courtes (souvent non écrites) : َ a, ِ i, ُ ou ; ّ (chadda) double la lettre ; article ال (el).
+
 ## Vérification
 
 Chaque ligne du contenu passe deux contrôles : (1) un script compare l'écriture latine et l'écriture arabe consonne par consonne ; (2) une relecture ligne par ligne contre les règles ci-dessus. Les points encore incertains sont listés pour la relecture d'un natif.

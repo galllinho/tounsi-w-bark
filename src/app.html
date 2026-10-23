@@ -176,6 +176,7 @@ h1,h2,h3{margin:0;font-family:Georgia,"Times New Roman",serif;font-weight:700;le
 
 <script src="content.js"></script>
 <script src="content-tn-more.js"></script>
+<script src="content-script.js"></script>
 <script src="content-kab.js"></script>
 <script>
 /* =========================================================
@@ -505,7 +506,14 @@ function home(){
   const review = nL >= 4 ? `<button class="card step" id="rev" style="margin-bottom:14px;border-top:0">
       <span class="dot ${rDone ? 'done' : 'open'}">${rDone ? '✓' : '?'}</span>
       <span style="flex:1"><b>${esc(MN())} t’interroge</b><small>${rDone ? 'Fait aujourd’hui. Tu peux recommencer.' : '8 questions sur les mots que tu oublies · +15 jasmins'}</small></span></button>` : '';
-  shell(`<div class="say">${avatar(PACK.mascot, 52)}<div class="bubble">${esc(mascotMsg())}</div></div>
+  const tsw = S.lang === 'tn' ? `<div class="filters" style="margin-bottom:14px"><button data-tr="speak" class="${track === 'speak' ? 'on' : ''}">Parler</button><button data-tr="script" class="${track === 'script' ? 'on' : ''}">Lire et écrire</button></div>` : '';
+  if (S.lang === 'tn' && track === 'script') {
+    shell(tsw + scriptHome());
+    root.querySelectorAll('[data-tr]').forEach(b => b.onclick = () => { track = b.dataset.tr; home(); });
+    bindScriptHome();
+    return;
+  }
+  shell(tsw + `<div class="say">${avatar(PACK.mascot, 52)}<div class="bubble">${esc(mascotMsg())}</div></div>
     ${PACK.draft ? '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Version brouillon.</b> Les textes kabyles sont en cours de relecture par une locutrice native, et les voix arrivent avec le Studio famille.</div>' : ''}
     ${review}${shown.map(levelCard).join('')}
     ${doneLv.length ? `<div class="sec">Niveaux réussis</div>${doneLv.map(levelCard).join('')}` : ''}
@@ -517,6 +525,7 @@ function home(){
   });
   root.querySelectorAll('[data-boss]').forEach(b => b.onclick = () => { const l = lv.find(x => x.id === b.dataset.boss); bossOpen(l) ? startBoss(l) : toast('Termine les épisodes du niveau pour affronter ' + MN() + '.'); });
   const r = $('#rev'); if (r) r.onclick = startReview;
+  root.querySelectorAll('[data-tr]').forEach(b => b.onclick = () => { track = b.dataset.tr; home(); });
   root.querySelectorAll('[data-gram]').forEach(b => b.onclick = () => { const l = lv.find(x => x.id === b.dataset.gram); if (!S.done[l.episodes[0].id]) return toast('Termine d’abord l’épisode 1 du niveau.'); grammarLesson(l, 0); });
 }
 
@@ -903,9 +912,10 @@ function runExercises(list, ctx){
     feedback(ok, info, next);
   };
   const progress = () => 0.4 + 0.6 * doneCount / total;
-  const finish = () => ctx.boss ? bossResult(ctx.level, firstTry, total, hontes) : ctx.review ? reviewResult(firstTry, total, hontes) : ctx.grammar ? grammarResult(ctx.grammar, firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
+  const finish = () => ctx.boss ? bossResult(ctx.level, firstTry, total, hontes) : ctx.review ? reviewResult(firstTry, total, hontes) : ctx.grammar ? grammarResult(ctx.grammar, firstTry, total, hontes) : ctx.script ? scriptResult(ctx.script, firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
 
   function show(x, q){
+    if (x.type && x.type[0] === 'l' && x.type !== 'listen') return showScript(x);
     const check = `<button class="btn btn-primary btn-block" id="check" disabled>Vérifier</button>`;
     if (q.type === 'meaning' || q.type === 'reverse' || q.type === 'listen') {
       let prompt;
@@ -1029,6 +1039,83 @@ function runExercises(list, ctx){
       };
     }
   }
+  function showScript(x){
+    const q = buildScriptQ(x), check = `<button class="btn btn-primary btn-block" id="check" disabled>Vérifier</button>`;
+    const AR = 'font-family:\'Noto Naskh Arabic\',\'Amiri\',serif;';
+    const optsHTML = (big) => `<div style="margin-top:16px;${big ? 'display:grid;grid-template-columns:1fr 1fr;gap:10px' : ''}">${q.opts.map((o, i) => `<button class="opt" data-i="${i}" style="${big ? AR + 'font-size:36px;text-align:center;margin:0' : ''}">${esc(o.label)}${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('')}</div>`;
+    const L = SC.letters[x.k] || {};
+    const done = (ok, sub, sayIt) => answered(x, ok, { answer: q.answer, sub, ar: null });
+    if (x.type === 'lsound' || x.type === 'lfind' || x.type === 'lform' || x.type === 'lvowel') {
+      const head = x.type === 'lsound' ? `<div class="q">Quel son fait cette lettre ?</div><div style="${AR}font-size:96px;text-align:center;line-height:1.3;color:var(--blue)">${L.ch}</div>`
+        : x.type === 'lfind' ? `<div class="q">Quelle lettre fait le son…</div><div class="big">${esc(L.lat)}</div><div class="muted" style="font-size:14px">${esc(L.sound)}</div>`
+        : x.type === 'lform' ? `<div class="q">Cette forme, c’est quelle lettre ?</div><div style="${AR}font-size:88px;text-align:center;line-height:1.3;color:var(--blue)">${esc(q.shown)}</div><p class="center muted" style="font-size:13px;margin:0">Forme ${['', 'du début', 'du milieu', 'de la fin'][x.pos]} de mot</p>`
+        : `<div class="q">Comment se lit cette syllabe ?</div><div style="${AR}font-size:96px;text-align:center;line-height:1.4;color:var(--blue)">${esc(x.v[0])}</div>`;
+      lessonFrame(progress(), head + optsHTML(x.type === 'lfind' || x.type === 'lform'), check);
+      choose(q.opts, i => { markOpts(q.opts); done(q.opts[i].ok, x.k ? L.name + ' · ' + L.lat + ' — ' + L.sound : ''); });
+      return;
+    }
+    if (x.type === 'lread' || x.type === 'lphrase') {
+      const t = x.type === 'lread' ? x.w[0] : x.p.ar;
+      lessonFrame(progress(), `<div class="q">${x.type === 'lread' ? 'Lis ce mot' : 'Lis cette phrase'}</div><div style="${AR}font-size:${x.type === 'lread' ? 64 : 34}px;text-align:center;line-height:1.6;direction:rtl">${esc(fill(t))}</div>${hasVoice(t) ? `<div class="center">${sayBtn(t, 'Écouter')}</div>` : ''}` + optsHTML(false), check);
+      choose(q.opts, i => { markOpts(q.opts); done(q.opts[i].ok, ''); });
+      return;
+    }
+    if (x.type === 'lbuild') {
+      const target = [...x.w[0]];
+      const extra = shuffle(x.pool.map(k => SC.letters[k].ch).filter(c => !target.includes(c))).slice(0, 2);
+      const tiles = shuffle(target.concat(extra));
+      let built = [];
+      const draw = () => {
+        $('#bw').textContent = built.map(i => tiles[i]).join('') || ' ';
+        root.querySelectorAll('[data-lt]').forEach(b => b.classList.toggle('used', built.includes(+b.dataset.lt)));
+        $('#check').disabled = !built.length;
+      };
+      lessonFrame(progress(), `<div class="q">Écris ce mot en arabe</div><div class="big">${esc(x.w[1])}</div><div class="muted">${esc(x.w[2])}</div>
+        <div id="bw" style="${AR}font-size:54px;text-align:center;direction:rtl;min-height:90px;border-bottom:2px solid var(--line);margin:12px 0 14px"></div>
+        <div class="pool" style="direction:rtl">${tiles.map((c, i) => `<button class="tok" data-lt="${i}" style="${AR}font-size:30px;min-width:54px">${c}</button>`).join('')}</div>
+        <div class="center" style="margin-top:12px"><button class="btn btn-ghost" id="undo" style="min-height:0;padding:8px 14px">Effacer la dernière lettre</button></div>
+        <p class="muted center" style="font-size:13px">Touche les lettres de droite à gauche : elles s’attachent toutes seules.</p>`, check);
+      root.querySelectorAll('[data-lt]').forEach(b => b.onclick = () => { const i = +b.dataset.lt; if (!built.includes(i)) { built.push(i); draw(); } });
+      $('#undo').onclick = () => { built.pop(); draw(); };
+      draw();
+      $('#check').onclick = () => done(built.map(i => tiles[i]).join('') === x.w[0], x.w[0] + ' = ' + x.w[1] + ' (' + x.w[2] + ')');
+      return;
+    }
+    if (x.type === 'ltrace') {
+      lessonFrame(progress(), `<div class="q">Trace la lettre ${esc(L.name)} (${esc(L.lat)}) avec ton doigt</div>
+        <canvas id="cv" width="560" height="560" style="width:100%;max-width:320px;aspect-ratio:1;display:block;margin:10px auto;background:#fff;border:2px dashed var(--line);border-radius:18px;touch-action:none"></canvas>
+        <div class="center"><button class="btn btn-ghost" id="clr" style="min-height:0;padding:8px 14px">Recommencer</button></div>
+        <p class="muted center" style="font-size:13px">Suis la lettre grise. Les points, tu peux les ajouter à la fin.</p>`, check);
+      const cv = $('#cv'), g = cv.getContext('2d');
+      const font = '360px "Noto Naskh Arabic", "Amiri", serif';
+      const guide = () => { g.clearRect(0, 0, 560, 560); g.fillStyle = '#e4ddd0'; g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(L.ch, 280, 300); };
+      guide();
+      const tgt = document.createElement('canvas'); tgt.width = tgt.height = 140; const tg = tgt.getContext('2d');
+      tg.fillStyle = '#000'; tg.font = font.replace('360px', '90px'); tg.textAlign = 'center'; tg.textBaseline = 'middle'; tg.fillText(L.ch, 70, 75);
+      const T = tg.getImageData(0, 0, 140, 140).data;
+      let drawing = false, strokes = 0;
+      const pos = e => { const r = cv.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [(t.clientX - r.left) * 560 / r.width, (t.clientY - r.top) * 560 / r.height]; };
+      const start = e => { e.preventDefault(); drawing = true; const [px, py] = pos(e); g.beginPath(); g.moveTo(px, py); g.lineTo(px + .1, py); g.strokeStyle = '#1d5aa6'; g.lineWidth = 34; g.lineCap = g.lineJoin = 'round'; g.stroke(); strokes++; $('#check').disabled = false; };
+      const move = e => { if (!drawing) return; e.preventDefault(); const [px, py] = pos(e); g.lineTo(px, py); g.stroke(); };
+      const end = () => { drawing = false; };
+      cv.addEventListener('pointerdown', start); cv.addEventListener('pointermove', move); window.addEventListener('pointerup', end);
+      $('#clr').onclick = () => { guide(); strokes = 0; $('#check').disabled = true; };
+      $('#check').onclick = () => {
+        const U = g.getImageData(0, 0, 560, 560).data;
+        let tIn = 0, tCov = 0, uIn = 0, uTot = 0;
+        const blue = (x4, y4) => { let hit = false; for (let dy = 0; dy < 4 && !hit; dy++) for (let dx = 0; dx < 4 && !hit; dx++) { const i = ((y4 * 4 + dy) * 560 + (x4 * 4 + dx)) * 4; if (U[i + 2] > 120 && U[i] < 100) hit = true; } return hit; };
+        const near = (x, y) => { for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < 140 && yy < 140 && T[(yy * 140 + xx) * 4 + 3] > 100) return true; } return false; };
+        for (let y = 0; y < 140; y++) for (let x2 = 0; x2 < 140; x2++) {
+          const isT = T[(y * 140 + x2) * 4 + 3] > 100, isU = blue(x2, y);
+          if (isT) { tIn++; if (isU) tCov++; }
+          if (isU) { uTot++; if (near(x2, y)) uIn++; }
+        }
+        const recall = tIn ? tCov / tIn : 0, precision = uTot ? uIn / uTot : 0;
+        done(recall >= 0.45 && precision >= 0.65, recall >= 0.45 && precision >= 0.65 ? 'Belle lettre !' : 'Essaie de rester sur la lettre grise et de la recouvrir en entier.');
+      };
+      return;
+    }
+  }
   function choose(opts, onCheck){
     let sel = -1;
     root.querySelectorAll('.opt[data-i]').forEach(b => b.onclick = () => {
@@ -1103,6 +1190,117 @@ function bossResult(level, score, total, hontes){
     `<button class="btn btn-primary btn-block" id="next">${pass ? 'Retour au parcours' : 'Réessayer plus tard'}</button>`);
   screen = 'result';
   $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
+}
+
+// ---------- Lire et écrire : l'alphabet du tunisien ----------
+const SC = window.TWB_SCRIPT;
+const LKEYS = Object.keys(SC.letters);
+const CH2KEY = Object.fromEntries(LKEYS.map(k => [SC.letters[k].ch, k]));
+const HARAKAT = /[ً-ْٰ]/g; // petites voyelles, chadda, soukoun
+const bare = t => String(t).replace(HARAKAT, '').replace(/[أإآ]/g, 'ا');
+const forms = k => { const L = SC.letters[k]; return L.join === false ? [L.ch, L.ch, 'ـ' + L.ch, 'ـ' + L.ch] : [L.ch, L.ch + 'ـ', 'ـ' + L.ch + 'ـ', 'ـ' + L.ch]; };
+let track = 'speak';
+function learnedLetters(uIndex){ return new Set(SC.units.slice(0, uIndex + 1).flatMap(u => u.letters)); }
+function scriptWords(uIndex){
+  const known = SC.units[uIndex].review ? new Set(LKEYS) : learnedLetters(uIndex);
+  const fromCourse = allWords().filter(w => w.ar && !/[\/…{]/.test(w.ar) && !/\s/.test(bare(w.ar).trim()) && !/[{]/.test(w.tn)).map(w => [bare(w.ar).replace(/[؟!?.,،]/g, ''), fill(w.tn).replace(/[?!.]/g, ''), fill(w.fr)]);
+  const all = SC.extraWords.map(x => [bare(x[0]), x[1], x[2]]).concat(fromCourse);
+  const seen = new Set();
+  return all.filter(([ar]) => { if (!ar || seen.has(ar)) return false; seen.add(ar); return [...ar].every(c => CH2KEY[c] && known.has(CH2KEY[c])); });
+}
+function scriptPhrases(){
+  return PACK.levels.flatMap(l => l.episodes.flatMap(e => e.scene.filter(x => x.ar && !/\{/.test(x.ar) && x.ar.length <= 40))).map(x => ({ ar: x.ar, tn: x.tn, fr: x.fr }));
+}
+function buildScriptLesson(u, uIndex){
+  const keys = u.letters.length ? u.letters : shuffle([...learnedLetters(uIndex - 1)]).slice(0, u.phrases ? 2 : 3);
+  const pool = [...learnedLetters(uIndex)].length >= 4 ? [...learnedLetters(uIndex)] : LKEYS.slice(0, 8);
+  const words = shuffle(scriptWords(uIndex));
+  const list = [];
+  keys.forEach(k => { list.push({ type: 'lsound', k, pool }); list.push({ type: 'lfind', k, pool }); });
+  shuffle(keys).slice(0, 2).forEach(k => list.push({ type: 'lform', k, pool, pos: 1 + Math.floor(Math.random() * 3) }));
+  shuffle(keys).slice(0, u.review ? 0 : 2).forEach(k => list.push({ type: 'ltrace', k }));
+  if (u.vowels) shuffle(u.vowels).slice(0, 5).forEach(v => list.push({ type: 'lvowel', v, all: u.vowels }));
+  const everyWord = scriptWords(SC.units.length - 1);
+  const nr = u.phrases ? 2 : u.review ? 4 : 3, nb = u.phrases ? 2 : u.review ? 3 : 2;
+  words.slice(0, nr).forEach(w => list.push({ type: 'lread', w, words: everyWord }));
+  (words.length > nr ? words.slice(nr, nr + nb) : words.slice(0, 1)).forEach(w => list.push({ type: 'lbuild', w, pool }));
+  if (u.phrases) shuffle(scriptPhrases()).slice(0, 5).forEach(p => list.push({ type: 'lphrase', p, all: scriptPhrases() }));
+  const rank = { lsound: 0, lfind: 1, lform: 2, lvowel: 2, ltrace: 3, lread: 4, lbuild: 5, lphrase: 6 };
+  return list.map(x => [rank[x.type] + Math.random() * 2, x]).sort((a, b) => a[0] - b[0]).map(p => p[1]).slice(0, 18);
+}
+function scriptHome(){
+  const units = SC.units.map((u, i) => {
+    const d = S.done[u.id], op = i === 0 || !!S.done[SC.units[i - 1].id];
+    const preview = u.letters.length ? u.letters.map(k => SC.letters[k].ch).join(' ') : (u.vowels ? 'بَ بِ بُ' : 'أسلامة');
+    return `<button class="step" data-su="${i}" ${op ? '' : 'aria-disabled="true"'}>
+      <span class="dot ${d ? 'done' : op ? 'open' : ''}" style="font-family:'Noto Naskh Arabic',serif;font-size:${u.letters.length ? 19 : 15}px">${op ? esc(u.letters.length ? SC.letters[u.letters[0]].ch : i + 1) : ICON.lock}</span>
+      <span style="flex:1"><b>${i + 1}. ${esc(u.title)}</b><small class="ar" style="font-size:18px;display:block;text-align:left;direction:rtl">${esc(preview)}</small></span>${d ? `<span class="stars">${'★'.repeat(d.stars)}${'☆'.repeat(3 - d.stars)}</span>` : op ? '<span class="tag">À toi</span>' : ''}</button>`;
+  }).join('');
+  const n = SC.units.filter(u => S.done[u.id]).length;
+  return `<div class="card level" style="margin-bottom:14px">
+      <div class="level-head" style="background:var(--terra)"><div class="num">${n} / ${SC.units.length} unités</div><h2>Lire et écrire</h2><p>L’alphabet du tunisien, en partant de zéro</p></div>
+      <div class="path">${units}</div></div>
+    <div class="card" style="font-size:14px"><b>Le saviez-vous ?</b> L’arabe se lit de droite à gauche, et la plupart des lettres changent un peu de forme selon leur place dans le mot.</div>`;
+}
+function bindScriptHome(){
+  root.querySelectorAll('[data-su]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.su;
+    if (i > 0 && !S.done[SC.units[i - 1].id]) return toast('Termine d’abord l’unité ' + i + '.');
+    scriptUnit(i, 0);
+  });
+}
+function letterCard(k){
+  const L = SC.letters[k], f = forms(k);
+  return `<div class="card" style="margin-top:12px;padding:14px">
+    <div style="display:flex;gap:14px;align-items:center">
+      <div style="font-family:'Noto Naskh Arabic','Amiri',serif;font-size:64px;line-height:1;min-width:70px;text-align:center;color:var(--blue)">${L.ch}</div>
+      <div style="flex:1"><b style="font-size:18px">${esc(L.name)}</b> <span class="tag">${esc(L.lat)}</span><div class="muted" style="font-size:14px;margin-top:4px">${esc(L.sound)}</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;text-align:center">
+      ${['seule', 'début', 'milieu', 'fin'].map((t, i) => L.finalOnly && (i === 1 || i === 2) ? `<div style="background:var(--sand);border-radius:10px;padding:6px 0;opacity:.45"><div style="font-size:28px">–</div><small class="muted">${t}</small></div>` : `<div style="background:var(--sand);border-radius:10px;padding:6px 0"><div style="font-family:'Noto Naskh Arabic',serif;font-size:28px">${f[i]}</div><small class="muted">${t}</small></div>`).join('')}</div>
+    <div style="margin-top:10px;font-size:15px">Exemple : <span style="font-family:'Noto Naskh Arabic',serif;font-size:22px">${esc(L.ex[0])}</span> = <b>${esc(L.ex[1])}</b> (${esc(L.ex[2])}) ${hasVoice(L.ex[0]) ? sayBtn(L.ex[0], '') : ''}</div>
+    ${L.join === false ? '<div class="note" style="color:var(--blue)">Cette lettre ne s’attache jamais à la lettre suivante.</div>' : ''}</div>`;
+}
+function scriptUnit(uIndex, step){
+  const u = SC.units[uIndex], cards = u.cards.length, total = cards + (u.letters.length ? 1 : 0);
+  if (step < cards) {
+    const c = u.cards[step];
+    lessonFrame(0.3 * (step + 1) / total, `<div class="q">Unité ${uIndex + 1} · ${esc(u.title)}</div><h2 style="font-size:24px;margin:4px 0 8px">${esc(c.title)}</h2><p style="font-size:17px">${esc(c.text)}</p>`,
+      `<button class="btn btn-primary btn-block" id="next">Suite</button>`);
+    $('#next').onclick = () => scriptUnit(uIndex, step + 1);
+    return;
+  }
+  if (step === cards && u.letters.length) {
+    lessonFrame(0.32, `<div class="q">Les lettres de l’unité · regarde comme elles changent selon leur place</div>${u.letters.map(letterCard).join('')}`,
+      `<button class="btn btn-primary btn-block" id="next">C’est parti</button>`);
+    $('#next').onclick = () => runExercises(buildScriptLesson(u, uIndex), { script: u, uIndex });
+    return;
+  }
+  runExercises(buildScriptLesson(u, uIndex), { script: u, uIndex });
+}
+function scriptResult(u, firstTry, total, hontes){
+  const stars = hontes === 0 ? 3 : hontes <= 3 ? 2 : 1;
+  const prev = S.done[u.id]; S.done[u.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
+  S.xp += 15 + firstTry * 2; bumpStreak(); save();
+  const nextI = SC.units.indexOf(u) + 1;
+  lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<div class="bigstars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
+      <h1 style="font-size:28px">Unité terminée !</h1>
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${stars === 3 ? 'Tu lis déjà mieux que Skander. Ne lui dis pas, il va bouder.' : 'Bien ! Refais l’unité demain : les lettres rentrent à force de les voir.'}</div></div></div>`,
+    `<button class="btn btn-primary btn-block" id="next">${SC.units[nextI] ? 'Unité suivante' : 'Retour'}</button>`);
+  screen = 'result';
+  $('#quit').onclick = () => { stack = []; home(); };
+  $('#next').onclick = () => { stack = []; if (SC.units[nextI]) scriptUnit(nextI, 0); else home(); };
+}
+function buildScriptQ(x){
+  const L = k => SC.letters[k];
+  const opts4 = (good, pool, label) => shuffle([good].concat(shuffle(pool.filter(k => k !== good && label(k) !== label(good))).slice(0, 3))).map(k => ({ label: label(k), ok: k === good }));
+  if (x.type === 'lsound') return { opts: opts4(x.k, x.pool, k => L(k).lat), answer: L(x.k).lat };
+  if (x.type === 'lfind') return { opts: opts4(x.k, x.pool, k => L(k).ch), answer: L(x.k).ch };
+  if (x.type === 'lform' && SC.letters[x.k].finalOnly) x.pos = 3;
+  if (x.type === 'lform') return { opts: opts4(x.k, x.pool, k => L(k).ch), answer: L(x.k).ch, shown: forms(x.k)[x.pos] };
+  if (x.type === 'lread') { const o = shuffle([x.w].concat(shuffle(x.words.filter(w => w[1] !== x.w[1])).slice(0, 3))); return { opts: o.map(w => ({ label: w[1] + ' · ' + w[2], ok: w === x.w })), answer: x.w[1] + ' (' + x.w[2] + ')' }; }
+  if (x.type === 'lvowel') { const o = shuffle([x.v].concat(shuffle(x.all.filter(v => v[1] !== x.v[1])).slice(0, 3))); return { opts: o.map(v => ({ label: v[1], ok: v === x.v })), answer: x.v[1] }; }
+  if (x.type === 'lphrase') { const o = shuffle([x.p].concat(shuffle(x.all.filter(p => p.tn !== x.p.tn)).slice(0, 2))); return { opts: o.map(p => ({ label: fill(p.tn), sub: fill(p.fr), ok: p === x.p })), answer: fill(x.p.tn) + ' (' + fill(x.p.fr) + ')' }; }
+  return {};
 }
 
 // ---------- Le coin de Khalti : leçons de grammaire ----------
