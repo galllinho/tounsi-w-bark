@@ -42,7 +42,13 @@ def main():
     tts = api.SilmaTTS(enable_normalizer=False, force_tashkeel=False, device="cpu")
     ref = os.environ.get("REF_AUDIO") or REF
     ref_text = os.environ.get("REF_TEXT") or REF_TEXT
+    # Temps maximum (minutes) : on s'arrête proprement avant la limite de GitHub, ce qui est fait est gardé
+    budget = float(os.environ.get("MAX_MINUTES", "0")) * 60
+    start = time.time()
     for it in items:
+        if budget and time.time() - start > budget:
+            print("Temps écoulé : on garde ce qui est fait, le reste sera généré au prochain lancement", flush=True)
+            break
         t0 = time.time()
         wav_path = os.path.join(out, it["key"] + ".wav")
         if os.path.exists(wav_path):

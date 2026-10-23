@@ -16,13 +16,16 @@ for (const f of fs.readdirSync(path.join(root, 'src')).filter(f => f.endsWith('.
   fs.copyFileSync(path.join(root, 'src', f), path.join(www, f));
 // Voix enregistrées par la famille (src/audio/<langue>/*) : copiées dans l'appli + index des clés
 const index = {}, audioSrc = path.join(root, 'src/audio');
-if (fs.existsSync(audioSrc)) for (const lang of fs.readdirSync(audioSrc)) {
+// Les voix générées par l'IA (dossiers « -ia ») passent d'abord : une voix de la famille pour la même phrase les remplace.
+let nIA = 0;
+if (fs.existsSync(audioSrc)) for (const lang of fs.readdirSync(audioSrc).sort((a, b) => b.endsWith('-ia') - a.endsWith('-ia'))) {
   const dir = path.join(audioSrc, lang); if (!fs.statSync(dir).isDirectory()) continue;
   fs.mkdirSync(path.join(www, 'audio', lang), { recursive: true });
   for (const f of fs.readdirSync(dir)) {
     if (f === 'voices.json') continue;
     fs.copyFileSync(path.join(dir, f), path.join(www, 'audio', lang, f));
     index[f.replace(/\.[^.]+$/, '')] = lang + '/' + f;
+    if (lang.endsWith('-ia')) nIA++;
   }
 }
 fs.mkdirSync(path.join(www, 'audio'), { recursive: true });
@@ -30,4 +33,4 @@ fs.writeFileSync(path.join(www, 'audio', 'index.json'), JSON.stringify(index));
 const cap = path.join(root, 'node_modules/@capacitor/core/dist/capacitor.js');
 if (fs.existsSync(cap)) fs.copyFileSync(cap, path.join(www, 'vendor', 'capacitor.js'));
 else fs.writeFileSync(path.join(www, 'vendor', 'capacitor.js'), '');
-console.log('www/ prêt (version ' + build + ', ' + Object.keys(index).length + ' voix enregistrées)');
+console.log('www/ prêt (version ' + build + ', ' + (Object.keys(index).length - nIA) + ' voix de la famille, ' + nIA + ' voix IA)');

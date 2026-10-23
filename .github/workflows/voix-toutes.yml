@@ -1,0 +1,71 @@
+name: Voix tunisienne (toutes les phrases)
+# Génère la voix de chaque phrase tunisienne qui n'en a pas encore, l'ajoute dans src/audio/tn-ia/ et relance la construction de l'APK.
+# À relancer après un ajout de contenu : seules les nouvelles phrases sont générées.
+on:
+  workflow_dispatch:
+    inputs:
+      lots:
+        description: Nombre de machines en parallèle
+        default: '6'
+permissions: { contents: write, actions: write }
+concurrency: { group: voix-toutes }
+jobs:
+  liste:
+    runs-on: ubuntu-latest
+    outputs: { lots: "${{ steps.l.outputs.lots }}" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - id: l
+        run: echo "lots=$(node tools/tts/collect.js lots ${{ inputs.lots }})" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with: { name: lots, path: lots/, if-no-files-found: ignore }
+  voix:
+    needs: liste
+    if: needs.liste.outputs.lots != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix: { lot: "${{ fromJSON(needs.liste.outputs.lots) }}" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: lots, path: lots }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Installer SILMA TTS (sans les outils d'arabe standard)
+        run: |
+          sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "numpy<=1.26.4" cached_path ema_pytorch hydra-core omegaconf librosa pydub safetensors soundfile tqdm transformers vocos "x_transformers>=1.31.14" torchdiffeq unidecode matplotlib huggingface_hub
+          pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
+      - name: Générer les voix
+        env: { MAX_MINUTES: '300' }
+        run: python tools/tts/generate.py lots/lot-${{ matrix.lot }}.json voix
+      - name: Convertir en mp3
+        if: always()
+        run: |
+          mkdir -p mp3 && cd voix && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 48k "../mp3/${f%.wav}.mp3"; done; ls ../mp3 | wc -l
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: "voix-${{ matrix.lot }}", path: mp3/*.mp3, if-no-files-found: ignore }
+  ajouter:
+    needs: voix
+    if: always() && needs.voix.result != 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { pattern: "voix-*", path: src/audio/tn-ia, merge-multiple: true }
+      - name: Enregistrer les voix dans le dépôt et reconstruire l'APK
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          ls src/audio/tn-ia | wc -l
+          git config user.name "galllinho" && git config user.email "gallah8@gmail.com"
+          git add src/audio/tn-ia
+          git diff --cached --quiet && { echo "Rien de nouveau"; exit 0; }
+          git commit -q -m "Voix tunisiennes générées (SILMA TTS Derja) : $(git diff --cached --name-only | wc -l) phrases"
+          git pull -q --rebase && git push -q
+          gh workflow run build.yml --ref main

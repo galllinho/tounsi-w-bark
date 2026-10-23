@@ -6,9 +6,10 @@ Appli Android pour apprendre le darija tunisien avec humour, avec Khalti, la tat
 - `src/content-tn-more.js` : suite du tunisien (niveaux 1 à 5 complets, grammaire, missions)
 - `docs/reference-tounsi.md` : règles et sources utilisées pour vérifier le tunisien
 - `src/content-script.js` : parcours « Lire et écrire » (alphabet arabe pour le tunisien)
-- `tools/tts/` + `.github/workflows/voix-test.yml` : génération de voix tunisiennes (SILMA TTS Derja)
+- `tools/tts/` + `.github/workflows/voix-test.yml` : test de la voix tunisienne (SILMA TTS Derja)
+- `.github/workflows/voix-toutes.yml` (lancement manuel) : génère la voix de toutes les phrases qui n'en ont pas encore dans `src/audio/tn-ia/`, puis reconstruit l'APK. À relancer après un ajout de contenu. Voix : SILMA TTS Derja (Ghazouaniwala/silma-tts-derja), entraînée sur le corpus LinTO de Linagora (CC BY 4.0) ; usage gratuit et non commercial.
 - `src/content-kab.js` : contenus kabyles avec Nanna (brouillon à faire relire)
-- `src/audio/<langue>/` : voix enregistrées dans le Studio famille (`node scripts/import-voices.js voix-….json`)
+- `src/audio/<langue>/` : voix enregistrées dans le Studio famille (elles passent avant les voix IA) (`node scripts/import-voices.js voix-….json`)
 - `src/app.html` : l'application
 - `android-config/` : icône et clé de signature (la même à chaque version, pour pouvoir mettre à jour l'appli)
 - `.github/workflows/build.yml` : construit l'APK à chaque mise à jour (onglet Releases)
