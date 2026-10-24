@@ -297,17 +297,25 @@ function applySkin(){
 }
 applySkin();
 // Sauvegarde : stockage natif d'Android (Preferences) qui survit à la fermeture de l'appli, + copie dans localStorage.
+// Plusieurs profils sur le même téléphone : S = le profil qui joue (clé LS, comme avant), OTHERS = les autres (clé LSP).
+const LSP = 'twb.profiles.v1';
+const newPid = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+let OTHERS = (() => { try { return JSON.parse(localStorage.getItem(LSP) || '{}') || {}; } catch(e){ return {}; } })();
+if (!S.pid) S.pid = newPid();
 function save(){
-  const v = JSON.stringify(S);
-  try { localStorage.setItem(LS, v); } catch(e){}
-  if (Native.Prefs) Native.Prefs.set({ key: LS, value: v }).catch(() => {});
+  const v = JSON.stringify(S), o = JSON.stringify(OTHERS);
+  try { localStorage.setItem(LS, v); localStorage.setItem(LSP, o); } catch(e){}
+  if (Native.Prefs) { Native.Prefs.set({ key: LS, value: v }).catch(() => {}); Native.Prefs.set({ key: LSP, value: o }).catch(() => {}); }
 }
 async function restore(){
   if (!Native.Prefs) return;
   try {
     const { value } = await Native.Prefs.get({ key: LS });
+    const r = await Native.Prefs.get({ key: LSP });
+    if (r && r.value) OTHERS = JSON.parse(r.value) || {};
     if (value) S = Object.assign(blank(), JSON.parse(value));
     else if (S.name) save();   // ancienne version : on recopie le profil dans le stockage natif
+    if (!S.pid) S.pid = newPid();
   } catch(e){}
 }
 
@@ -507,11 +515,13 @@ function onboarding(){
       <button class="opt" data-g="f">une fille<small>benti · yelli</small></button>
     </div>
     <button class="btn btn-primary btn-block" id="go" style="margin-top:14px">Yalla, on commence</button>
+    ${!S.name && Object.keys(OTHERS).length ? '<button class="btn btn-ghost btn-block" id="ob-back" style="margin-top:10px">Retour aux profils</button>' : ''}
   </div>`;
   const paint = () => { root.querySelectorAll('[data-g]').forEach(b => b.classList.toggle('sel', b.dataset.g === g)); root.querySelectorAll('[data-l]').forEach(b => b.classList.toggle('sel', b.dataset.l === lg)); };
   root.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { g = b.dataset.g; paint(); });
   root.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { lg = b.dataset.l; paint(); });
   paint();
+  if ($('#ob-back')) $('#ob-back').onclick = () => { const k = Object.keys(OTHERS)[0]; const o = OTHERS[k]; delete OTHERS[k]; S = Object.assign(blank(), o); save(); usePack(); applySkin(); whoPlays(); };
   $('#go').onclick = () => {
     const n = $('#nm').value.trim();
     if (!n) { toast('La famille attend ton prénom…'); $('#nm').focus(); return; }
@@ -684,6 +694,11 @@ function profile(){
       <div class="stat"><b>${nd}/${eps.length}</b><span>épisodes terminés</span></div>
       <div class="stat"><b>${S.hontes}</b><span>moments de honte</span></div>
     </div>
+    <div class="sec">Profils sur ce téléphone</div>
+    <div class="card" style="padding:6px 14px">
+      ${Object.values(OTHERS).map(o => `<div class="toggle"><span style="display:flex;align-items:center;gap:10px">${pBadge(o, 36)}<span><b>${esc(o.name)}</b><br><small class="muted">${o.xp || 0} jasmins</small></span></span><span style="display:flex;gap:6px"><button class="btn btn-primary" data-play="${o.pid}" style="min-height:0;padding:8px 12px">Jouer</button><button class="btn btn-ghost" data-del="${o.pid}" aria-label="Supprimer le profil de ${esc(o.name)}" style="min-height:0;padding:8px 10px">${ICON.close}</button></span></div>`).join('')}
+      <div class="toggle"><span class="muted" style="font-size:14px">${Object.keys(OTHERS).length ? 'Chaque profil garde sa propre progression.' : 'Un frère, une sœur, une cousine ? Chacun peut avoir sa progression.'}</span><button class="btn btn-ghost" id="padd" style="min-height:0;padding:8px 12px;flex:none">Ajouter</button></div>
+    </div>
     <div class="sec">Langue apprise</div>
     <div class="card"><div class="toggle"><span><b>${esc(PACK.label)}</b><br><small class="muted">Ta progression est gardée pour chaque langue.</small></span><button class="btn btn-ghost" id="swl" style="min-height:0;padding:8px 12px">Passer au ${S.lang === 'kab' ? 'tunisien' : 'kabyle'}</button></div></div>
     ${Native.LN ? `    <div class="sec">Rappel de ${esc(MN())}</div>
@@ -713,6 +728,10 @@ function profile(){
       <p class="muted" style="margin:0;font-size:14px">Si tu repères une erreur de langue, dis-le : les textes sont en cours de relecture.</p></div>
     <button class="btn btn-ghost btn-block" id="reset" style="margin-top:16px;color:var(--terra)">Tout recommencer à zéro</button>`);
   root.querySelectorAll('[data-opt]').forEach(b => b.onclick = () => { S.opts[b.dataset.opt] = !S.opts[b.dataset.opt]; save(); b.classList.toggle('on'); });
+  root.querySelectorAll('[data-play]').forEach(b => b.onclick = () => switchProfile(b.dataset.play));
+  root.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteProfile(b.dataset.del));
+  $('#padd').onclick = () => addProfile();
+  root.querySelectorAll('[data-del] svg').forEach(v => { v.style.width = '18px'; v.style.height = '18px'; });
   $('#bk-out').onclick = () => backupOut();
   $('#bk-in').onclick = () => backupIn();
   root.querySelectorAll('[data-skin-pick]').forEach(b => b.onclick = () => { S.skin = b.dataset.skinPick; save(); applySkin(); const y = window.scrollY; profile(); window.scrollTo(0, y); });
@@ -721,9 +740,45 @@ function profile(){
   if ($('#nth')) $('#nth').onchange = e => { S.notif.hour = +e.target.value; save(); scheduleNotif(); };
   $('#studio').onclick = () => studio();
   $('#rename').onclick = () => { S.name = ''; save(); onboarding(); };
-  $('#reset').onclick = () => { if (confirm('Effacer toute ta progression ? ' + MN() + ' va être triste.')) { const keep = { name: S.name, gender: S.gender, lang: S.lang, skin: S.skin }; S = Object.assign(blank(), keep); save(); tab = 'learn'; home(); } };
+  $('#reset').onclick = () => { if (confirm('Effacer toute ta progression ? ' + MN() + ' va être triste.')) { const keep = { name: S.name, gender: S.gender, lang: S.lang, skin: S.skin, pid: S.pid }; S = Object.assign(blank(), keep); save(); tab = 'learn'; home(); } };
 }
 
+
+
+// ---------- Profils : « Qui joue ? », ajout, changement, suppression ----------
+const PCOL = ['#1d4e9e', '#c8553d', '#1a8a8a', '#7a4b8c', '#b8860b', '#2e7d4f', '#c2185b', '#455a64'];
+function pBadge(p, size){
+  const n = (p.name || '?').trim(), h = [...(p.pid || n)].reduce((a, c) => a + c.charCodeAt(0), 0);
+  return `<span aria-hidden="true" style="flex:none;width:${size}px;height:${size}px;border-radius:50%;display:grid;place-items:center;background:${PCOL[h % PCOL.length]};color:#fff;font-weight:800;font-size:${Math.round(size * 0.45)}px">${esc(n[0].toUpperCase())}</span>`;
+}
+function switchProfile(pid){
+  const o = OTHERS[pid]; if (!o) return;
+  if (S.name) OTHERS[S.pid] = S;
+  delete OTHERS[pid];
+  S = Object.assign(blank(), o); save(); usePack(); applySkin(); stack = []; tab = 'learn';
+  toast((S.lang === 'kab' ? 'Azul ' : 'Aslema ') + S.name + ' !'); home();
+}
+function addProfile(){
+  const skin = S.skin;
+  if (S.name) OTHERS[S.pid] = S;
+  S = blank(); S.pid = newPid(); S.skin = skin; save(); applySkin(); onboarding();
+}
+function deleteProfile(pid){
+  const o = OTHERS[pid]; if (!o) return;
+  if (!confirm('Supprimer le profil de ' + o.name + ' et toute sa progression ? Pense à garder son code de secours avant.')) return;
+  delete OTHERS[pid]; save(); profile();
+}
+function whoPlays(){
+  screen = 'who';
+  const all = [S].concat(Object.values(OTHERS)).filter(p => p.name);
+  root.innerHTML = `<div class="main fadein">
+    <div class="hero">${avatar('khalti', 80)}<h1 style="font-size:28px">Qui joue ?</h1><p class="muted">Choisis ton prénom, Khalti t’attend.</p></div>
+    ${all.map(p => `<button class="opt" data-who="${p.pid}" style="display:flex;align-items:center;gap:14px;padding:14px">${pBadge(p, 48)}<span style="flex:1"><b style="font-size:18px">${esc(p.name)}</b><small>${p.xp || 0} jasmins · ${(n => n + (n > 1 ? ' étapes réussies' : ' étape réussie'))(Object.keys(p.done || {}).length)}</small></span></button>`).join('')}
+    <button class="btn btn-ghost btn-block" id="who-add" style="margin-top:6px">+ Ajouter un profil</button>
+  </div>`;
+  root.querySelectorAll('[data-who]').forEach(b => b.onclick = () => { if (b.dataset.who === S.pid) { tab = 'learn'; home(); } else switchProfile(b.dataset.who); });
+  $('#who-add').onclick = () => addProfile();
+}
 
 // ---------- Code de secours : toute la progression dans un texte à copier ou partager ----------
 const backupCode = () => 'TWB1-' + btoa(unescape(encodeURIComponent(JSON.stringify(S))));
@@ -758,7 +813,7 @@ function backupIn(){
     let o; try { o = readBackup($('#bk-p').value); } catch(e){ return toast('Ce code ne marche pas : vérifie qu’il est complet'); }
     const n = Object.keys(o.done || {}).length;
     if (!confirm('Remplacer la progression de ce téléphone par celle de ' + (o.name || 'ce code') + ' (' + n + ' étapes réussies) ?')) return;
-    S = Object.assign(blank(), o); save(); usePack(); applySkin(); tab = 'learn'; toast('Progression récupérée. Aslema ' + S.name + ' !'); home();
+    const pid = S.pid; S = Object.assign(blank(), o); S.pid = pid; save(); usePack(); applySkin(); tab = 'learn'; toast('Progression récupérée. Aslema ' + S.name + ' !'); home();
   };
 }
 
@@ -1637,7 +1692,8 @@ if (window.TWB_WEB && 'serviceWorker' in navigator && location.protocol === 'htt
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 restore().then(() => {
-  usePack(); applySkin(); home();
+  usePack(); applySkin();
+  if (S.name && Object.keys(OTHERS).length) whoPlays(); else home();
   loadVoices().then(() => { if (screen === 'home') home(); });
   if (S.notif.on) scheduleNotif();
 });

@@ -25,3 +25,4 @@ Les textes tunisiens doivent être relus par un natif avant de partager l'appli.
 - Sans IA (pas de discussion ni de missions) : elle est pensée pour des enfants, et Gemini est réservé aux adultes.
 - S'installe sur l'écran d'accueil (Safari → Partager → Sur l'écran d'accueil), marche hors ligne (service worker `scripts/sw-template.js`), icônes et manifeste dans `web/`.
 - Sauvegarde : sur le téléphone, plus un « code de secours » (Profil → Sauvegarde) pour récupérer sa progression ou la passer d'un téléphone à l'autre, Android compris.
+- Plusieurs profils par téléphone (Profil → Profils sur ce téléphone) : écran « Qui joue ? » à l'ouverture dès qu'il y en a plus d'un ; chaque profil a sa progression, son skin et son code de secours.
