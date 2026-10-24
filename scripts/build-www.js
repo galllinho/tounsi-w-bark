@@ -5,11 +5,16 @@ fs.rmSync(www, { recursive: true, force: true });
 fs.mkdirSync(path.join(www, 'vendor'), { recursive: true });
 const body = fs.readFileSync(path.join(root, 'src/app.html'), 'utf8');
 const build = parseInt(process.env.GITHUB_RUN_NUMBER || '0', 10);
+// WEB=1 : version web pour iPhone (GitHub Pages), installable sur l'écran d'accueil, sans IA (pensée pour les enfants)
+const WEB = process.env.WEB === '1';
+const key = WEB ? '' : (process.env.GEMINI_KEY || '');
 fs.writeFileSync(path.join(www, 'index.html'),
   '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n' +
   '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n' +
   '<meta name="theme-color" content="#1d5aa6">\n<title>Tounsi w Bark</title>\n' +
-  '<link rel="stylesheet" href="fonts/fonts.css">\n<script src="vendor/capacitor.js"></script>\n<script>window.TWB_BUILD = ' + build + '; window.TWB_GEMINI_KEY = ' + JSON.stringify(process.env.GEMINI_KEY || '') + ';</script>\n' +
+  (WEB ? '<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="apple-touch-icon.png">\n<link rel="icon" href="icon-192.png">\n' +
+    '<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-status-bar-style" content="default">\n<meta name="apple-mobile-web-app-title" content="Tounsi w Bark">\n' : '') +
+  '<link rel="stylesheet" href="fonts/fonts.css">\n<script src="vendor/capacitor.js"></script>\n<script>window.TWB_BUILD = ' + build + '; window.TWB_GEMINI_KEY = ' + JSON.stringify(key) + '; window.TWB_WEB = ' + WEB + ';</script>\n' +
   '<style>body{margin:0}[hidden]{display:none!important}</style>\n</head>\n<body>\n' +
   body + '\n</body>\n</html>\n');
 for (const f of fs.readdirSync(path.join(root, 'src')).filter(f => f.endsWith('.js')))
@@ -36,4 +41,12 @@ fs.writeFileSync(path.join(www, 'audio', 'index.json'), JSON.stringify(index));
 const cap = path.join(root, 'node_modules/@capacitor/core/dist/capacitor.js');
 if (fs.existsSync(cap)) fs.copyFileSync(cap, path.join(www, 'vendor', 'capacitor.js'));
 else fs.writeFileSync(path.join(www, 'vendor', 'capacitor.js'), '');
-console.log('www/ prêt (version ' + build + ', ' + (Object.keys(index).length - nIA) + ' voix de la famille, ' + nIA + ' voix IA)');
+// Version web : icônes, manifeste et service worker (tout est mis en cache pour marcher hors ligne)
+if (WEB) {
+  for (const f of fs.readdirSync(path.join(root, 'web'))) fs.copyFileSync(path.join(root, 'web', f), path.join(www, f));
+  const list = [];
+  (function walk(d, rel){ for (const f of fs.readdirSync(d)) { const p = path.join(d, f), r = rel ? rel + '/' + f : f; if (fs.statSync(p).isDirectory()) walk(p, r); else if (f !== 'sw.js') list.push(r); } })(www, '');
+  fs.writeFileSync(path.join(www, 'sw.js'), "const CACHE = 'twb-" + build + "-" + Date.now() + "';\nconst FILES = " + JSON.stringify(['./'].concat(list)) + ";\n" + fs.readFileSync(path.join(root, 'scripts/sw-template.js'), 'utf8'));
+  fs.writeFileSync(path.join(www, '.nojekyll'), '');
+}
+console.log((WEB ? 'version web, ' : '') + 'www/ prêt (version ' + build + ', ' + (Object.keys(index).length - nIA) + ' voix de la famille, ' + nIA + ' voix IA)');

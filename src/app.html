@@ -270,6 +270,8 @@ const Native = (() => {
 })();
 
 // ---------- État ----------
+// IA (discussion, missions) : seulement si une clé Gemini est fournie. La version web (pour les enfants) n'en a pas.
+const AI = () => !!window.TWB_GEMINI_KEY;
 const blank = () => ({ name: '', gender: 'm', lang: 'tn', xp: 0, done: {}, saved: [], weak: {}, review: '', streak: { last: '', count: 0 }, hontes: 0, opts: { fr: true, ar: false }, notif: { on: false, hour: 19 }, voiceName: '', missions: {}, skin: 'sidi' });
 let S = load();
 function load(){ try { return Object.assign(blank(), JSON.parse(localStorage.getItem(LS) || '{}')); } catch(e){ return blank(); } }
@@ -521,9 +523,9 @@ function shell(content){
   root.innerHTML = `<div class="top"><div class="brand">Tounsi <span>w</span> Bark</div>
     <div class="chips"><button class="chip" id="lgchip" title="Changer de langue">${esc(PACK.short)}</button><span class="chip" title="Jours d'affilée">${ICON.flame}${streakNow()}</span><span class="chip" title="Jasmins gagnés">${ICON.jasmine}${S.xp}</span></div></div>
     <div class="main fadein">${content}</div>
-    <nav class="nav"><div class="nav-in">
+    <nav class="nav"><div class="nav-in" style="grid-template-columns:repeat(${AI() ? 4 : 3},1fr)">
       <button data-tab="learn" class="${tab === 'learn' ? 'on' : ''}">${ICON.learn}Apprendre</button>
-      <button data-tab="chat" class="${tab === 'chat' ? 'on' : ''}">${ICON.chat}Discuter</button>
+      ${AI() ? `<button data-tab="chat" class="${tab === 'chat' ? 'on' : ''}">${ICON.chat}Discuter</button>` : ''}
       <button data-tab="book" class="${tab === 'book' ? 'on' : ''}">${ICON.book}Carnet</button>
       <button data-tab="me" class="${tab === 'me' ? 'on' : ''}">${ICON.user}Profil</button>
     </div></nav>`;
@@ -554,7 +556,7 @@ function levelCard(l){
   const steps = l.episodes.map((e, i) => {
     const d = S.done[e.id], op = isOpen(l, i);
     const st = d ? `<span class="stars">${'★'.repeat(d.stars)}${'☆'.repeat(3 - d.stars)}</span>` : op ? '<span class="tag">À toi</span>' : '';
-    const ms = e.mission && d ? (S.missions[e.id] ? ' · mission réussie' : ' · mission à tenter') : '';
+    const ms = e.mission && d && AI() ? (S.missions[e.id] ? ' · mission réussie' : ' · mission à tenter') : '';
     const step = `<button class="step" data-ep="${e.id}" ${op ? '' : 'aria-disabled="true"'}>
       <span class="dot ${d ? 'done' : op ? 'open' : ''}">${op ? i + 1 : ICON.lock}</span>
       <span style="flex:1"><b>${esc(e.title)}</b><small>${e.words.length} mots${ms}</small></span>${st}</button>`;
@@ -581,7 +583,8 @@ function home(){
   if (!S.name) return onboarding();
   screen = 'home';
   if (tab === 'book') return book();
-  if (tab === 'chat') return chatHome();
+  if (tab === 'chat' && AI()) return chatHome();
+  if (tab === 'chat') tab = 'learn';
   if (tab === 'me') return profile();
   const lv = PACK.levels;
   const playable = lv.filter(l => l.episodes.length && levelOpen(l));
@@ -601,6 +604,7 @@ function home(){
     return;
   }
   shell(tsw + `<div class="say">${avatar(PACK.mascot, 52)}<div class="bubble">${esc(mascotMsg())}</div></div>
+    ${installHint()}
     ${PACK.draft ? '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Version brouillon.</b> Les textes kabyles sont en cours de relecture par une locutrice native, et les voix arrivent avec le Studio famille.</div>' : ''}
     ${review}${shown.map(levelCard).join('')}
     ${doneLv.length ? `<div class="sec">Niveaux réussis</div>${doneLv.map(levelCard).join('')}` : ''}
@@ -682,15 +686,21 @@ function profile(){
     </div>
     <div class="sec">Langue apprise</div>
     <div class="card"><div class="toggle"><span><b>${esc(PACK.label)}</b><br><small class="muted">Ta progression est gardée pour chaque langue.</small></span><button class="btn btn-ghost" id="swl" style="min-height:0;padding:8px 12px">Passer au ${S.lang === 'kab' ? 'tunisien' : 'kabyle'}</button></div></div>
-    <div class="sec">Rappel de ${esc(MN())}</div>
+    ${Native.LN ? `    <div class="sec">Rappel de ${esc(MN())}</div>
     <div class="card">
       <div class="toggle"><span>Un message par jour pour ne pas casser ta série</span><button class="sw ${S.notif.on ? 'on' : ''}" id="ntf" aria-label="Rappel quotidien"></button></div>
       <div class="toggle"><span>Heure du rappel</span><select class="field" id="nth" style="width:auto;padding:8px 10px">${hours.map(h => `<option value="${h}" ${S.notif.hour === h ? 'selected' : ''}>${h} h</option>`).join('')}</select></div>
-    </div>
+    </div>` : ''}
     <div class="sec">Studio famille</div>
     <button class="card step" id="studio" style="border-top:0"><span class="dot open">${ICON.mic}</span><span style="flex:1"><b>Enregistrer les vraies voix</b><small>Un proche enregistre les phrases ${S.lang === 'kab' ? 'en kabyle' : 'en tunisien'} : elles remplacent la voix du téléphone.</small></span></button>
     <div class="sec">Apparence</div>
     <div class="skins">${SKINS.map(k => `<button class="skin ${S.skin === k.id ? 'on' : ''}" data-skin-pick="${k.id}" aria-pressed="${S.skin === k.id}"><span class="sw3">${k.c.map(c => `<i style="background:${c}"></i>`).join('')}</span><b>${esc(k.name)}</b><small>${esc(k.desc)}</small></button>`).join('')}</div>
+    <div class="sec">Sauvegarde</div>
+    <div class="card">
+      <p class="muted" style="margin:0 0 10px;font-size:14px">Ta progression est enregistrée sur ce téléphone. Garde aussi ton code de secours : il permet de la retrouver après un changement de téléphone, ou de la passer d’un téléphone à l’autre (Android ↔ iPhone).</p>
+      <div class="seg"><button class="btn btn-ghost" id="bk-out">Mon code de secours</button><button class="btn btn-ghost" id="bk-in">J’ai un code</button></div>
+      <div id="bk-box" hidden style="margin-top:12px"></div>
+    </div>
     <div class="sec">Réglages</div>
     <div class="card">
       <div class="toggle"><span>Afficher la traduction pendant les scènes</span><button class="sw ${S.opts.fr ? 'on' : ''}" data-opt="fr" aria-label="Traduction"></button></div>
@@ -703,13 +713,53 @@ function profile(){
       <p class="muted" style="margin:0;font-size:14px">Si tu repères une erreur de langue, dis-le : les textes sont en cours de relecture.</p></div>
     <button class="btn btn-ghost btn-block" id="reset" style="margin-top:16px;color:var(--terra)">Tout recommencer à zéro</button>`);
   root.querySelectorAll('[data-opt]').forEach(b => b.onclick = () => { S.opts[b.dataset.opt] = !S.opts[b.dataset.opt]; save(); b.classList.toggle('on'); });
+  $('#bk-out').onclick = () => backupOut();
+  $('#bk-in').onclick = () => backupIn();
   root.querySelectorAll('[data-skin-pick]').forEach(b => b.onclick = () => { S.skin = b.dataset.skinPick; save(); applySkin(); const y = window.scrollY; profile(); window.scrollTo(0, y); });
   $('#swl').onclick = switchLang;
-  $('#ntf').onclick = async () => { S.notif.on = !S.notif.on; save(); $('#ntf').classList.toggle('on', S.notif.on); const ok = await scheduleNotif(true); if (S.notif.on && !ok) { S.notif.on = false; save(); $('#ntf').classList.remove('on'); } };
-  $('#nth').onchange = e => { S.notif.hour = +e.target.value; save(); scheduleNotif(); };
+  if ($('#ntf')) $('#ntf').onclick = async () => { S.notif.on = !S.notif.on; save(); $('#ntf').classList.toggle('on', S.notif.on); const ok = await scheduleNotif(true); if (S.notif.on && !ok) { S.notif.on = false; save(); $('#ntf').classList.remove('on'); } };
+  if ($('#nth')) $('#nth').onchange = e => { S.notif.hour = +e.target.value; save(); scheduleNotif(); };
   $('#studio').onclick = () => studio();
   $('#rename').onclick = () => { S.name = ''; save(); onboarding(); };
   $('#reset').onclick = () => { if (confirm('Effacer toute ta progression ? ' + MN() + ' va être triste.')) { const keep = { name: S.name, gender: S.gender, lang: S.lang, skin: S.skin }; S = Object.assign(blank(), keep); save(); tab = 'learn'; home(); } };
+}
+
+
+// ---------- Code de secours : toute la progression dans un texte à copier ou partager ----------
+const backupCode = () => 'TWB1-' + btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+function readBackup(code){
+  const c = String(code || '').replace(/\s+/g, '');
+  if (!c.startsWith('TWB1-')) throw new Error('format');
+  const o = JSON.parse(decodeURIComponent(escape(atob(c.slice(5)))));
+  if (!o || typeof o !== 'object' || typeof o.done !== 'object') throw new Error('contenu');
+  return o;
+}
+async function backupOut(){
+  const code = backupCode(), box = $('#bk-box');
+  box.hidden = false;
+  box.innerHTML = `<textarea class="field" id="bk-t" rows="4" readonly style="font-size:12px;word-break:break-all">${esc(code)}</textarea>
+    <div class="seg" style="margin-top:8px"><button class="btn btn-primary" id="bk-copy">Copier</button><button class="btn btn-ghost" id="bk-share">Envoyer</button></div>
+    <p class="muted" style="font-size:13px;margin:8px 0 0">Envoie-le-toi par message ou par mail. Il change à chaque progrès : refais-le de temps en temps.</p>`;
+  $('#bk-copy').onclick = async () => { try { await navigator.clipboard.writeText(code); toast('Code copié'); } catch(e){ const t = $('#bk-t'); t.select(); document.execCommand('copy'); toast('Code copié'); } };
+  $('#bk-share').onclick = async () => {
+    const text = 'Mon code de secours Tounsi w Bark (' + S.name + ') :\n' + code;
+    try {
+      if (Native.Share) await Native.Share.share({ title: 'Code de secours Tounsi w Bark', text, dialogTitle: 'Envoyer mon code' });
+      else if (navigator.share) await navigator.share({ title: 'Code de secours Tounsi w Bark', text });
+      else { await navigator.clipboard.writeText(text); toast('Code copié : colle-le dans un message'); }
+    } catch(e){}
+  };
+}
+function backupIn(){
+  const box = $('#bk-box'); box.hidden = false;
+  box.innerHTML = `<textarea class="field" id="bk-p" rows="4" placeholder="Colle ici ton code (il commence par TWB1-)" style="font-size:12px"></textarea>
+    <button class="btn btn-primary btn-block" id="bk-go" style="margin-top:8px">Récupérer ma progression</button>`;
+  $('#bk-go').onclick = () => {
+    let o; try { o = readBackup($('#bk-p').value); } catch(e){ return toast('Ce code ne marche pas : vérifie qu’il est complet'); }
+    const n = Object.keys(o.done || {}).length;
+    if (!confirm('Remplacer la progression de ce téléphone par celle de ' + (o.name || 'ce code') + ' (' + n + ' étapes réussies) ?')) return;
+    S = Object.assign(blank(), o); save(); usePack(); applySkin(); tab = 'learn'; toast('Progression récupérée. Aslema ' + S.name + ' !'); home();
+  };
 }
 
 // ---------- Rappel quotidien (notification locale, sans serveur) ----------
@@ -827,7 +877,7 @@ function intro(ep){
       <h1 style="font-size:30px;margin:10px 0 8px">${esc(ep.title)}</h1><p class="muted" style="margin:0 0 18px">${esc(ep.pitch)}</p></div>
       <div class="sec">Dans cet épisode</div><div class="card" style="padding:6px 14px">${cast}</div>
       <p class="muted" style="font-size:14px;margin-top:16px">1. La scène · 2. Les mots · 3. ${buildLesson(ep, levelOf(ep.id)).length} exercices${levelOf(ep.id).num >= 4 ? ' · traductions cachées : touche une bulle pour la voir' : ''}</p>`,
-    ep.mission && S.done[ep.id]
+    ep.mission && AI() && S.done[ep.id]
       ? `<div class="seg"><button class="btn btn-ghost" id="next">Revoir l’épisode</button><button class="btn btn-primary" id="mis">${S.missions[ep.id] ? 'Rejouer la mission' : 'Mission bonus'}</button></div>`
       : `<button class="btn btn-primary btn-block" id="next">Voir la scène</button>`);
   $('#next').onclick = () => scene(ep, 0);
@@ -1249,7 +1299,7 @@ function epResult(ep, firstTry, total, hontes){
       <h1 style="font-size:28px">Épisode terminé !</h1>
       <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(msg)}</div></div>
       <div class="stats" style="margin-top:8px"><div class="stat"><b>+${gain}</b><span>jasmins</span></div><div class="stat"><b>${hontes}</b><span>moment${hontes > 1 ? 's' : ''} de honte</span></div></div></div>`,
-    (ep.mission ? `<button class="btn btn-ghost btn-block" id="mis" style="margin-bottom:10px">Mission bonus avec ${esc(CAST[ep.mission.who].name)} · +30 jasmins</button>` : '') +
+    (ep.mission && AI() ? `<button class="btn btn-ghost btn-block" id="mis" style="margin-bottom:10px">Mission bonus avec ${esc(CAST[ep.mission.who].name)} · +30 jasmins</button>` : '') +
     `<button class="btn btn-primary btn-block" id="next">${nextEp ? 'Épisode suivant' : 'Retour au parcours'}</button>`);
   $('#quit').onclick = () => { stack = []; home(); };
   const mb = $('#mis'); if (mb) mb.onclick = () => startMission(ep);
@@ -1569,8 +1619,23 @@ async function gemini(key, msgs){
   throw new Error(last);
 }
 
+
+// ---------- Version web (iPhone) : installation sur l'écran d'accueil + fonctionnement hors ligne ----------
+const standalone = () => window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+function installHint(){
+  if (!window.TWB_WEB || standalone() || S.hideInstall) return '';
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  return `<div class="card" id="inst" style="margin-bottom:14px;background:var(--blue-soft);border-color:var(--blue);font-size:14px">
+    <b>Installe l’appli sur ton écran d’accueil</b>
+    <p style="margin:4px 0 8px">${ios ? 'Dans Safari, touche le bouton Partager (le carré avec une flèche), puis « Sur l’écran d’accueil ».' : 'Dans le menu du navigateur, choisis « Ajouter à l’écran d’accueil ».'} Elle s’ouvrira comme une vraie appli, même sans internet.</p>
+    <button class="btn btn-ghost" id="inst-x" style="min-height:0;padding:6px 12px">Plus tard</button></div>`;
+}
+document.addEventListener('click', e => { if (e.target.closest('#inst-x')) { S.hideInstall = true; save(); const c = $('#inst'); if (c) c.remove(); } });
+if (window.TWB_WEB && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
 // ---------- Démarrage ----------
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 restore().then(() => {
   usePack(); applySkin(); home();
   loadVoices().then(() => { if (screen === 'home') home(); });

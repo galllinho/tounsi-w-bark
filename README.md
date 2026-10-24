@@ -18,3 +18,10 @@ Version 0.5 : parcours « Lire et écrire » (10 unités, 31 lettres, tracé au 
 Version 0.4 : tunisien complet (5 niveaux × 5 épisodes, 242 mots), 11 types d'exercices avec difficulté progressive, grammaire, missions IA.
 Version 0.3 : tunisien (niveaux 1 et 2) et kabyle (niveau 1, brouillon), révisions quotidiennes, discussion avec l'IA, rappel quotidien, Studio famille.
 Les textes tunisiens doivent être relus par un natif avant de partager l'appli.
+
+## Version web (iPhone)
+
+- Adresse : https://galllinho.github.io/tounsi-w-bark/ (publiée par `.github/workflows/web.yml` à chaque push sur main ; construite avec `WEB=1 node scripts/build-www.js`).
+- Sans IA (pas de discussion ni de missions) : elle est pensée pour des enfants, et Gemini est réservé aux adultes.
+- S'installe sur l'écran d'accueil (Safari → Partager → Sur l'écran d'accueil), marche hors ligne (service worker `scripts/sw-template.js`), icônes et manifeste dans `web/`.
+- Sauvegarde : sur le téléphone, plus un « code de secours » (Profil → Sauvegarde) pour récupérer sa progression ou la passer d'un téléphone à l'autre, Android compris.
