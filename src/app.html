@@ -63,6 +63,12 @@ h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:var(--display-w);l
 .opt.ok{border-color:var(--good);background:var(--good-soft)}
 .opt.ko{border-color:var(--terra);background:var(--terra-soft)}
 .opt:disabled{opacity:1}
+.langs-seg{grid-template-columns:1fr}
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;animation:up .2s ease-out}
+.sheet-in{background:var(--card);color:var(--ink);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:85vh;overflow:auto;border-top:1px solid var(--line)}
+.lang-opt{display:flex;align-items:center;gap:12px}
+#lgchip{white-space:nowrap}
+.lang-opt .av{border-radius:50%;flex:none}
 .nav{position:fixed;left:0;right:0;bottom:0;background:var(--nav-bg);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
 .nav-in{max-width:560px;width:100%;display:grid;grid-template-columns:repeat(4,1fr)}
 .nav button{padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--nav-ink)}
@@ -248,17 +254,21 @@ h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:var(--display-w);l
 <script src="content.js"></script>
 <script src="content-tn-more.js"></script>
 <script src="content-script.js"></script>
+<script src="content-dz.js"></script>
+<script src="content-dz-more.js"></script>
 <script src="content-kab.js"></script>
 <script>
 /* =========================================================
    Tounsi w Bark — v0.1
-   Tunisien et kabyle, épisodes, révisions, discussion, Studio famille.
+   Plusieurs langues (packs : tunisien, algérien, kabyle…), épisodes, révisions, discussion, Studio famille.
+   Ajouter une langue = ajouter un fichier src/content-xx.js (voir docs/journal-ajout-langues.md), sans toucher à ce code.
    Tout est stocké sur le téléphone (localStorage).
    ========================================================= */
 'use strict';
 const PACKS = window.TWB_CONTENT;
 const CAST = window.TWB_CAST;
 let PACK, KH, CHAT;
+let SC = null, LKEYS = [], CH2KEY = {};   // parcours « Lire et écrire » du pack en cours
 const LS = 'twb.state.v1';
 
 // ---------- Fonctions natives (dans l'APK) ----------
@@ -275,8 +285,12 @@ const AI = () => !!window.TWB_GEMINI_KEY;
 const blank = () => ({ name: '', gender: 'm', lang: 'tn', xp: 0, done: {}, saved: [], weak: {}, review: '', streak: { last: '', count: 0 }, hontes: 0, opts: { fr: true, ar: false }, notif: { on: false, hour: 19 }, voiceName: '', missions: {}, skin: 'sidi' });
 let S = load();
 function load(){ try { return Object.assign(blank(), JSON.parse(localStorage.getItem(LS) || '{}')); } catch(e){ return blank(); } }
+// Packs de langue disponibles, dans l'ordre d'affichage (champ « order » de chaque pack)
+const PACK_IDS = () => Object.keys(PACKS).filter(k => PACKS[k] && PACKS[k].levels).sort((a, b) => (PACKS[a].order || 50) - (PACKS[b].order || 50));
+const UI = (k, d) => (PACK.ui && PACK.ui[k] != null) ? PACK.ui[k] : (d || '');
 function usePack(){
   PACK = PACKS[S.lang] || PACKS.tn; KH = PACK.lines;
+  if (typeof setScript === 'function') setScript();
   CHAT = Object.assign({}, window.TWB_CHAT, { rules: PACK.chat.rules, personas: PACK.chat.personas });
 }
 usePack();
@@ -330,7 +344,8 @@ const yesterday = () => { const d = new Date(Date.now() - 864e5); return d.getFu
 function fill(s){
   const petit = S.gender === 'f' ? 'benti' : 'wlidi', petitAr = S.gender === 'f' ? 'بنتي' : 'وليدي';
   const f = S.gender === 'f';
-  return String(s).replace(/\{petitAr\}/g, petitAr).replace(/\{petit\}/g, petit).replace(/\{prenom\}/g, S.name || 'Nour')
+  // {g:forme garçon|forme fille} : accord générique selon le genre de l'élève (algérien, marocain…)
+  return String(s).replace(/\{g:([^|{}]*)\|([^{}]*)\}/g, (m, a, b) => f ? b : a).replace(/\{petitAr\}/g, petitAr).replace(/\{petit\}/g, petit).replace(/\{prenom\}/g, S.name || 'Nour')
     .replace(/\{mmi\}/g, f ? 'a yelli' : 'a mmi').replace(/\{k\}/g, f ? 'm' : 'k').replace(/\{e\}/g, f ? 'e' : '')
     .replace(/\{jayAr\}/g, f ? 'جاية' : 'جاي').replace(/\{jay\}/g, f ? 'jaya' : 'jay')
     .replace(/\{petitFr\}/g, f ? 'ma petite' : 'mon petit')
@@ -498,21 +513,20 @@ function onboarding(){
   screen = 'onboard';
   let g = S.gender || 'm', lg = S.lang || 'tn';
   root.innerHTML = `<div class="main fadein">
-    <div class="hero">${avatar('khalti', 96)} ${avatar('nanna', 96)}
+    <div class="hero">${PACK_IDS().map(k => avatar(PACKS[k].mascot, 72)).join(' ')}
       <h1>Tounsi <span>w</span> Bark</h1>
-      <p class="muted">Apprends la langue de ta famille avec humour.<br>Khalti et Nanna sont drôles, exigeantes, et ont toujours raison.</p>
+      <p class="muted">Apprends la langue de ta famille avec humour.<br>${esc(PACK_IDS().map(k => CAST[PACKS[k].mascot].name).join(', ').replace(/, ([^,]*)$/, ' et $1'))} sont drôles, exigeantes, et ont toujours raison.</p>
     </div>
     <label class="q" for="nm">Ton prénom</label>
     <input class="field" id="nm" autocomplete="given-name" maxlength="20" placeholder="ex. Yasmine" value="${esc(S.name)}">
     <div class="q" style="margin-top:18px">Tu veux apprendre…</div>
-    <div class="seg">
-      <button class="opt" data-l="tn">le tunisien<small>avec Khalti</small></button>
-      <button class="opt" data-l="kab">le kabyle<small>avec Nanna · brouillon</small></button>
+    <div class="seg langs-seg">
+      ${PACK_IDS().map(k => `<button class="opt" data-l="${k}">${esc(PACKS[k].flag || '')} l’${esc(PACKS[k].ui.adj)}<small>${esc(PACKS[k].ui.with)}</small></button>`).join('')}
     </div>
     <div class="q" style="margin-top:8px">Pour la famille, tu es…</div>
     <div class="seg">
-      <button class="opt" data-g="m">un garçon<small>wlidi · mmi</small></button>
-      <button class="opt" data-g="f">une fille<small>benti · yelli</small></button>
+      <button class="opt" data-g="m">un garçon<small>wlidi · nta · mmi</small></button>
+      <button class="opt" data-g="f">une fille<small>benti · nti · yelli</small></button>
     </div>
     <button class="btn btn-primary btn-block" id="go" style="margin-top:14px">Yalla, on commence</button>
     ${!S.name && Object.keys(OTHERS).length ? '<button class="btn btn-ghost btn-block" id="ob-back" style="margin-top:10px">Retour aux profils</button>' : ''}
@@ -531,7 +545,7 @@ function onboarding(){
 
 function shell(content){
   root.innerHTML = `<div class="top"><div class="brand">Tounsi <span>w</span> Bark</div>
-    <div class="chips"><button class="chip" id="lgchip" title="Changer de langue">${esc(PACK.short)}</button><span class="chip" title="Jours d'affilée">${ICON.flame}${streakNow()}</span><span class="chip" title="Jasmins gagnés">${ICON.jasmine}${S.xp}</span></div></div>
+    <div class="chips"><button class="chip" id="lgchip" title="Changer de langue" aria-label="Langue : ${esc(PACK.label)}. Changer de langue">${esc(PACK.flag || '')} ${esc(PACK.short)}</button><span class="chip" title="Jours d'affilée">${ICON.flame}${streakNow()}</span><span class="chip" title="Jasmins gagnés">${ICON.jasmine}${S.xp}</span></div></div>
     <div class="main fadein">${content}</div>
     <nav class="nav"><div class="nav-in" style="grid-template-columns:repeat(${AI() ? 4 : 3},1fr)">
       <button data-tab="learn" class="${tab === 'learn' ? 'on' : ''}">${ICON.learn}Apprendre</button>
@@ -540,22 +554,40 @@ function shell(content){
       <button data-tab="me" class="${tab === 'me' ? 'on' : ''}">${ICON.user}Profil</button>
     </div></nav>`;
   root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; stack = []; home(); });
-  $('#lgchip').onclick = switchLang;
+  $('#lgchip').onclick = langPicker;
 }
-function switchLang(){
-  S.lang = S.lang === 'kab' ? 'tn' : 'kab'; save(); usePack(); scheduleNotif();
-  toast(S.lang === 'kab' ? 'Azul ! Place au kabyle avec Nanna.' : 'Aslema ! Retour au tunisien avec Khalti.');
+// Sélecteur de langues : la liste vient des packs chargés (ajouter un pack l'ajoute ici automatiquement)
+function langPicker(){
+  const old = document.querySelector('.sheet'); if (old) old.remove();
+  const f = document.createElement('div');
+  f.className = 'sheet';
+  const nEp = k => PACKS[k].levels.reduce((a, l) => a + l.episodes.length, 0);
+  f.innerHTML = `<div class="sheet-in" role="dialog" aria-label="Choisir une langue"><h3 style="margin:0 0 4px">Quelle langue ?</h3>
+    <p class="muted" style="margin:0 0 12px;font-size:14px">Ta progression est gardée pour chaque langue.</p>
+    ${PACK_IDS().map(k => { const P = PACKS[k], on = k === S.lang; return `<button class="opt lang-opt ${on ? 'sel' : ''}" data-pick="${k}" aria-pressed="${on}">${avatar(P.mascot, 44)}<span style="flex:1;text-align:left"><b>${esc(P.flag || '')} ${esc(P.label)}</b><small>${esc(P.ui.with)} · ${nEp(k)} épisodes</small></span>${on ? '<span class="tag">Actuelle</span>' : ''}</button>`; }).join('')}
+    <button class="btn btn-ghost btn-block" id="lp-x" style="margin-top:6px">Fermer</button></div>`;
+  document.body.appendChild(f);
+  f.onclick = e => { if (e.target === f) f.remove(); };
+  f.querySelector('#lp-x').onclick = () => f.remove();
+  f.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { f.remove(); setLang(b.dataset.pick); });
+}
+function setLang(k){
+  if (!PACKS[k] || k === S.lang) return;
+  S.lang = k; save(); usePack(); scheduleNotif(); stack = [];
+  if (!PACK.script) track = 'speak';
+  toast(UI('welcome'));
   home();
 }
+const switchLang = langPicker;
 
 function mascotMsg(){
   const lv = PACK.levels.filter(l => l.episodes.length);
   if (lv.every(l => S.done[l.boss.id])) return fill(KH.done);
   const n = streakNow();
-  if (!S.streak.last) return S.lang === 'kab' ? `Azul ${S.name} ! Commence par l’épisode 1, je t’attends devant la maison depuis l’aube.` : `Aslema ${S.name} ! Commence par l’épisode 1, je t’attends à l’aéroport depuis 2 heures.`;
-  if (n === 0) return KH.streak0;
-  if (n === 1) return KH.streak1;
-  return KH.streakN.replace('{n}', n);
+  if (!S.streak.last) return fill(UI('start'));
+  if (n === 0) return fill(KH.streak0);
+  if (n === 1) return fill(KH.streak1);
+  return fill(KH.streakN.replace('{n}', n));
 }
 
 function levelCard(l){
@@ -606,8 +638,8 @@ function home(){
   const review = nL >= 4 ? `<button class="card step" id="rev" style="margin-bottom:14px;border-top:0">
       <span class="dot ${rDone ? 'done' : 'open'}">${rDone ? '✓' : '?'}</span>
       <span style="flex:1"><b>${esc(MN())} t’interroge</b><small>${rDone ? 'Fait aujourd’hui. Tu peux recommencer.' : '8 questions sur les mots que tu oublies · +15 jasmins'}</small></span></button>` : '';
-  const tsw = S.lang === 'tn' ? `<div class="filters" style="margin-bottom:14px"><button data-tr="speak" class="${track === 'speak' ? 'on' : ''}">Parler</button><button data-tr="script" class="${track === 'script' ? 'on' : ''}">Lire et écrire</button></div>` : '';
-  if (S.lang === 'tn' && track === 'script') {
+  const tsw = PACK.script ? `<div class="filters" style="margin-bottom:14px"><button data-tr="speak" class="${track === 'speak' ? 'on' : ''}">Parler</button><button data-tr="script" class="${track === 'script' ? 'on' : ''}">Lire et écrire</button></div>` : '';
+  if (PACK.script && track === 'script') {
     shell(tsw + scriptHome());
     root.querySelectorAll('[data-tr]').forEach(b => b.onclick = () => { track = b.dataset.tr; home(); });
     bindScriptHome();
@@ -615,7 +647,7 @@ function home(){
   }
   shell(tsw + `<div class="say">${avatar(PACK.mascot, 52)}<div class="bubble">${esc(mascotMsg())}</div></div>
     ${installHint()}
-    ${PACK.draft ? '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Version brouillon.</b> Les textes kabyles sont en cours de relecture par une locutrice native, et les voix arrivent avec le Studio famille.</div>' : ''}
+    ${PACK.draft ? `<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Version brouillon.</b> ${esc(UI('draftNote'))}</div>` : ''}
     ${review}${shown.map(levelCard).join('')}
     ${doneLv.length ? `<div class="sec">Niveaux réussis</div>${doneLv.map(levelCard).join('')}` : ''}
     ${later.length ? `<div class="sec">La suite</div>${later.map(levelCard).join('')}` : ''}`);
@@ -700,14 +732,14 @@ function profile(){
       <div class="toggle"><span class="muted" style="font-size:14px">${Object.keys(OTHERS).length ? 'Chaque profil garde sa propre progression.' : 'Un frère, une sœur, une cousine ? Chacun peut avoir sa progression.'}</span><button class="btn btn-ghost" id="padd" style="min-height:0;padding:8px 12px;flex:none">Ajouter</button></div>
     </div>
     <div class="sec">Langue apprise</div>
-    <div class="card"><div class="toggle"><span><b>${esc(PACK.label)}</b><br><small class="muted">Ta progression est gardée pour chaque langue.</small></span><button class="btn btn-ghost" id="swl" style="min-height:0;padding:8px 12px">Passer au ${S.lang === 'kab' ? 'tunisien' : 'kabyle'}</button></div></div>
+    <div class="card"><div class="toggle"><span><b>${esc(PACK.label)}</b><br><small class="muted">Ta progression est gardée pour chaque langue.</small></span><button class="btn btn-ghost" id="swl" style="min-height:0;padding:8px 12px">Changer</button></div></div>
     ${Native.LN ? `    <div class="sec">Rappel de ${esc(MN())}</div>
     <div class="card">
       <div class="toggle"><span>Un message par jour pour ne pas casser ta série</span><button class="sw ${S.notif.on ? 'on' : ''}" id="ntf" aria-label="Rappel quotidien"></button></div>
       <div class="toggle"><span>Heure du rappel</span><select class="field" id="nth" style="width:auto;padding:8px 10px">${hours.map(h => `<option value="${h}" ${S.notif.hour === h ? 'selected' : ''}>${h} h</option>`).join('')}</select></div>
     </div>` : ''}
     <div class="sec">Studio famille</div>
-    <button class="card step" id="studio" style="border-top:0"><span class="dot open">${ICON.mic}</span><span style="flex:1"><b>Enregistrer les vraies voix</b><small>Un proche enregistre les phrases ${S.lang === 'kab' ? 'en kabyle' : 'en tunisien'} : elles remplacent la voix du téléphone.</small></span></button>
+    <button class="card step" id="studio" style="border-top:0"><span class="dot open">${ICON.mic}</span><span style="flex:1"><b>Enregistrer les vraies voix</b><small>Un proche enregistre les phrases en ${esc(UI('adj'))} : elles remplacent la voix du téléphone.</small></span></button>
     <div class="sec">Apparence</div>
     <div class="skins">${SKINS.map(k => `<button class="skin ${S.skin === k.id ? 'on' : ''}" data-skin-pick="${k.id}" aria-pressed="${S.skin === k.id}"><span class="sw3">${k.c.map(c => `<i style="background:${c}"></i>`).join('')}</span><b>${esc(k.name)}</b><small>${esc(k.desc)}</small></button>`).join('')}</div>
     <div class="sec">Sauvegarde</div>
@@ -724,7 +756,7 @@ function profile(){
     </div>
     <div class="sec">À propos</div>
     <div class="card"><p style="margin:0 0 8px"><b>Tounsi w Bark</b> · version ${window.TWB_BUILD || 'test'}</p>
-      <p class="muted" style="margin:0 0 8px;font-size:14px">${PACK.voice === 'tts' ? 'Sans enregistrement, c’est la voix du téléphone : l’accent n’est pas tunisien.' : 'Le téléphone n’a pas de voix kabyle : les phrases s’écoutent une fois enregistrées dans le Studio famille.'}</p>
+      <p class="muted" style="margin:0 0 8px;font-size:14px">${esc(UI('ttsNote'))}</p>
       <p class="muted" style="margin:0;font-size:14px">Si tu repères une erreur de langue, dis-le : les textes sont en cours de relecture.</p></div>
     <button class="btn btn-ghost btn-block" id="reset" style="margin-top:16px;color:var(--terra)">Tout recommencer à zéro</button>`);
   root.querySelectorAll('[data-opt]').forEach(b => b.onclick = () => { S.opts[b.dataset.opt] = !S.opts[b.dataset.opt]; save(); b.classList.toggle('on'); });
@@ -756,7 +788,7 @@ function switchProfile(pid){
   if (S.name) OTHERS[S.pid] = S;
   delete OTHERS[pid];
   S = Object.assign(blank(), o); save(); usePack(); applySkin(); stack = []; tab = 'learn';
-  toast((S.lang === 'kab' ? 'Azul ' : 'Aslema ') + S.name + ' !'); home();
+  toast(UI('hello', 'Salut') + ' ' + S.name + ' !'); home();
 }
 function addProfile(){
   const skin = S.skin;
@@ -772,7 +804,7 @@ function whoPlays(){
   screen = 'who';
   const all = [S].concat(Object.values(OTHERS)).filter(p => p.name);
   root.innerHTML = `<div class="main fadein">
-    <div class="hero">${avatar('khalti', 80)}<h1 style="font-size:28px">Qui joue ?</h1><p class="muted">Choisis ton prénom, Khalti t’attend.</p></div>
+    <div class="hero">${avatar(PACK.mascot, 80)}<h1 style="font-size:28px">Qui joue ?</h1><p class="muted">Choisis ton prénom, ${esc(MN())} t’attend.</p></div>
     ${all.map(p => `<button class="opt" data-who="${p.pid}" style="display:flex;align-items:center;gap:14px;padding:14px">${pBadge(p, 48)}<span style="flex:1"><b style="font-size:18px">${esc(p.name)}</b><small>${p.xp || 0} jasmins · ${(n => n + (n > 1 ? ' étapes réussies' : ' étape réussie'))(Object.keys(p.done || {}).length)}</small></span></button>`).join('')}
     <button class="btn btn-ghost btn-block" id="who-add" style="margin-top:6px">+ Ajouter un profil</button>
   </div>`;
@@ -813,7 +845,7 @@ function backupIn(){
     let o; try { o = readBackup($('#bk-p').value); } catch(e){ return toast('Ce code ne marche pas : vérifie qu’il est complet'); }
     const n = Object.keys(o.done || {}).length;
     if (!confirm('Remplacer la progression de ce téléphone par celle de ' + (o.name || 'ce code') + ' (' + n + ' étapes réussies) ?')) return;
-    const pid = S.pid; S = Object.assign(blank(), o); S.pid = pid; save(); usePack(); applySkin(); tab = 'learn'; toast('Progression récupérée. Aslema ' + S.name + ' !'); home();
+    const pid = S.pid; S = Object.assign(blank(), o); S.pid = pid; save(); usePack(); applySkin(); tab = 'learn'; toast('Progression récupérée. ' + UI('hello', 'Salut') + ' ' + S.name + ' !'); home();
   };
 }
 
@@ -856,7 +888,7 @@ async function studio(){
   const done = items.filter(i => LOCAL.has(i.key)).length;
   root.innerHTML = `<div class="lesson fadein"><div class="lesson-top"><button class="x" id="quit" aria-label="Fermer">${ICON.close}</button><b style="flex:1">Studio famille · ${esc(PACK.short)}</b></div>
     <div class="lesson-body">
-      <p class="muted" style="margin:0 0 10px;font-size:14px">Un proche qui parle bien ${S.lang === 'kab' ? 'kabyle' : 'tunisien'} lit chaque phrase : touche <b>●</b>, parle, retouche pour arrêter. Les voix s’entendent tout de suite sur ce téléphone. Ensuite, « Envoyer » crée un fichier à transmettre pour que tout le monde les ait.</p>
+      <p class="muted" style="margin:0 0 10px;font-size:14px">Un proche qui parle bien ${esc(UI('adj'))} lit chaque phrase : touche <b>●</b>, parle, retouche pour arrêter. Les voix s’entendent tout de suite sur ce téléphone. Ensuite, « Envoyer » crée un fichier à transmettre pour que tout le monde les ait.</p>
       <label class="q" for="vn">Voix de</label><input class="field" id="vn" placeholder="ex. Maman" value="${esc(S.voiceName || '')}" style="margin-bottom:10px">
       <div class="card" style="padding:4px 14px">${items.map(i => `<div class="word" data-k="${i.key}"><div class="w"><b>${esc(i.tn)}</b><div class="fr">${esc(i.fr)}</div></div>
         <button class="icon-btn rec-b" data-rec="${i.key}" aria-label="Enregistrer" style="color:var(--terra)">●</button>
@@ -1048,8 +1080,8 @@ function buildBoss(level){
 }
 
 // Correction tolérante pour les réponses écrites
-function skel(s){ return normLat(String(s).replace(/3/g, 'a').replace(/7/g, 'h').replace(/9/g, 'k').replace(/5/g, 'kh')).replace(/sh/g, 'ch').replace(/ou/g, 'u').replace(/[aeiouy]+/g, ''); }
-function lat(s){ return normLat(String(s).replace(/3/g, 'a').replace(/7/g, 'h').replace(/9/g, 'k').replace(/5/g, 'kh')).replace(/sh/g, 'ch'); }
+function skel(s){ return normLat(String(s).replace(/3/g, 'a').replace(/7/g, 'h').replace(/9/g, 'k').replace(/5/g, 'kh')).replace(/sh/g, 'ch').replace(/q/g, 'k').replace(/ou/g, 'u').replace(/[aeiouy]+/g, ''); }
+function lat(s){ return normLat(String(s).replace(/3/g, 'a').replace(/7/g, 'h').replace(/9/g, 'k').replace(/5/g, 'kh')).replace(/sh/g, 'ch').replace(/q/g, 'k'); }
 function checkWritten(input, item){
   const targets = [fill(item.tn)].concat((item.alt || []).map(fill));
   let best = 0, exact = false;
@@ -1115,7 +1147,7 @@ function runExercises(list, ctx){
     if (q.type === 'meaning' || q.type === 'reverse' || q.type === 'listen') {
       let prompt;
       if (q.type === 'meaning') prompt = `<div class="q">Ça veut dire quoi ?</div><div class="big">${esc(fill(q.w.tn))}</div>${arDiv(q.w)}${sayBtn(V(q.w))}`;
-      if (q.type === 'reverse') prompt = `<div class="q">Comment on dit en tunisien ?</div><div class="big">${esc(fill(q.w.fr))}</div>`;
+      if (q.type === 'reverse') prompt = `<div class="q">Comment on dit en ${esc(UI('adj'))} ?</div><div class="big">${esc(fill(q.w.fr))}</div>`;
       const hv = hasVoice(V(q.w));
       if (q.type === 'listen') prompt = hv
         ? `<div class="q">Écoute et choisis la traduction</div><div class="center" style="margin:16px 0">${sayBtn(V(q.w), 'Réécouter')}</div><button class="btn btn-ghost" id="peek" style="min-height:0;padding:8px 12px;font-size:14px">Je n’ai pas de son : afficher le mot</button><div class="big" id="peekw" hidden>${esc(fill(q.w.tn))}</div>`
@@ -1132,9 +1164,9 @@ function runExercises(list, ctx){
       const it = q.it;
       const head = q.dict
         ? `<div class="q">Écoute et écris ce que tu entends</div><div class="center" style="margin:14px 0">${sayBtn(V(it), 'Réécouter')}</div>`
-        : `<div class="q">${x.sentence ? 'Traduis en tunisien' : 'Écris en tunisien'}${x.old ? ' · révision' : ''}</div><div class="big" style="${x.sentence ? 'font-size:24px' : ''}">${esc(fill(it.fr))}</div>`;
+        : `<div class="q">${x.sentence ? 'Traduis en ' : 'Écris en '}${esc(UI('adj'))}${x.old ? ' · révision' : ''}</div><div class="big" style="${x.sentence ? 'font-size:24px' : ''}">${esc(fill(it.fr))}</div>`;
       lessonFrame(progress(), head + `<input class="field" id="wr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Écris en lettres latines" style="margin-top:16px;font-size:18px">
-        <p class="muted" style="font-size:13px;margin:8px 2px 0">Comme sur WhatsApp : « aa » ou « 3 » pour ع, « h » ou « 7 » pour ح, « k » ou « 9 » pour ق.</p>`, check);
+        <p class="muted" style="font-size:13px;margin:8px 2px 0">Comme sur WhatsApp : « aa » ou « 3 » pour ع, « h » ou « 7 » pour ح, « q », « k » ou « 9 » pour ق.</p>`, check);
       if (q.dict) speak(V(it));
       const inp = $('#wr'); inp.focus();
       inp.oninput = () => { $('#check').disabled = !inp.value.trim(); };
@@ -1329,7 +1361,7 @@ function feedback(ok, info, onNext){
   const f = document.createElement('div');
   f.className = 'feedback ' + (ok ? 'good' : 'bad');
   const msg = fill(pick(ok ? KH.right : KH.wrong));
-  f.innerHTML = `<div class="in"><div class="head">${avatar(PACK.mascot, 44)}<div><h3>${ok ? (S.lang === 'kab' ? 'Ayuz !' : 'Mrigel !') : (S.lang === 'kab' ? 'A yemma…' : 'Ya hasra…')}</h3><p>${esc(msg)}</p></div></div>
+  f.innerHTML = `<div class="in"><div class="head">${avatar(PACK.mascot, 44)}<div><h3>${esc(ok ? UI('bravo', 'Bravo !') : UI('oops', 'Oups…'))}</h3><p>${esc(msg)}</p></div></div>
     ${!ok ? `<p style="margin:0 0 4px"><b>Bonne réponse :</b> ${esc(info.answer)}</p>` : ''}${info.sub ? `<p class="muted" style="margin:0 0 10px;font-size:14px">${esc(info.sub)}</p>` : '<div style="height:6px"></div>'}
     <button class="btn ${ok ? 'btn-good' : 'btn-bad'} btn-block" id="cont">Continuer</button></div>`;
   document.body.appendChild(f);
@@ -1365,7 +1397,7 @@ function epResult(ep, firstTry, total, hontes){
 function startBoss(level){
   const list = buildBoss(level);
   stack = [];
-  const pet = S.lang === 'kab' ? fill('{mmi}') : 'ya ' + fill('{petit}');
+  const pet = fill(UI('pet', '{prenom}'));
   lessonFrame(0, `<div class="center" style="padding-top:12px">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin:14px 0 8px">${esc(level.boss.title)}</h1>
       <p class="muted">${esc(level.boss.pitch)}</p>
       <div class="say" style="text-align:left;margin-top:18px">${avatar(PACK.mascot, 40)}<div class="bubble">Pas de deuxième chance ici, ${esc(pet)}. Concentre-toi.</div></div></div>`,
@@ -1377,7 +1409,7 @@ function bossResult(level, score, total, hontes){
   if (pass) { S.done[level.boss.id] = { stars: 3, at: today() }; S.xp += 50; }
   S.hontes += hontes; bumpStreak(); save();
   const nxt = PACK.levels[PACK.levels.indexOf(level) + 1];
-  const ok = (S.lang === 'kab' ? 'Ayuz ! ' : 'Mrigel ! ') + 'Tu as réussi mon épreuve. ' + (nxt && nxt.episodes.length ? 'Le niveau ' + nxt.num + ' « ' + nxt.name + ' » est ouvert !' : 'La suite arrive bientôt.');
+  const ok = UI('bravo', 'Bravo !') + ' Tu as réussi mon épreuve. ' + (nxt && nxt.episodes.length ? 'Le niveau ' + nxt.num + ' « ' + nxt.name + ' » est ouvert !' : 'La suite arrive bientôt.');
   lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}
       <h1 style="font-size:30px;margin-top:14px">${score} / ${total}</h1>
       <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(pass ? ok : 'Pas encore… Révise ton carnet, bois un thé, et reviens me voir. Il en faut ' + level.boss.pass + '.')}</div></div>
@@ -1388,9 +1420,13 @@ function bossResult(level, score, total, hontes){
 }
 
 // ---------- Lire et écrire : l'alphabet du tunisien ----------
-const SC = window.TWB_SCRIPT;
-const LKEYS = Object.keys(SC.letters);
-const CH2KEY = Object.fromEntries(LKEYS.map(k => [SC.letters[k].ch, k]));
+// Chaque pack peut avoir son parcours (PACK.script) : lettres, mots et unités propres à la langue.
+function setScript(){
+  SC = PACK.script || null;
+  LKEYS = SC ? Object.keys(SC.letters) : [];
+  CH2KEY = SC ? Object.fromEntries(LKEYS.map(k => [SC.letters[k].ch, k])) : {};
+}
+setScript();
 const HARAKAT = /[ً-ْٰ]/g; // petites voyelles, chadda, soukoun
 const bare = t => String(t).replace(HARAKAT, '').replace(/[أإآ]/g, 'ا');
 const forms = k => { const L = SC.letters[k]; return L.join === false ? [L.ch, L.ch, 'ـ' + L.ch, 'ـ' + L.ch] : [L.ch, L.ch + 'ـ', 'ـ' + L.ch + 'ـ', 'ـ' + L.ch]; };
@@ -1426,14 +1462,14 @@ function buildScriptLesson(u, uIndex){
 function scriptHome(){
   const units = SC.units.map((u, i) => {
     const d = S.done[u.id], op = i === 0 || !!S.done[SC.units[i - 1].id];
-    const preview = u.letters.length ? u.letters.map(k => SC.letters[k].ch).join(' ') : (u.vowels ? 'بَ بِ بُ' : 'أسلامة');
+    const preview = u.letters.length ? u.letters.map(k => SC.letters[k].ch).join(' ') : (u.vowels ? 'بَ بِ بُ' : (SC.preview || 'أسلامة'));
     return `<button class="step" data-su="${i}" ${op ? '' : 'aria-disabled="true"'}>
       <span class="dot ${d ? 'done' : op ? 'open' : ''}" style="font-family:var(--font-ar);font-size:${u.letters.length ? 19 : 15}px">${op ? esc(u.letters.length ? SC.letters[u.letters[0]].ch : i + 1) : ICON.lock}</span>
       <span style="flex:1"><b>${i + 1}. ${esc(u.title)}</b><small class="ar" style="font-size:18px;display:block;text-align:left;direction:rtl">${esc(preview)}</small></span>${d ? `<span class="stars">${'★'.repeat(d.stars)}${'☆'.repeat(3 - d.stars)}</span>` : op ? '<span class="tag">À toi</span>' : ''}</button>`;
   }).join('');
   const n = SC.units.filter(u => S.done[u.id]).length;
   return `<div class="card level" style="margin-bottom:14px">
-      <div class="level-head" style="background:var(--terra)"><div class="num">${n} / ${SC.units.length} unités</div><h2>Lire et écrire</h2><p>L’alphabet du tunisien, en partant de zéro</p></div>
+      <div class="level-head" style="background:var(--terra)"><div class="num">${n} / ${SC.units.length} unités</div><h2>Lire et écrire</h2><p>L’alphabet de l’${esc(UI('adj'))}, en partant de zéro</p></div>
       <div class="path">${units}</div></div>
     <div class="card" style="font-size:14px"><b>Le saviez-vous ?</b> L’arabe se lit de droite à gauche, et la plupart des lettres changent un peu de forme selon leur place dans le mot.</div>`;
 }
@@ -1479,7 +1515,7 @@ function scriptResult(u, firstTry, total, hontes){
   const nextI = SC.units.indexOf(u) + 1;
   lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<div class="bigstars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
       <h1 style="font-size:28px">Unité terminée !</h1>
-      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${stars === 3 ? 'Tu lis déjà mieux que Skander. Ne lui dis pas, il va bouder.' : 'Bien ! Refais l’unité demain : les lettres rentrent à force de les voir.'}</div></div></div>`,
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${stars === 3 ? 'Tu lis déjà mieux que ' + esc(UI('cousin', 'ton cousin')) + '. Ne lui dis pas, il va bouder.' : 'Bien ! Refais l’unité demain : les lettres rentrent à force de les voir.'}</div></div></div>`,
     `<button class="btn btn-primary btn-block" id="next">${SC.units[nextI] ? 'Unité suivante' : 'Retour'}</button>`);
   screen = 'result';
   $('#quit').onclick = () => { stack = []; home(); };
@@ -1512,7 +1548,7 @@ function grammarResult(g, firstTry, total, hontes){
   const prev = S.done[g.id]; S.done[g.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
   S.xp += 20 + firstTry * 2; bumpStreak(); save();
   lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin-top:12px">${firstTry} / ${total}</h1>
-      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${hontes === 0 ? 'Parfait ! Tu pourrais donner des cours à Skander.' : 'Bien. Relis le tableau une fois ce soir, et ça rentrera.'}</div></div></div>`,
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${hontes === 0 ? 'Parfait ! Tu pourrais donner des cours à ' + esc(UI('cousin', 'ton cousin')) + '.' : 'Bien. Relis le tableau une fois ce soir, et ça rentrera.'}</div></div></div>`,
     `<button class="btn btn-primary btn-block" id="next">Retour au parcours</button>`);
   screen = 'result';
   $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
@@ -1522,7 +1558,7 @@ function grammarResult(g, firstTry, total, hontes){
 const MISSION_TURNS = 8;
 function startMission(ep){
   if (!GEMINI_KEY) return toast('Les missions ont besoin de la discussion IA, pas encore activée dans cette version.');
-  const m = ep.mission, hello = ep.scene.find(x => x.who === m.who) || { tn: 'Aslema!', ar: 'أسلامة!', fr: 'Bonjour !' };
+  const m = ep.mission, hello = ep.scene.find(x => x.who === m.who) || { tn: UI('hello', 'Salam') + '!', ar: UI('helloAr', 'سلام') + '!', fr: 'Bonjour !' };
   stack = [];
   openChat(m.who, { ep, goal: m.goal, win: m.win, hello });
 }
@@ -1537,8 +1573,8 @@ function chatHome(){
   const ok = !!GEMINI_KEY;
   const cards = Object.keys(CHAT.personas).map(k => `<button class="persona" data-p="${k}">${avatar(k, 64)}<b>${esc(CAST[k].name)}</b><small>${esc(CAST[k].role)}</small></button>`).join('');
   shell(`<h2 style="font-size:26px;margin:4px 0 4px">Discuter</h2>
-    <p class="muted" style="margin:0 0 14px">${PACK.srLang ? 'Parle tunisien à voix haute, ils te répondent. Active « mains libres » pour enchaîner sans toucher l’écran.' : 'Écris en kabyle (ou parle en français au micro), ils te répondent en kabyle.'}</p>
-    ${PACK.draft ? '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Bêta.</b> L’IA connaît moins bien le kabyle que le tunisien : elle peut faire des fautes. Le téléphone ne comprend pas le kabyle à l’oral, et les réponses ne sont pas lues à voix haute.</div>' : ''}
+    <p class="muted" style="margin:0 0 14px">${esc(UI('chatIntro'))}</p>
+    ${UI('chatDraft') ? `<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Bêta.</b> ${esc(UI('chatDraft'))}</div>` : ''}
     ${ok ? '' : '<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold)"><b>Pas encore activé</b><p class="muted" style="margin:4px 0 0;font-size:14px">La clé Gemini n’est pas encore installée dans cette version de l’appli.</p></div>'}
     <div class="personas">${cards}</div>
     <p class="muted center" style="font-size:13px;margin-top:16px">${chatLeft()} répliques restantes aujourd’hui · ne raconte rien de personnel : en version gratuite, Google peut lire les échanges.</p>`);
@@ -1546,7 +1582,7 @@ function chatHome(){
 }
 
 function personaOf(key){
-  return CHAT.personas[key] || { prompt: 'Tu es ' + CAST[key].name + ' (' + CAST[key].role + '), un personnage drôle et bienveillant de la famille ou du quartier.', hello: { tn: 'Aslema!', ar: 'أسلامة!', fr: 'Bonjour !' } };
+  return CHAT.personas[key] || { prompt: 'Tu es ' + CAST[key].name + ' (' + CAST[key].role + '), un personnage drôle et bienveillant de la famille ou du quartier.', hello: { tn: UI('hello', 'Salam') + '!', ar: UI('helloAr', 'سلام') + '!', fr: 'Bonjour !' } };
 }
 function openChat(key, mission){
   const run = ++chatRun;
@@ -1638,7 +1674,7 @@ function missionEnd(win, feedbackText){
   if (win) { const first = !S.missions[ep.id]; S.missions[ep.id] = true; if (first) S.xp += 30; bumpStreak(); save(); }
   const f = document.createElement('div');
   f.className = 'feedback ' + (win ? 'good' : 'bad');
-  f.innerHTML = `<div class="in"><div class="head">${avatar(st.key, 44)}<div><h3>${win ? 'Mission réussie !' : 'Mission pas encore réussie'}</h3><p>${esc(feedbackText || (win ? 'Bravo, tout en tunisien !' : 'Tu y étais presque.'))}</p></div></div>
+  f.innerHTML = `<div class="in"><div class="head">${avatar(st.key, 44)}<div><h3>${win ? 'Mission réussie !' : 'Mission pas encore réussie'}</h3><p>${esc(feedbackText || (win ? 'Bravo, tout en ' + UI('adj') + ' !' : 'Tu y étais presque.'))}</p></div></div>
     ${win && !S.missions['_shown_' + ep.id] ? '<p class="muted" style="margin:0 0 10px;font-size:14px">+30 jasmins</p>' : ''}
     <div class="seg"><button class="btn btn-ghost" id="mre">${win ? 'Continuer à discuter' : 'Réessayer'}</button><button class="btn ${win ? 'btn-good' : 'btn-bad'}" id="mok">Retour au parcours</button></div></div>`;
   document.body.appendChild(f);

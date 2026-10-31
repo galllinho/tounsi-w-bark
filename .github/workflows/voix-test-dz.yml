@@ -1,0 +1,60 @@
+name: Voix algérienne (test)
+# Essai de la voix IA algérienne (KasbahTTS, darja algérienne, licence MIT) sur quelques phrases du pack « dz ».
+# Vérifie automatiquement la durée de chaque fichier, puis publie les mp3 pour écoute (pré-version « voix-dz-test-N »).
+on:
+  workflow_dispatch:
+    inputs:
+      nombre:
+        description: Nombre de phrases à essayer
+        default: '10'
+      modele:
+        description: "Modèle : kasbah (MenaVoice/KasbahTTS-V0) ou habibi (SWivid/Habibi-TTS, Specialized/ALG)"
+        default: kasbah
+permissions: { contents: write }
+jobs:
+  voix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Phrases à essayer
+        run: node tools/tts/collect.js lots 1 dz ${{ inputs.nombre }}
+      - name: Installer F5-TTS (CPU)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q f5-tts huggingface_hub soundfile
+          pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
+      - name: Générer les voix
+        env:
+          MODEL_REPO: "${{ inputs.modele == 'habibi' && 'SWivid/Habibi-TTS' || 'MenaVoice/KasbahTTS-V0' }}"
+          MODEL_CKPT: "${{ inputs.modele == 'habibi' && 'Specialized/ALG/model_100000.safetensors' || 'ALGERIA.safetensors' }}"
+          MODEL_VOCAB: "${{ inputs.modele == 'habibi' && 'Specialized/ALG/vocab.txt' || 'vocab.txt' }}"
+        run: python tools/tts/generate-dz.py lots/lot-0.json voix
+      - name: Vérifier les durées
+        run: python tools/tts/check-durations.py lots/lot-0.json voix rapport.md
+      - name: Convertir en mp3
+        if: always()
+        run: mkdir -p mp3 && cd voix && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 64k "../mp3/${f%.wav}.mp3"; done; ls ../mp3 | wc -l
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: voix-dz-test
+          if-no-files-found: ignore
+          path: |
+            mp3/*.mp3
+            rapport.md
+      - name: Publier pour écoute
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: voix-dz-test-${{ github.run_number }}
+          name: Test de la voix algérienne (${{ github.run_number }})
+          prerelease: true
+          make_latest: false
+          body_path: rapport.md
+          files: mp3/*.mp3

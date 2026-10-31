@@ -1,14 +1,18 @@
-name: Voix tunisienne (toutes les phrases)
-# Génère la voix de chaque phrase tunisienne qui n'en a pas encore, l'ajoute dans src/audio/tn-ia/ et relance la construction de l'APK.
-# À relancer après un ajout de contenu : seules les nouvelles phrases sont générées.
+name: Voix IA (toutes les phrases d'une langue)
+# Génère la voix de chaque phrase d'un pack qui n'en a pas encore, l'ajoute dans src/audio/<langue>-ia/ et relance l'APK.
+# tn : SILMA TTS Derja (tunisien) ; dz : KasbahTTS (darja algérienne). À relancer après un ajout de contenu :
+# seules les nouvelles phrases sont générées. Coût : environ 1,5 à 2 minutes GitHub par phrase (tunisien : 830 min pour 476).
 on:
   workflow_dispatch:
     inputs:
+      langue:
+        description: "Langue : tn (tunisien) ou dz (algérien)"
+        default: tn
       lots:
         description: Nombre de machines en parallèle
         default: '6'
 permissions: { contents: write, actions: write }
-concurrency: { group: voix-toutes }
+concurrency: { group: "voix-toutes-${{ inputs.langue }}" }
 jobs:
   liste:
     runs-on: ubuntu-latest
@@ -18,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - id: l
-        run: echo "lots=$(node tools/tts/collect.js lots ${{ inputs.lots }})" >> "$GITHUB_OUTPUT"
+        run: echo "lots=$(node tools/tts/collect.js lots ${{ inputs.lots }} ${{ inputs.langue }})" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with: { name: lots, path: lots/, if-no-files-found: ignore }
   voix:
@@ -36,14 +40,25 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - name: Installer SILMA TTS (sans les outils d'arabe standard)
+        if: inputs.langue == 'tn'
         run: |
           sudo apt-get install -y -q ffmpeg
           pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
           pip install -q "numpy<=1.26.4" cached_path ema_pytorch hydra-core omegaconf librosa pydub safetensors soundfile tqdm transformers vocos "x_transformers>=1.31.14" torchdiffeq unidecode matplotlib huggingface_hub
           pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
+      - name: Installer F5-TTS pour KasbahTTS (algérien)
+        if: inputs.langue == 'dz'
+        run: |
+          sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q f5-tts huggingface_hub soundfile
+          pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
       - name: Générer les voix
         env: { MAX_MINUTES: '300' }
-        run: python tools/tts/generate.py lots/lot-${{ matrix.lot }}.json voix
+        run: python tools/tts/${{ inputs.langue == 'dz' && 'generate-dz.py' || 'generate.py' }} lots/lot-${{ matrix.lot }}.json voix
+      - name: Vérifier les durées (algérien)
+        if: inputs.langue == 'dz'
+        run: python tools/tts/check-durations.py lots/lot-${{ matrix.lot }}.json voix || true
       - name: Convertir en mp3
         if: always()
         run: |
@@ -58,14 +73,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { pattern: "voix-*", path: src/audio/tn-ia, merge-multiple: true }
+        with: { pattern: "voix-*", path: "src/audio/${{ inputs.langue }}-ia", merge-multiple: true }
       - name: Enregistrer les voix dans le dépôt et reconstruire l'APK
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          ls src/audio/tn-ia | wc -l
+          ls src/audio/${{ inputs.langue }}-ia | wc -l
           git config user.name "galllinho" && git config user.email "gallah8@gmail.com"
-          git add src/audio/tn-ia
+          git add src/audio/${{ inputs.langue }}-ia
           git diff --cached --quiet && { echo "Rien de nouveau"; exit 0; }
-          git commit -q -m "Voix tunisiennes générées (SILMA TTS Derja) : $(git diff --cached --name-only | wc -l) phrases"
+          git commit -q -m "Voix IA générées (${{ inputs.langue }}) : $(git diff --cached --name-only | wc -l) phrases"
           git pull -q --rebase && git push -q
           gh workflow run build.yml --ref main

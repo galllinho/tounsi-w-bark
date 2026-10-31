@@ -376,7 +376,7 @@ window.TWB_KHALTI = {
   right: [
     'Mrigel ! On dirait un vrai tounsi.',
     'Behi barcha ! Je le dirai à tout le quartier.',
-    'Ça, c’est mon {petit} !',
+    'Ça, c’est {petitFr} !',
     'El hamdoullah, tout n’est pas perdu.',
     'Tu vois quand tu veux ?',
     'Bravo ! Je t’autorise un deuxième makroudh.'
@@ -389,7 +389,14 @@ window.TWB_KHALTI = {
 
 // Réglages du paquet tunisien
 Object.assign(window.TWB_CONTENT.tn, {
-  short: 'Tounsi', label: 'Darija tunisien', mascot: 'khalti',
+  short: 'Tounsi', label: 'Darija tunisien', mascot: 'khalti', order: 1, code: 'TN', flag: '🇹🇳',
+  ui: {
+    adj: 'tunisien', hello: 'Aslema', bravo: 'Mrigel !', oops: 'Ya hasra…', pet: 'ya {petit}', cousin: 'Skander',
+    with: 'avec Khalti', welcome: 'Aslema ! Place au tunisien avec Khalti.',
+    start: 'Aslema {prenom} ! Commence par l’épisode 1, je t’attends à l’aéroport depuis 2 heures.',
+    ttsNote: 'Les phrases sont lues par une voix IA tunisienne (SILMA TTS Derja) ; sans elle, c’est la voix du téléphone, dont l’accent n’est pas tunisien.',
+    chatIntro: 'Parle tunisien à voix haute, ils te répondent. Active « mains libres » pour enchaîner sans toucher l’écran.'
+  },
   voice: 'tts', ttsLangs: ['ar-TN', 'ar-SA', 'ar'], srLang: 'ar-TN', speakField: 'ar',
   lines: window.TWB_KHALTI, chat: window.TWB_CHAT,
   notif: [

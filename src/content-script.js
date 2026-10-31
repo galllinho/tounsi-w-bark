@@ -107,3 +107,5 @@ window.TWB_SCRIPT = {
       ] }
   ]
 };
+// Le parcours appartient au pack tunisien (chaque pack peut avoir le sien : voir content-dz-more.js).
+window.TWB_CONTENT.tn.script = window.TWB_SCRIPT;
