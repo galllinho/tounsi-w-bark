@@ -22,7 +22,7 @@ Session automatique (Claude), sans l'utilisateur.
 - **Vérifications** :
   1. `tools/check-dz.js` : compare latin et arabe consonne par consonne, version garçon et fille : 612 lignes, 0 écart.
   2. Relecture ligne par ligne contre la référence par deux agents relecteurs qui n'avaient pas écrit le contenu : 29 corrections (accords au féminin : haki, aawdi, arwahi, jiti ; futur « rah nqoul » au lieu de « rani nqoul » ; article avec taa ; kesksou au lieu de kousksi tunisien ; traductions).
-  3. `tools/test-app.js` (Playwright) : toutes les leçons, épreuves, grammaire, unités « Lire et écrire », révision, carnet, profil, Studio, sélecteur de langues et une mission simulée, pour le tunisien, l'algérien et le kabyle, dans les skins « Nuit de jasmin » et « Sidi Bou Saïd ». Résultat : voir plus bas.
+  3. `tools/test-app.js` (Playwright) : toutes les leçons, épreuves, grammaire, unités « Lire et écrire », révision, carnet, profil, Studio, sélecteur de langues et une mission simulée (réponse de Gemini simulée), pour le tunisien (25 épisodes, 5 épreuves, 5 grammaires, 10 unités), l'algérien (25, 5, 5, 10) et le kabyle (3 épisodes, 1 épreuve), dans « Nuit de jasmin » (profil fille) et « Sidi Bou Saïd » (profil garçon) : **zéro erreur JavaScript**.
 
 ### Choix faits sans l'utilisateur
 
@@ -39,13 +39,20 @@ Session automatique (Claude), sans l'utilisateur.
 Toute la liste est dans `docs/reference-algerien.md` (« Points à faire confirmer »). En plus, relevés pendant l'écriture et la relecture :
 tochrob / techreb (tu bois), wlid okht (le fils de la sœur), tewkelni (elle me fait manger), s-houn (assiettes) ou tbasi, mtcherfin, nahedrou / nahadrou, tomatich, glas (glace), kahla (café noir), nemzah (je plaisante), arwah / arwahi (viens), chbab alik (ça te va bien), saha li jiti, nchathou (danser), taatalt (en retard), tchina (oranges), skhana (fièvre), garjouma (gorge), qmija, dioul (feuilles de brick), « chhar tmanya » pour août, la note « saha = à tes souhaits » (on dirait plutôt « Rahmek Allah »), et l'orthographe variable de nos / nouss, nwalli / nwelli.
 
-### Voix
+### Voix algérienne
 
-Voir la section « Voix algérienne » ci-dessous (mise à jour à la fin de la session).
+- Recherche sur Hugging Face (rapport dans cette session) : pas de MMS-TTS « arq » chez Meta (seulement `mms-tts-ara`, arabe standard, écarté). Modèles réellement entraînés sur la darja algérienne : **KasbahTTS-V0** (MenaVoice, licence MIT, affiné depuis Habibi-TTS / F5-TTS sur de la darja algérienne parlée), Habibi-TTS « Specialized/ALG » (Apache 2.0), Hadra-TTS (licence des données non déterminée), Natiq-dz (non commercial, mais carte graphique obligatoire).
+- **Test fait** avec KasbahTTS (`voix-test-dz.yml`, 10 phrases) : modèle chargé, 10 fichiers produits, durées cohérentes (0,10 à 0,11 s par lettre, 1,1 à 3,3 s par phrase). Écoute : pré-version « Test de la voix algérienne (1) » (tag `voix-dz-test-1`) dans Releases.
+- **Pas de génération complète pour l'instant** : sur les machines gratuites de GitHub (sans carte graphique), il faut environ **140 secondes par phrase**. Le pack algérien a 669 phrases (versions garçon et fille), soit environ **1 560 minutes**, presque le quota mensuel (2 000 min) : il ne resterait plus de marge pour les APK ni pour AnounisFitness. Personne n'a encore écouté les essais, et la voix de référence utilisée est un extrait d'arabe standard (celui de la voix tunisienne).
+- **Voix utilisée dans la version 0.6** : la voix arabe du téléphone (`ar-DZ`, puis `ar-MA`, `ar-SA`, `ar`), ou les voix enregistrées par la famille dans le Studio (elles passent toujours en premier).
+- **Pour l'activer plus tard** : écouter les 10 mp3 du test ; si la voix est bonne, lancer Actions → « Voix IA (toutes les phrases d'une langue) » → langue `dz`. Le travail est repris là où il s'est arrêté à chaque lancement (seules les phrases sans voix sont générées), on peut donc l'étaler sur plusieurs mois. Pour aller deux fois plus vite, mettre `nfe_step=16` dans `tools/tts/generate-dz.py` (qualité un peu moindre).
 
-### Minutes GitHub consommées
+### Minutes GitHub consommées (environ 35 minutes)
 
-Voir la section « Constructions » ci-dessous.
+- Construction de l'APK n° 16 : 1er essai en échec (dépôt Maven indisponible quelques secondes, sans lien avec le code), relancé : réussi (≈ 3 min au total).
+- Version web : ≈ 1 min par envoi.
+- Test de la voix algérienne : 25 min.
+- Construction finale de l'APK (n° 17) avec ce journal : ≈ 3 min.
 
 ## Ajouter une langue (ex. darija marocain « ma »)
 
