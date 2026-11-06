@@ -83,4 +83,5 @@ jobs:
           git diff --cached --quiet && { echo "Rien de nouveau"; exit 0; }
           git commit -q -m "Voix IA générées (${{ inputs.langue }}) : $(git diff --cached --name-only | wc -l) phrases"
           git pull -q --rebase && git push -q
-          gh workflow run build.yml --ref main
+          # Sur main : nouvelle version de l'APK. Sur une autre branche : les voix attendent la fusion, aucune publication.
+          if [ "${{ github.ref_name }}" = "main" ]; then gh workflow run build.yml --ref main; else echo "Branche ${{ github.ref_name }} : pas de nouvelle version publiée"; fi
