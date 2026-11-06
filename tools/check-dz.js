@@ -5,7 +5,7 @@
 const path = require('path');
 const packId = process.argv[2] || 'dz';
 global.window = { TWB_CONTENT: {}, TWB_CAST: {} };
-for (const f of ['content.js', 'content-tn-more.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js', 'content-kab.js'])
+for (const f of ['content.js', 'content-tn-more.js', 'content-tn-fetes.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js', 'content-kab.js'])
   require(path.join(__dirname, '..', 'src', f));
 const P = window.TWB_CONTENT[packId];
 

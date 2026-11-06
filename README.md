@@ -4,6 +4,7 @@ Appli Android pour apprendre la langue de sa famille avec humour : le darija tun
 
 - `src/content.js` : contenus tunisiens (niveaux, épisodes, mots, exercices, personnages, répliques de Khalti, discussion)
 - `src/content-tn-more.js` : suite du tunisien (niveaux 1 à 5 complets, grammaire, missions)
+- `src/content-tn-fetes.js` : niveau bonus tunisien « Fêtes et traditions » (Ramadan, Aïd, Aïd el Kbir, Mouled, proverbes ; ouvert dès que le niveau 1 est réussi, via `after`), leçon « Les formules qui font plaisir », et « Les histoires de Khalti » (`PACK.stories` : 3 contes de Jha avec questions)
 - `docs/reference-tounsi.md` : règles et sources utilisées pour vérifier le tunisien
 - `src/content-script.js` : parcours « Lire et écrire » (alphabet arabe pour le tunisien)
 - `tools/tts/` + `.github/workflows/voix-test.yml` : test de la voix tunisienne (SILMA TTS Derja) ; `.github/workflows/voix-test-dz.yml` : test de la voix algérienne (KasbahTTS, darja algérienne, licence MIT), avec contrôle automatique des durées (`tools/tts/check-durations.py`)
@@ -33,3 +34,12 @@ Les textes tunisiens et algériens doivent être relus par un natif avant de par
 - S'installe sur l'écran d'accueil (Safari → Partager → Sur l'écran d'accueil), marche hors ligne (service worker `scripts/sw-template.js`), icônes et manifeste dans `web/`.
 - Sauvegarde : sur le téléphone, plus un « code de secours » (Profil → Sauvegarde) pour récupérer sa progression ou la passer d'un téléphone à l'autre, Android compris.
 - Plusieurs profils par téléphone (Profil → Profils sur ce téléphone) : écran « Qui joue ? » à l'ouverture dès qu'il y en a plus d'un ; chaque profil a sa progression, son skin et son code de secours.
+
+## Nouveautés du 6 novembre 2026 (branche `ameliorations`, publiées avec le marocain)
+
+- **Signaler une erreur** : petit drapeau sur chaque phrase de scène, chaque mot du carnet et chaque correction d'exercice. Les signalements (`twb.reports.v1`, communs à tous les profils) se retrouvent dans Profil → Erreurs signalées, avec un bouton pour les envoyer (WhatsApp, mail…) puis vider la liste.
+- **Mode enfant** (par profil, proposé à la création du profil, coché d'office sur la version web ; Profil → Mode enfant) : consignes lues à voix haute en français (bouton haut-parleur à côté de chaque consigne), boutons et textes plus gros, exercices « Trouve l'image » dans les leçons, et deux mini-jeux sur l'accueil (Trouve l'image, Memory). Les images sont des emojis choisis d'après la traduction française (`EMOJI` dans app.html ; un mot peut aussi avoir son propre champ `emoji`).
+- **Défi du jour** (5 défis qui tournent, +20 jasmins), **révision intelligente** (répétition espacée : chaque mot revient après 1, 2, 4, 7, 15 puis 30 jours, ou le lendemain en cas d'erreur ; `S.srs`), **classement de la semaine** entre les profils du téléphone (remis à zéro le lundi). Tous les gains de jasmins passent par `gainXP(n, sorte)`.
+- **Alerte de nouvelle version** (appli Android seulement) : au démarrage, au plus toutes les 6 heures, l'appli lit la dernière release GitHub et propose de télécharger l'APK si elle est plus récente.
+- **Voix algérienne** générée pour toutes les phrases (KasbahTTS, `src/audio/dz-ia/`).
+- La génération de voix (`voix-toutes.yml`) ne publie plus d'APK quand elle tourne sur une autre branche que main.

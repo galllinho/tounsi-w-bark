@@ -6,7 +6,7 @@ const fs = require('fs'), vm = require('vm'), path = require('path');
 const root = path.join(__dirname, '..', '..');
 const [out = 'lots', nb = '6', lang = 'tn', limit = '0'] = process.argv.slice(2);
 const ctx = { window: {} }; vm.createContext(ctx);
-for (const f of ['content.js', 'content-tn-more.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js']) vm.runInContext(fs.readFileSync(path.join(root, 'src', f), 'utf8'), ctx);
+for (const f of ['content.js', 'content-tn-more.js', 'content-tn-fetes.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js']) vm.runInContext(fs.readFileSync(path.join(root, 'src', f), 'utf8'), ctx);
 const W = ctx.window, AR = /[؀-ۿ]/, all = new Map();
 // Mêmes remplacements que fill() dans src/app.html, pour un garçon (f = false) puis une fille (f = true)
 const G = (s, f) => String(s).replace(/\{g:([^|{}]*)\|([^{}]*)\}/g, (m, a, b) => f ? b : a).replace(/\{petitAr\}/g, f ? 'بنتي' : 'وليدي').replace(/\{jayAr\}/g, f ? 'جاية' : 'جاي')

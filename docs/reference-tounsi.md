@@ -75,3 +75,13 @@ Courants à ma connaissance mais non retrouvés dans une source écrite :
 - **nrahnek** (je te parie), **tsob el mtar** (il pleut) ;
 - proverbes : **elli fet met**, **kol taakhira fiha khira**, **ya ghrib koun adib**, **ejjar kbal eddar** ;
 - **Jedda** ou **Mémé** pour la grand-mère, **tzawej** ou **aaras** pour se marier (selon les familles).
+
+### Ajoutés avec le niveau « Fêtes et traditions » et les histoires (novembre 2026)
+
+- **saha ftourek** au moment du ftour (ou *saha ftourkom*, *saha chribtek*) ; **Ramdhan karim** ;
+- **brik** au masculin (*el brik skhoun*) ou au féminin (*skhouna*) ;
+- **{g:metakhar|metakhra}** pour « en retard » (ou plutôt *fetni el kar*, « j'ai raté le bus ») ; **el kar** pour le bus ;
+- **kaddech mel wakt?** (combien de temps ?) ; **habb sghir kahel** pour décrire le zgougou ;
+- le proverbe **elli yheb el aasel, yesber l kris ennhal** (forme exacte à Tunis) ;
+- **el mahba** (argent de l'Aïd, attesté par la presse tunisienne), **allouch** (mouton), **sabbat** (chaussure), **dawwer** (tourne) ;
+- dans les contes de Jha : **kasrouna** (marmite), **tsallef** (emprunter), **khdhe** (il a pris), **ala sakih / ala sakihom** (à pied), **aib!** (quelle honte).

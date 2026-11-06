@@ -54,6 +54,31 @@ tochrob / techreb (tu bois), wlid okht (le fils de la sœur), tewkelni (elle me 
 - Test de la voix algérienne : 25 min.
 - Construction finale de l'APK (n° 17) avec ce journal : ≈ 3 min.
 
+## 6 novembre 2026 : améliorations (branche « ameliorations », publiées avec le marocain)
+
+Session avec l'utilisateur. Consigne : **ne rien publier** (aucun push sur main) avant que le marocain soit intégré ; la session du 7 novembre fusionne la branche et lance une seule mise à jour.
+
+### Ce qui a été fait
+
+- **Voix algérienne** pour toutes les phrases (KasbahTTS, 20 machines en parallèle, le dépôt étant public) : workflow lancé sur la branche ameliorations, il ajoute `src/audio/dz-ia/` à la branche sans publier d'APK (`voix-toutes.yml` ne publie plus que depuis main).
+- **Signaler une erreur** (drapeau sur les phrases, les mots et les corrections ; liste dans Profil → Erreurs signalées, envoi par le menu Partager).
+- **Mode enfant** par profil (consignes lues en français, gros boutons, exercices « Trouve l'image », mini-jeux Trouve l'image et Memory sur l'accueil). Coché d'office à la création d'un profil sur la version web.
+- **Défi du jour**, **révision intelligente** (répétition espacée), **classement de la semaine** entre profils.
+- **Contenu culturel tunisien** (`src/content-tn-fetes.js`) : niveau bonus n6 « Fêtes et traditions » (ftour de Ramadan, matin de l'Aïd et mahba, mouton de l'Aïd el Kbir, assida du Mouled, proverbes de Jedda ; épreuve 12/8 ; leçon « Les formules qui font plaisir » ; 5 missions IA), ouvert dès que l'épreuve du niveau 1 est réussie ; **3 histoires de Jha** à écouter avec questions (le clou, l'âne, la marmite).
+- **Alerte de nouvelle version** dans l'appli Android.
+
+### Vérifications
+
+- `tools/check-dz.js tn` : les écarts du niveau 6 sont du même type que ceux du reste du tunisien (k/ق, article collé, fel/في).
+- Relecture ligne par ligne par un agent qui n'avait pas écrit le contenu : 15 corrections appliquées (zgougou ≠ pignons, brik au masculin, *koul* et non *kol* pour « mange », assimilation de l'article *ejjar*, *eddar*, *ezzgougou*, *bardan*, *mrigla*, *kenet ahla*, *baad* au lieu de *tawa* dans un récit, et deux choix pour les enfants : le mouton qu'on a nommé n'est plus grillé à la fin, « a eu un bébé » au lieu de « a accouché »).
+- Points à faire confirmer par un natif : ajoutés à `docs/reference-tounsi.md`.
+- Tests Playwright : `tools/test-app.js` (toutes les langues, deux skins) et deux tests ciblés des nouveautés (mode enfant, jeux, signalement, histoires, niveau 6, classement, alerte de mise à jour) : zéro erreur JavaScript.
+
+### Pour la session marocaine
+
+- Les nouveautés sont génériques : le pack marocain profite automatiquement du mode enfant (emojis d'après la traduction française), du défi du jour, de la révision, du signalement. `PACK.stories` et un niveau bonus `after: '…boss'` sont possibles mais pas obligatoires.
+- Ajouter `content-ma*.js` aux listes de `tools/check-dz.js` et `tools/tts/collect.js`.
+
 ## Ajouter une langue (ex. darija marocain « ma »)
 
 1. Copier `src/content-dz.js` en `src/content-ma.js` (et `content-dz-more.js` en `content-ma-more.js`) ; remplacer la clé `window.TWB_CONTENT.dz` par `.ma`, `order: 3`, `code: 'MA'`, `flag: '🇲🇦'`, les textes `ui`, `lines`, `chat`, `notif`, les personnages (nouvelles clés) et les identifiants (niveaux `m1…`, mots `m_…`, grammaire `mg1…`, unités « Lire et écrire » `ms1…`).
