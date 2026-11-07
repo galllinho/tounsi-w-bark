@@ -61,6 +61,7 @@ Session avec l'utilisateur. Consigne : **ne rien publier** (aucun push sur main)
 ### Ce qui a été fait
 
 - **Voix algérienne** pour toutes les phrases (KasbahTTS, 20 machines en parallèle, le dépôt étant public) : workflow lancé sur la branche ameliorations, il ajoute `src/audio/dz-ia/` à la branche sans publier d'APK (`voix-toutes.yml` ne publie plus que depuis main).
+- Résultat des voix : **669 phrases algériennes sur 669** (`src/audio/dz-ia/`, 7,6 Mo ; les mots courts étaient rejetés à tort par le contrôle des durées, corrigé dans `tools/tts/check-durations.py`) et **82 nouvelles phrases tunisiennes** (niveau Fêtes, histoires) avec la voix SILMA. Personne n'a encore écouté la voix algérienne : si elle sonne mal, supprimer `src/audio/dz-ia/` avant la fusion et l'appli reprendra la voix du téléphone.
 - **Signaler une erreur** (drapeau sur les phrases, les mots et les corrections ; liste dans Profil → Erreurs signalées, envoi par le menu Partager).
 - **Mode enfant** par profil (consignes lues en français, gros boutons, exercices « Trouve l'image », mini-jeux Trouve l'image et Memory sur l'accueil). Coché d'office à la création d'un profil sur la version web.
 - **Défi du jour**, **révision intelligente** (répétition espacée), **classement de la semaine** entre profils.
