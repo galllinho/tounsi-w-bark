@@ -32,7 +32,8 @@ if (lang === 'tn') { walk(W.TWB_CHAT); walk(W.TWB_KHALTI); }
 if (P.script) { Object.values(P.script.letters).forEach(l => add(l.ex[0])); (P.script.extraWords || []).forEach(w => add(w[0])); }
 const have = new Set();
 for (const d of [lang, lang + '-ia']) { const p = path.join(root, 'src', 'audio', d); if (fs.existsSync(p)) fs.readdirSync(p).forEach(f => have.add(f.replace(/\.[^.]+$/, ''))); }
-let todo = [...all].filter(([k]) => !have.has(k)).map(([key, text]) => ({ key, text }));
+// TOUTES=1 : toutes les phrases, même celles qui ont déjà une voix (pour un test ou pour tout regénérer)
+let todo = [...all].filter(([k]) => process.env.TOUTES === '1' || !have.has(k)).map(([key, text]) => ({ key, text }));
 if (+limit) todo = todo.slice(0, +limit);   // pour un test : seulement les N premières phrases
 fs.mkdirSync(out, { recursive: true });
 const n = Math.max(1, parseInt(nb, 10)), lots = [];
