@@ -11,12 +11,17 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: pip install -q huggingface_hub
+      - name: Dépôt GitHub de Habibi-TTS (extraits de référence par dialecte)
+        run: |
+          git clone -q --depth 1 https://github.com/SWivid/Habibi-TTS h && cd h && find . -path ./.git -prune -o -type f -print | head -200
+          cat README.md | head -150
+          grep -rn "MAR" --include=*.py --include=*.toml --include=*.json --include=*.txt --include=*.yaml . | head -60
       - name: Sonde
         shell: python
         run: |
           from huggingface_hub import HfApi, hf_hub_download
           api = HfApi()
-          for repo in ['SWivid/Habibi-TTS', 'facebook/mms-tts-ary', 'facebook/mms-tts-ara']:
+          for repo in ['Jip7e/habibi-tts-doda-darija']:
               try:
                   info = api.model_info(repo, files_metadata=False)
                   print('==', repo, 'licence:', (info.card_data or {}).get('license') if info.card_data else None)
