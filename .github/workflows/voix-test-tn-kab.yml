@@ -1,13 +1,14 @@
 name: Voix tunisienne et kabyle (essai de nouveaux modèles)
 # Essai sans publication : kabyle avec Meta MMS-TTS (facebook/mms-tts-kab), tunisien avec Habibi-TTS Unified (dialecte TUN),
 # comparé à la voix tunisienne actuelle (SILMA). Contrôles : durées et reconnaissance vocale (Whisper pour le tunisien,
-# Meta MMS pour le kabyle). Résultats (mp3 + rapports) dans les artefacts du lancement.
+# Meta MMS pour le kabyle). Sur un envoi, seuls les essais nommés dans le message ([kab], [tn]) tournent. Résultats (mp3 + rapports) dans les artefacts du lancement.
 on:
   push: { branches: [correctif-voix-dz], paths: ['.github/workflows/voix-test-tn-kab.yml'] }
   workflow_dispatch:
 permissions: { contents: read }
 jobs:
   kabyle:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[kab]')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -20,7 +21,7 @@ jobs:
       - name: Installer (CPU)
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
-          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "torch>=2.6" --index-url https://download.pytorch.org/whl/cpu
           pip install -q "transformers>=4.40" soundfile accelerate
       - name: Générer (Meta MMS-TTS kabyle)
         run: python tools/tts/generate-kab.py lots/lot-0.json voix
@@ -33,6 +34,7 @@ jobs:
         if: always()
         with: { name: essai-kabyle, path: "mp3/*.mp3\nrapport.md" }
   tunisien:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[tn]')
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
