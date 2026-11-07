@@ -1,0 +1,38 @@
+name: Voix IA (contrôle par reconnaissance vocale)
+# Fait transcrire par Whisper un échantillon des voix IA déjà enregistrées (tn-ia, dz-ia, ma-ia) et compare au texte :
+# détecte les voix inaudibles (grésillement, bruit) que le contrôle des durées ne voit pas. Ne publie rien.
+on:
+  push: { branches: [correctif-voix-dz], paths: ['.github/workflows/voix-controle.yml'] }
+  workflow_dispatch:
+    inputs:
+      nombre:
+        description: Nombre de fichiers contrôlés par langue
+        default: '30'
+permissions: { contents: read }
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: { langue: [tn, dz, ma] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg && pip install -q faster-whisper
+      - name: Échantillon
+        run: |
+          TOUTES=1 node tools/tts/collect.js lots 1 ${{ matrix.langue }}
+          mkdir -p ech && python -c "
+          import json, random, shutil, os
+          it=[i for i in json.load(open('lots/lot-0.json')) if os.path.exists('src/audio/${{ matrix.langue }}-ia/'+i['key']+'.mp3')]
+          random.seed(7); it=random.sample(it, min(int('${{ inputs.nombre || 30 }}'), len(it)))
+          json.dump(it, open('ech.json','w'), ensure_ascii=False)
+          [shutil.copy('src/audio/${{ matrix.langue }}-ia/'+i['key']+'.mp3','ech/') for i in it]"
+      - name: Reconnaissance vocale
+        run: echo "# ${{ matrix.langue }}" > rapport.md && python tools/tts/check-asr.py ech.json ech rapport.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: "controle-${{ matrix.langue }}", path: rapport.md }

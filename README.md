@@ -8,7 +8,7 @@ Appli Android pour apprendre la langue de sa famille avec humour : le darija tun
 - `docs/reference-tounsi.md` : règles et sources utilisées pour vérifier le tunisien
 - `src/content-script.js` : parcours « Lire et écrire » (alphabet arabe pour le tunisien)
 - `tools/tts/` + `.github/workflows/voix-test.yml` : test de la voix tunisienne (SILMA TTS Derja) ; `.github/workflows/voix-test-dz.yml` : test de la voix algérienne (KasbahTTS, darja algérienne, licence MIT), avec contrôle automatique des durées (`tools/tts/check-durations.py`)
-- `.github/workflows/voix-toutes.yml` (lancement manuel, choisir la langue `tn`, `dz` ou `ma`) : génère la voix de toutes les phrases qui n'en ont pas encore dans `src/audio/<langue>-ia/`, puis reconstruit l'APK. À relancer après un ajout de contenu. Tunisien : SILMA TTS Derja (Ghazouaniwala/silma-tts-derja), entraînée sur le corpus LinTO de Linagora (CC BY 4.0) ; usage gratuit et non commercial. Algérien : KasbahTTS-V0 (MenaVoice), voir le journal.
+- `.github/workflows/voix-toutes.yml` (lancement manuel, choisir la langue `tn`, `dz`, `ma` ou `kab`) : génère la voix de toutes les phrases qui n'en ont pas encore dans `src/audio/<langue>-ia/`, puis reconstruit l'APK. À relancer après un ajout de contenu. Tunisien : SILMA TTS Derja (Ghazouaniwala/silma-tts-derja), entraînée sur le corpus LinTO de Linagora (CC BY 4.0) ; usage gratuit et non commercial. Algérien : KasbahTTS-V0 (MenaVoice), voir le journal.
 - `src/content-dz.js` : pack algérien « dz » (algérois) : réglages, personnages (Khalti Zhor, Amine, Mima, Ammi Rabah…), discussion IA, niveaux 1 et 2
 - `src/content-dz-more.js` : suite de l'algérien (niveaux 3 à 5, grammaire « Le coin de Khalti Zhor », parcours « Lire et écrire » algérien)
 - `docs/reference-algerien.md` : règles, vocabulaire et sources de l'algérois, points à faire confirmer par un natif
@@ -16,6 +16,7 @@ Appli Android pour apprendre la langue de sa famille avec humour : le darija tun
 - `src/content-ma-more.js` : suite du marocain (niveaux 3 à 5, grammaire « Le coin de Tata Saadia », parcours « Lire et écrire » marocain avec la lettre ڭ)
 - `docs/reference-marocain.md` : règles, vocabulaire, pièges entre les trois darijas, sources et points à faire confirmer par un natif de Casablanca
 - `tools/tts/generate-ma.py` + `.github/workflows/voix-test-ma.yml` : voix IA marocaine (Habibi-TTS, modèle spécialisé MAR, darija marocaine, licence Apache 2.0)
+- `tools/tts/generate-kab.py` : voix IA kabyle (Meta MMS-TTS `facebook/mms-tts-kab`, CC BY-NC 4.0) dans `src/audio/kab-ia/` ; `tools/tts/check-asr.py` et `check-asr-kab.py` : vérifient par reconnaissance vocale qu'une voix générée contient bien de la parole
 - `tools/check-mots-etrangers.js` : vérifie qu'aucun mot typique d'un autre dialecte ne s'est glissé dans un pack (`node tools/check-mots-etrangers.js`)
 - `tools/check-dz.js` : contrôle automatique latin ↔ arabe, consonne par consonne (`node tools/check-dz.js dz`, `node tools/check-dz.js ma`)
 - `tools/test-app.js` : test de bout en bout de toutes les langues avec Playwright (`GEMINI_KEY=test node scripts/build-www.js && node tools/test-app.js jasmin sidi`)

@@ -6,33 +6,37 @@ const fs = require('fs'), vm = require('vm'), path = require('path');
 const root = path.join(__dirname, '..', '..');
 const [out = 'lots', nb = '6', lang = 'tn', limit = '0'] = process.argv.slice(2);
 const ctx = { window: { TWB_CAST: {}, TWB_CONTENT: {} } }; vm.createContext(ctx);
-for (const f of ['content.js', 'content-tn-more.js', 'content-tn-fetes.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js', 'content-ma.js', 'content-ma-more.js'])
+for (const f of ['content.js', 'content-tn-more.js', 'content-tn-fetes.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js', 'content-ma.js', 'content-ma-more.js', 'content-kab.js'])
   if (fs.existsSync(path.join(root, 'src', f))) vm.runInContext(fs.readFileSync(path.join(root, 'src', f), 'utf8'), ctx);
 const W = ctx.window, AR = /[؀-ۿ]/, all = new Map();
+// Champ lu à voix haute : « ar » pour les darijas, « tn » (lettres latines) pour le kabyle
+const FIELD = (W.TWB_CONTENT[lang] && W.TWB_CONTENT[lang].speakField) || 'ar', LATIN = FIELD !== 'ar';
 // Mêmes remplacements que fill() dans src/app.html, pour un garçon (f = false) puis une fille (f = true)
 const G = (s, f) => String(s).replace(/\{g:([^|{}]*)\|([^{}]*)\}/g, (m, a, b) => f ? b : a).replace(/\{petitAr\}/g, f ? 'بنتي' : 'وليدي').replace(/\{jayAr\}/g, f ? 'جاية' : 'جاي')
   .replace(/\{mechiAr\}/g, f ? 'ماشية' : 'ماشي').replace(/\{tounsiAr\}/g, f ? 'تونسية' : 'تونسي').replace(/\{jdidAr\}/g, f ? 'جديدة' : 'جديد')
   .replace(/\{khouyaAr\}/g, f ? 'أختي' : 'خويا').replace(/\{asliAr\}/g, f ? 'أصليّة' : 'أصلي').replace(/\{taalAr\}/g, f ? 'تعالي' : 'تعال')
-  .replace(/\{cousinAr\}/g, f ? 'كوزينة' : 'كوزان');
+  .replace(/\{cousinAr\}/g, f ? 'كوزينة' : 'كوزان')
+  .replace(/\{mmi\}/g, f ? 'a yelli' : 'a mmi').replace(/\{k\}/g, f ? 'm' : 'k');
 const vnorm = t => String(t).toLowerCase().replace(/[\s.,!?;:…'’"«»()\-–—،؟]/g, '');
 const vkey = t => { let h = 5381; const s = vnorm(t); for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return lang + '_' + h.toString(36); };
 function add(s){
-  if (typeof s !== 'string' || !AR.test(s) || /\{prenom/.test(s)) return;
+  if (typeof s !== 'string' || (!LATIN && !AR.test(s)) || !s.trim() || /\{prenom/.test(s)) return;
   for (const f of [false, true]) { const t = G(s, f); if (/\{/.test(t)) throw new Error('Remplacement manquant : ' + t); all.set(vkey(t), t); }
 }
 function walk(o, key){
   if (o == null) return;
-  if (typeof o === 'string') { if (key === 'ar') add(o); return; }
+  if (typeof o === 'string') { if (key === FIELD) add(o); return; }
   if (Array.isArray(o)) return o.forEach(x => walk(x, key));
   if (typeof o === 'object') for (const k in o) walk(o[k], k);
 }
 const P = W.TWB_CONTENT[lang]; if (!P) throw new Error('Pack inconnu : ' + lang);
 walk(P.levels); walk(P.chat); walk(P.lines);
 if (lang === 'tn') { walk(W.TWB_CHAT); walk(W.TWB_KHALTI); }
-if (P.script) { Object.values(P.script.letters).forEach(l => add(l.ex[0])); (P.script.extraWords || []).forEach(w => add(w[0])); }
+if (P.script && !LATIN) { Object.values(P.script.letters).forEach(l => add(l.ex[0])); (P.script.extraWords || []).forEach(w => add(w[0])); }
 const have = new Set();
 for (const d of [lang, lang + '-ia']) { const p = path.join(root, 'src', 'audio', d); if (fs.existsSync(p)) fs.readdirSync(p).forEach(f => have.add(f.replace(/\.[^.]+$/, ''))); }
-let todo = [...all].filter(([k]) => !have.has(k)).map(([key, text]) => ({ key, text }));
+// TOUTES=1 : toutes les phrases, même celles qui ont déjà une voix (pour un test ou pour tout regénérer)
+let todo = [...all].filter(([k]) => process.env.TOUTES === '1' || !have.has(k)).map(([key, text]) => ({ key, text }));
 if (+limit) todo = todo.slice(0, +limit);   // pour un test : seulement les N premières phrases
 fs.mkdirSync(out, { recursive: true });
 const n = Math.max(1, parseInt(nb, 10)), lots = [];

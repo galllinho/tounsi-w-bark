@@ -1,0 +1,34 @@
+name: Voix IA (sonde des modèles sur Hugging Face)
+# Cherche sur Hugging Face les modèles de voix (TTS) pour le tunisien et le kabyle : nom, licence, fichiers. Ne publie rien.
+on:
+  push: { branches: [correctif-voix-dz], paths: ['.github/workflows/voix-sonde.yml'] }
+  workflow_dispatch:
+permissions: { contents: read }
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install -q huggingface_hub
+      - name: Sonde
+        shell: python
+        run: |
+          from huggingface_hub import HfApi
+          api = HfApi(); vus = set()
+          for q in ['tunisian', 'tunisia', 'tunisien', 'derja', 'darija tts', 'tun tts', 'aeb', 'kabyle', 'kabyl', 'kab', 'taqbaylit', 'tamazight', 'amazigh', 'berber', 'tifinagh', 'mms-tts-kab', 'silma', 'linto', 'maghreb']:
+              try:
+                  for m in api.list_models(search=q, limit=200, full=True):
+                      tags = m.tags or []
+                      if m.id in vus: continue
+                      if m.pipeline_tag in ('text-to-speech', 'text-to-audio') or any(t in tags for t in ('text-to-speech', 'tts')) or 'tts' in m.id.lower():
+                          vus.add(m.id)
+                          lic = next((t[8:] for t in tags if t.startswith('license:')), '?')
+                          print(f'[{q}] {m.id} | licence {lic} | {m.downloads} téléchargements | maj {str(m.last_modified)[:10]}')
+              except Exception as e: print(q, 'ERREUR', e)
+          for repo in ['facebook/mms-tts-kab', 'facebook/mms-tts-aeb', 'facebook/mms-tts-kab-latn']:
+              try:
+                  i = api.model_info(repo); print('==', repo, 'existe', [t for t in (i.tags or []) if t.startswith('license')])
+              except Exception as e: print('==', repo, 'absent')
+          for repo in ['SWivid/Habibi-TTS']:
+              print('== Habibi : dialectes du modèle Unified : TUN (identifiant ⑨), licence CC BY-NC-SA 4.0')

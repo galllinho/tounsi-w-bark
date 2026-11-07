@@ -1,59 +1,67 @@
 name: Voix algérienne (test)
-# Essai de la voix IA algérienne (KasbahTTS, darja algérienne, licence MIT) sur quelques phrases du pack « dz ».
-# Vérifie automatiquement la durée de chaque fichier, puis publie les mp3 pour écoute (pré-version « voix-dz-test-N »).
+# Essai de la voix IA algérienne sur quelques phrases du pack « dz », avec deux modèles affinés sur la darja algérienne
+# (Habibi-TTS Specialized/ALG, Apache 2.0 ; KasbahTTS-V0, MIT), chargés avec la bonne configuration (F5-TTS v1).
+# Contrôles : durée de chaque fichier ET reconnaissance vocale (Whisper) pour vérifier qu'on entend de la parole,
+# pas un grésillement. Les anciens fichiers de src/audio/dz-ia sont contrôlés aussi, pour comparaison.
+# Sur une branche : rien n'est publié (mp3 et rapports dans les artefacts) ; sur main : pré-version pour écoute.
 on:
+  push: { branches: [correctif-voix-dz], paths: ['.github/workflows/voix-test-dz.yml', 'tools/tts/generate-dz.py', 'tools/tts/check-asr.py'] }
   workflow_dispatch:
     inputs:
       nombre:
         description: Nombre de phrases à essayer
         default: '10'
-      modele:
-        description: "Modèle : kasbah (MenaVoice/KasbahTTS-V0) ou habibi (SWivid/Habibi-TTS, Specialized/ALG)"
-        default: kasbah
 permissions: { contents: write }
 jobs:
   voix:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: { modele: [alg, kasbah] }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - name: Phrases à essayer
-        run: node tools/tts/collect.js lots 1 dz ${{ inputs.nombre }}
-      - name: Installer F5-TTS (CPU)
+      - name: Phrases à essayer (même si elles ont déjà une voix)
+        run: TOUTES=1 node tools/tts/collect.js lots 1 dz ${{ inputs.nombre || '10' }}
+      - name: Installer Habibi-TTS et la reconnaissance vocale (CPU)
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
           pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
-          pip install -q f5-tts huggingface_hub soundfile
-          pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
+          pip install -q habibi-tts soundfile faster-whisper
+      - name: Contrôle des anciennes voix (src/audio/dz-ia)
+        if: matrix.modele == 'alg'
+        run: |
+          mkdir -p anciennes && for k in $(python -c "import json;print(' '.join(i['key'] for i in json.load(open('lots/lot-0.json'))))"); do [ -f src/audio/dz-ia/$k.mp3 ] && cp src/audio/dz-ia/$k.mp3 anciennes/; done
+          echo "# Anciennes voix algériennes" > rapport-anciennes.md
+          python tools/tts/check-asr.py lots/lot-0.json anciennes rapport-anciennes.md || true
       - name: Générer les voix
-        env:
-          MODEL_REPO: "${{ inputs.modele == 'habibi' && 'SWivid/Habibi-TTS' || 'MenaVoice/KasbahTTS-V0' }}"
-          MODEL_CKPT: "${{ inputs.modele == 'habibi' && 'Specialized/ALG/model_100000.safetensors' || 'ALGERIA.safetensors' }}"
-          MODEL_VOCAB: "${{ inputs.modele == 'habibi' && 'Specialized/ALG/vocab.txt' || 'vocab.txt' }}"
+        env: { MODELE: "${{ matrix.modele }}" }
         run: python tools/tts/generate-dz.py lots/lot-0.json voix
       - name: Vérifier les durées
-        run: python tools/tts/check-durations.py lots/lot-0.json voix rapport.md
+        run: echo "# Nouvelles voix (${{ matrix.modele }})" > rapport.md && python tools/tts/check-durations.py lots/lot-0.json voix rapport.md; cat rapport.md
+      - name: Vérifier qu'on entend de la parole (Whisper)
+        run: python tools/tts/check-asr.py lots/lot-0.json voix rapport.md
       - name: Convertir en mp3
         if: always()
         run: mkdir -p mp3 && cd voix && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 64k "../mp3/${f%.wav}.mp3"; done; ls ../mp3 | wc -l
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: voix-dz-test
+          name: voix-dz-test-${{ matrix.modele }}
           if-no-files-found: ignore
           path: |
             mp3/*.mp3
-            rapport.md
-      - name: Publier pour écoute
-        if: success()
+            rapport*.md
+      - name: Publier pour écoute (seulement depuis main)
+        if: success() && github.ref_name == 'main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: voix-dz-test-${{ github.run_number }}
-          name: Test de la voix algérienne (${{ github.run_number }})
+          tag_name: voix-dz-test-${{ github.run_number }}-${{ matrix.modele }}
+          name: Test de la voix algérienne (${{ github.run_number }}, ${{ matrix.modele }})
           prerelease: true
           make_latest: false
           body_path: rapport.md

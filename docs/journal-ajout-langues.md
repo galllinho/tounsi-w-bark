@@ -140,3 +140,31 @@ Toute la liste est dans `docs/reference-marocain.md` (« Points à faire confirm
 ### Minutes GitHub
 
 Le dépôt est public : minutes illimitées. Sonde des modèles (3 lancements, < 5 min), test de la voix (≈ 35 min), génération complète (20 machines × ≈ 80 min), puis une construction de l'APK et une de la version web au moment de la fusion dans main.
+
+## 7 novembre 2026 (soir) : correctif des voix algériennes (branche « correctif-voix-dz », non publiée)
+
+Signalé par l'utilisateur : les voix IA algériennes ne font qu'un **grésillement**.
+
+### Cause
+
+`tools/tts/generate-dz.py` chargeait KasbahTTS avec la configuration « F5TTS_Base » (ancienne architecture de F5-TTS) au lieu de « F5TTS_v1_Base », celle de Habibi-TTS dont KasbahTTS est dérivé. Les tailles des couches étant les mêmes, le chargement ne plantait pas, mais le modèle produisait un bourdonnement continu. Le contrôle des durées ne pouvait pas le voir (la durée était cohérente), et personne n'avait écouté. Spectrogramme : bandes horizontales fixes, aucune structure de parole.
+
+Preuve par reconnaissance vocale (Whisper « small », `tools/tts/check-asr.py`, score = consonnes retrouvées) : anciennes voix algériennes **0,11** (Whisper « entend » des phrases inventées typiques du bruit), voix tunisiennes 0,62, voix marocaines 0,77 (correctes ; les seuls échecs sont des mots isolés trop courts pour Whisper).
+
+### Correctif
+
+- `generate-dz.py` réécrit sur la chaîne de Habibi-TTS (configuration v1, `infer_process` de habibi_tts), comme la voix marocaine.
+- Modèle : **Habibi-TTS Specialized/ALG** (darja algérienne, licence Apache 2.0) avec l'extrait de référence algérien officiel (`assets/ALG.wav`). Essai sur 10 phrases : score de reconnaissance **0,99** (Whisper retrouve presque mot pour mot « سلام يا بنتي والله توحشتك بزاف »). KasbahTTS correctement chargé : 0,97, gardé en option (`MODELE=kasbah`).
+- Les 669 fichiers de `src/audio/dz-ia/` sont supprimés et regénérés sur la branche (`voix-toutes.yml`, 20 machines) : **668 phrases sur 669**, score de reconnaissance de 0,91 à 0,98 selon les lots, spectrogrammes de vraie parole. La phrase manquante (durée hors règle) est lue par la voix du téléphone ; un nouveau lancement de « Voix IA » → `dz` la regénérera.
+- Nouveau contrôle automatique : `tools/tts/check-asr.py` dans `voix-toutes.yml` (algérien et marocain) supprime les fichiers inaudibles des phrases de 12 lettres ou plus ; `voix-controle.yml` contrôle un échantillon des voix déjà enregistrées. `voix-test-dz.yml` ne publie plus rien depuis une branche.
+
+### Pour publier (non fait, à la demande de l'utilisateur)
+
+Fusionner la branche dans main : `git checkout main && git merge --no-ff correctif-voix-dz && git push`. Ce push construit l'APK et la version web.
+
+### Nouvelles sources de voix pour le tunisien et le kabyle (essais du 8 novembre, même branche)
+
+Recherche sur Hugging Face (`voix-sonde.yml`) puis essais sans publication (`voix-test-tn-kab.yml`), notés par reconnaissance vocale.
+
+- **Kabyle — adoptée** : Meta MMS-TTS `facebook/mms-tts-kab` (modèle VITS entraîné sur du kabyle, lettres latines ɣ ɛ ḥ ḍ ṭ ẓ č ǧ, licence CC BY-NC 4.0 : gratuit, non commercial, attribution « Meta MMS »). Score de reconnaissance (Meta MMS, adaptateur kabyle) : 0,75 en moyenne, 0,85 à 1,00 sur les phrases (« Azul a Nanna amek tellid » → « azulananna amek tellid ») ; les mots isolés sont moins bien reconnus. Le modèle ne connaît pas o, p, v : `generate-kab.py` écrit u, b, f (Mokrane → Mukrane). **64 phrases sur 64** dans `src/audio/kab-ia/` ; l'appli les joue déjà (les enregistrements du Studio famille passent avant), le texte d'aide du pack kabyle est mis à jour. À faire écouter par Maman.
+- **Tunisien — rien de mieux que SILMA** : Habibi-TTS « Unified » avec le dialecte TUN (licence CC BY-NC-SA 4.0), sur les mêmes 15 phrases : score 0,84, contre **0,91** pour la voix actuelle SILMA TTS Derja. Les autres modèles tunisiens trouvés (XTTS, Spark-TTS, MMS affinés par des particuliers) ont peu d'utilisateurs et souvent aucune licence indiquée : non essayés. On garde SILMA.
