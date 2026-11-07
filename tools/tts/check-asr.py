@@ -6,7 +6,9 @@ que le seul contrôle des durées n'avait pas vu).
 Usage : python tools/tts/check-asr.py phrases.json dossier_audio [rapport.md] [--supprimer]
 Score = part des consonnes de la phrase retrouvées dans l'ordre (0 à 1). Whisper connaît mal les darijas : un score
 de 0,3 est déjà une phrase reconnaissable ; un bourdonnement donne 0 ou presque.
-Code de sortie 1 si la moyenne est sous 0,25 (voix inutilisable). Avec --supprimer, les fichiers sous 0,1 sont supprimés.
+Whisper ne reconnaît presque jamais un mot isolé : les phrases de moins de 12 lettres ne comptent pas dans la moyenne
+et ne sont jamais supprimées. Code de sortie 1 si la moyenne est sous 0,25 (voix inutilisable).
+Avec --supprimer, les fichiers des phrases plus longues dont le score est sous 0,1 sont supprimés.
 """
 import json, os, re, sys
 from difflib import SequenceMatcher
@@ -37,13 +39,15 @@ def main():
         heard = " ".join(s.text for s in segs).strip()
         a, b = skel(items[k]), skel(heard)
         score = SequenceMatcher(None, a, b).ratio() if a else 0.0
-        scores.append(score)
-        rows.append(f"| {score:.2f} | {items[k]} | {heard} |")
-        print(f"{score:.2f}  {items[k]}  →  {heard}", flush=True)
-        if supprimer and score < 0.1:
+        court = len(re.findall(r"[؀-ۿ]", items[k])) < 12
+        if not court:
+            scores.append(score)
+        rows.append(f"| {score:.2f}{' (mot court)' if court else ''} | {items[k]} | {heard} |")
+        print(f"{score:.2f}{' (court)' if court else ''}  {items[k]}  →  {heard}", flush=True)
+        if supprimer and score < 0.1 and not court:
             os.remove(os.path.join(d, f))
     moy = sum(scores) / len(scores) if scores else 0
-    txt = "| Score | Phrase demandée | Ce que Whisper entend |\n|---|---|---|\n" + "\n".join(rows) + f"\n\nScore moyen : {moy:.2f} sur {len(scores)} fichiers.\n"
+    txt = "| Score | Phrase demandée | Ce que Whisper entend |\n|---|---|---|\n" + "\n".join(rows) + f"\n\nScore moyen : {moy:.2f} sur {len(scores)} phrases de 12 lettres ou plus.\n"
     if rapport:
         open(rapport, "a", encoding="utf-8").write("\n## Reconnaissance vocale\n\n" + txt)
     print(f"Score moyen : {moy:.2f}")
