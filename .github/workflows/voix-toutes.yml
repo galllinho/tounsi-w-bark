@@ -1,12 +1,12 @@
 name: Voix IA (toutes les phrases d'une langue)
 # Génère la voix de chaque phrase d'un pack qui n'en a pas encore, l'ajoute dans src/audio/<langue>-ia/ et relance l'APK.
-# tn : SILMA TTS Derja (tunisien) ; dz : KasbahTTS (darja algérienne). À relancer après un ajout de contenu :
+# tn : SILMA TTS Derja (tunisien) ; dz : KasbahTTS (darja algérienne) ; ma : Habibi-TTS, modèle spécialisé MAR (darija marocaine, Apache 2.0). À relancer après un ajout de contenu :
 # seules les nouvelles phrases sont générées. Coût : environ 1,5 à 2 minutes GitHub par phrase (tunisien : 830 min pour 476).
 on:
   workflow_dispatch:
     inputs:
       langue:
-        description: "Langue : tn (tunisien) ou dz (algérien)"
+        description: "Langue : tn (tunisien), dz (algérien) ou ma (marocain)"
         default: tn
       lots:
         description: Nombre de machines en parallèle
@@ -53,11 +53,17 @@ jobs:
           pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
           pip install -q f5-tts huggingface_hub soundfile
           pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
+      - name: Installer Habibi-TTS (marocain)
+        if: inputs.langue == 'ma'
+        run: |
+          sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q habibi-tts soundfile
       - name: Générer les voix
         env: { MAX_MINUTES: '300' }
-        run: python tools/tts/${{ inputs.langue == 'dz' && 'generate-dz.py' || 'generate.py' }} lots/lot-${{ matrix.lot }}.json voix
-      - name: Vérifier les durées (algérien)
-        if: inputs.langue == 'dz'
+        run: python tools/tts/${{ inputs.langue == 'dz' && 'generate-dz.py' || inputs.langue == 'ma' && 'generate-ma.py' || 'generate.py' }} lots/lot-${{ matrix.lot }}.json voix
+      - name: Vérifier les durées (algérien, marocain)
+        if: inputs.langue == 'dz' || inputs.langue == 'ma'
         run: python tools/tts/check-durations.py lots/lot-${{ matrix.lot }}.json voix || true
       - name: Convertir en mp3
         if: always()

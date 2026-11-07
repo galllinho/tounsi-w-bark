@@ -72,14 +72,14 @@
         // ---------------------------------------------------------------- Épisode 2
         {
           id: 'm1e2', title: 'Le petit taxi rouge',
-          pitch: 'Si Driss conduit son petit taxi rouge depuis 1992. Le compteur marche, la radio aussi. Très fort.',
+          pitch: 'Si Driss conduit son petit taxi rouge depuis plus de trente ans. Le compteur marche, la radio aussi. Très fort.',
           cast: ['driss'],
           scene: [
             { who: 'driss', tn: 'Salam! Fin {g:ghadi|ghadya}?', ar: 'سلام! فين {g:غادي|غادية}؟', fr: 'Salut ! Tu vas où ?' },
             { who: 'me', tn: 'Bghit nmchi l Maarif, aafak.', ar: 'بغيت نمشي للمعاريف، عافاك.', fr: 'Je veux aller au Maârif, s’il te plaît.' },
-            { who: 'driss', tn: 'Wakha. {g:Nta|Nti} men Fransa? Bayna!', ar: 'واخا. {g:نتا|نتي} من فرانسا؟ باينة!', fr: 'D’accord. Tu viens de France ? Ça se voit !', note: 'Tu n’as rien dit. Il a deviné à ta valise à roulettes et à ta casquette.' },
+            { who: 'driss', tn: 'Wakha. {g:Nta|Nti} mn Fransa? Bayna!', ar: 'واخا. {g:نتا|نتي} من فرانسا؟ باينة!', fr: 'D’accord. Tu viens de France ? Ça se voit !', note: 'Tu n’as rien dit. Il a deviné à ta valise à roulettes et à ta casquette.' },
             { who: 'me', tn: 'Hder bchwiya, ma fhemtch.', ar: 'هدر بشوية، ما فهمتش.', fr: 'Parle doucement, je n’ai pas compris.' },
-            { who: 'driss', tn: 'Smaa hadi! Nass El Ghiwane!', ar: 'سمع هادي! ناس الغيوان!', fr: 'Écoute celle-là ! Nass El Ghiwane !', note: 'Au lieu de parler doucement, il a monté le son. Nass El Ghiwane, c’est le groupe mythique de Casablanca.' },
+            { who: 'driss', tn: '{g:Smaa|Smaai} hadi! Nass El Ghiwane!', ar: '{g:سمع|سمعي} هادي! ناس الغيوان!', fr: 'Écoute celle-là ! Nass El Ghiwane !', note: 'Au lieu de parler doucement, il a monté le son. Nass El Ghiwane, c’est le groupe mythique de Casablanca.' },
             { who: 'driss', tn: 'Wselna!', ar: 'وصلنا!', fr: 'On est arrivés !' },
             { who: 'me', tn: 'Bchhal?', ar: 'بشحال؟', fr: 'C’est combien ?' },
             { who: 'driss', tn: 'Tmenya d drahem.', ar: 'تمنية د دراهم.', fr: 'Huit dirhams.', note: 'Le petit taxi a un compteur : le prix est celui qui s’affiche. Bonne nouvelle, c’est moins cher qu’à Paris.' },
@@ -91,8 +91,8 @@
             { id: 'm_aafak', tn: 'Aafak', ar: 'عافاك', fr: 'S’il te plaît', ex: 'Le mot magique du Maroc.' },
             { id: 'm_bchwiya', tn: 'Bchwiya', ar: 'بشوية', fr: 'Doucement', ex: 'Hder bchwiya = parle doucement.' },
             { id: 'm_mafhemtch', tn: 'Ma fhemtch', ar: 'ما فهمتش', fr: 'Je n’ai pas compris', ex: 'Ton meilleur ami à Casa.' },
-            { id: 'm_bayna', tn: 'Bayna', ar: 'باينة', fr: 'Ça se voit', ex: 'Men Fransa? Bayna!' },
-            { id: 'm_smaa', tn: 'Smaa', ar: 'سمع', fr: 'Écoute', ex: 'Ce que dit Si Driss avant chaque chanson.' },
+            { id: 'm_bayna', tn: 'Bayna', ar: 'باينة', fr: 'Ça se voit', ex: 'Mn Fransa? Bayna!' },
+            { id: 'm_smaa', tn: '{g:Smaa|Smaai}', ar: '{g:سمع|سمعي}', fr: 'Écoute', ex: 'Ce que dit Si Driss avant chaque chanson.' },
             { id: 'm_wselna', tn: 'Wselna', ar: 'وصلنا', fr: 'On est arrivés', ex: 'Le plus beau mot d’un trajet en taxi.' },
             { id: 'm_bchhal', tn: 'Bchhal?', ar: 'بشحال؟', fr: 'C’est combien ?', ex: 'Pour un prix. Chhal = combien (de choses).' },
             { id: 'm_drahem', tn: 'Drahem', ar: 'دراهم', fr: 'Dirhams, de l’argent', ex: 'Tmenya d drahem = huit dirhams.' },
@@ -125,7 +125,7 @@
             { who: 'me', tn: 'Aatini khobza w lhlib, aafak.', ar: 'عطيني خبزة والحليب، عافاك.', fr: 'Donne-moi un pain et du lait, s’il te plaît.' },
             { who: 'hamid', tn: 'Chhal men khobza?', ar: 'شحال من خبزة؟', fr: 'Combien de pains ?' },
             { who: 'me', tn: 'Jouj khobzat.', ar: 'جوج خبزات.', fr: 'Deux pains.' },
-            { who: 'hamid', tn: 'Ghir jouj? Dir tlata! W chi msemmen? Kayn kolchi!', ar: 'غير جوج؟ دير تلاتة! وشي مسمن؟ كاين كلشي!', fr: 'Seulement deux ? Prends-en trois ! Et un peu de msemmen ? Il y a de tout !' },
+            { who: 'hamid', tn: 'Ghir jouj? {g:Dir|Diri} tlata! W chi msemmen? Kayn kolchi!', ar: 'غير جوج؟ {g:دير|ديري} تلاتة! وشي مسمن؟ كاين كلشي!', fr: 'Seulement deux ? Prends-en trois ! Et un peu de msemmen ? Il y a de tout !' },
             { who: 'me', tn: 'La, choukran. Ghir jouj khobzat w lhlib.', ar: 'لا، شكرا. غير جوج خبزات والحليب.', fr: 'Non merci. Juste deux pains et le lait.' },
             { who: 'hamid', tn: 'Wakha. Tnach dirham. W {g:hak|haki} jouj bonbonat, fabor.', ar: 'واخا. طناش درهم. و{g:هاك|هاكي} جوج بونبونات، فابور.', fr: 'D’accord. Douze dirhams. Et voilà deux bonbons, gratuits.', note: 'Fabor (gratuit) vient de l’espagnol « favor ». Et non, ce n’est pas de la générosité : c’est pour que tu reviennes demain.' },
             { who: 'me', tn: 'Barak llahou fik, a Si Hamid. Bslama!', ar: 'بارك الله فيك، آ سي حميد. بسلامة!', fr: 'Merci beaucoup, Si Hamid. Au revoir !' }
@@ -135,7 +135,7 @@
             { id: 'm_achbghiti', tn: 'Ach bghiti?', ar: 'آش بغيتي؟', fr: 'Tu veux quoi ?', ex: 'Bghit = je veux. Ach = quoi.' },
             { id: 'm_aatini', tn: 'Aatini', ar: 'عطيني', fr: 'Donne-moi', ex: 'Aatini khobza = donne-moi un pain.' },
             { id: 'm_khobza', tn: 'Khobza', ar: 'خبزة', fr: 'Un pain', ex: 'Khobz = le pain. Jouj khobzat = deux pains.' },
-            { id: 'm_lhlib', tn: 'Lhlib', ar: 'الحليب', fr: 'Le lait', ex: 'Atay b lhlib ? Non, ça, ça ne se fait pas.' },
+            { id: 'm_lhlib', tn: 'Lhlib', ar: 'الحليب', fr: 'Le lait', ex: 'Qahwa b lhlib = café au lait.' },
             { id: 'm_chhal', tn: 'Chhal?', ar: 'شحال؟', fr: 'Combien ?', ex: 'Chhal men khobza? = combien de pains ?' },
             { id: 'm_wahed', tn: 'Wahed', ar: 'واحد', fr: 'Un', ex: 'Wahed, jouj, tlata, rbaa, khamsa…' },
             { id: 'm_jouj', tn: 'Jouj', ar: 'جوج', fr: 'Deux', ex: 'Avec un j au Maroc : jouj (pas zouj).' },
@@ -150,12 +150,12 @@
             { type: 'reverse', word: 'm_chhal' },
             R('hamid', 'Ach bghiti?', 'آش بغيتي؟', 'Tu veux quoi ?', [
               ok('Aatini khobza, aafak.', 'Donne-moi un pain, s’il te plaît.'),
-              ko('Fin {g:ghadi|ghadya}?', 'Tu vas où ?', 'Tu demandes à Si Hamid où il va. Nulle part : il vit dans sa boutique.'),
+              ko('Fin ghadi?', 'Tu vas où ?', 'Tu demandes à Si Hamid où il va. Nulle part : il vit dans sa boutique.'),
               ko('Ghali bzzaf!', 'C’est très cher !', 'Il n’a encore rien vendu. Laisse-lui au moins le temps d’ajouter trois choses.')]),
             { type: 'listen', word: 'm_jouj' },
             R('hamid', 'Chhal men khobza?', 'شحال من خبزة؟', 'Combien de pains ?', [
               ok('Jouj khobzat.', 'Deux pains.'),
-              ko('Aachra msemmen.', 'Dix msemmen.', 'Il parlait du pain. Mais Si Hamid est ravi : il note la commande.'),
+              ko('Aachra d lmsemmen.', 'Dix msemmen.', 'Il parlait du pain. Mais Si Hamid est ravi : il note la commande.'),
               ko('Sbah lkhir.', 'Bonjour.', 'Encore bonjour ? Il t’a déjà salué{e}, il veut un chiffre.')]),
             { type: 'order', tn: 'Aatini jouj khobzat w lhlib', fr: 'Donne-moi deux pains et le lait', tokens: ['Aatini', 'jouj', 'khobzat', 'w', 'lhlib'] },
             { type: 'speak', tn: 'Barak llahou fik.', ar: 'بارك الله فيك.', fr: 'Merci beaucoup (que Dieu te bénisse).' }
@@ -195,7 +195,7 @@
             R('abdellah', 'Ach {g:katchreb|katchrbi}?', 'آش {g:كتشرب|كتشربي}؟', 'Tu bois quoi ?', [
               ok('Atay, aafak.', 'Un thé, s’il te plaît.'),
               ko('Jouj khobzat.', 'Deux pains.', 'Tu commandes du pain au café. Ba Abdellah t’envoie chez Si Hamid… qui te vendra un thé.'),
-              ko('Fin {g:ghadi|ghadya}?', 'Tu vas où ?', 'C’est toi qui viens d’entrer. Lui, il n’a pas bougé de cette chaise depuis 1986.')]),
+              ko('Fin ghadi?', 'Tu vas où ?', 'C’est toi qui viens d’entrer. Lui, il n’a pas bougé de cette chaise depuis 1986.')]),
             { type: 'meaning', word: 'm_naanaa' },
             R('abdellah', 'W b sokkar?', 'وبالسكر؟', 'Et avec du sucre ?', [
               ok('Chwiya d sokkar, aafak.', 'Un peu de sucre, s’il te plaît.'),
@@ -215,7 +215,7 @@
           cast: ['naima'],
           scene: [
             { who: 'naima', tn: 'Salam! {g:Nta|Nti} {g:jdid|jdida} hna?', ar: 'سلام! {g:نتا|نتي} {g:جديد|جديدة} هنا؟', fr: 'Bonjour ! Tu es nouveau{e} ici ?' },
-            { who: 'me', tn: 'Iyeh, ana {g:weld|bent} okht Tata Saadia.', ar: 'إيه، أنا {g:ولد|بنت} أخت طاطا سعدية.', fr: 'Oui, je suis {g:le fils|la fille} de la sœur de Tata Saadia.' },
+            { who: 'me', tn: 'Iyeh, ana {g:weld|bent} khet Tata Saadia.', ar: 'إيه، أنا {g:ولد|بنت} خت طاطا سعدية.', fr: 'Oui, je suis {g:le fils|la fille} de la sœur de Tata Saadia.' },
             { who: 'naima', tn: 'Mrehba bik! Ana Naima, jaratha.', ar: 'مرحبا بيك! أنا نعيمة، جارتها.', fr: 'Bienvenue ! Moi, c’est Naïma, sa voisine.' },
             { who: 'me', tn: 'Metcherfin, a Lalla Naima.', ar: 'متشرفين، آ لالة نعيمة.', fr: 'Enchanté{e}, Lalla Naïma.', note: 'Lalla = madame, en signe de respect. Avec les dames du quartier, c’est obligatoire.' },
             { who: 'naima', tn: 'W fin {g:katqra|katqray}?', ar: 'وفين {g:كتقرا|كتقراي}؟', fr: 'Et tu étudies où ?' },
@@ -223,14 +223,14 @@
             { who: 'naima', tn: 'Mzyan! W wach {g:mzewwej|mzewwja}?', ar: 'مزيان! وواش {g:مزوج|مزوجة}؟', fr: 'Très bien ! Et tu es marié{e} ?', note: 'Tu es là depuis trois minutes. Elle a déjà posé LA question.' },
             { who: 'me', tn: 'La, mazal!', ar: 'لا، مازال!', fr: 'Non, pas encore !' },
             { who: 'naima', tn: 'Mazal? Aandi {g:bent khti|weld khti}…', ar: 'مازال؟ عندي {g:بنت ختي|ولد ختي}…', fr: 'Pas encore ? J’ai {g:une nièce|un neveu}…' },
-            { who: 'me', tn: 'Smeh liya, Tata katsennani!', ar: 'سمح ليا، طاطا كتسناني!', fr: 'Pardon, Tata m’attend !', note: 'Tu es venu{e} chercher du pain. Tu repars presque fiancé{e}.' }
+            { who: 'me', tn: 'Smeh liya, Tata katsennani!', ar: 'سمح ليا، طاطا كتسناني!', fr: 'Pardon, Tata m’attend !', note: 'Tu es juste sorti{e} sur le palier. Tu repars presque fiancé{e}.' }
           ],
           words: [
             { id: 'm_jdid', tn: '{g:Jdid|Jdida}', ar: '{g:جديد|جديدة}', fr: 'Nouveau, nouvelle', ex: 'Nta jdid hna? = tu es nouveau ici ?' },
             { id: 'm_iyeh', tn: 'Iyeh', ar: 'إيه', fr: 'Oui', ex: 'On dit aussi « ah ».' },
             { id: 'm_la', tn: 'La', ar: 'لا', fr: 'Non', ex: 'La, choukran = non merci.' },
             { id: 'm_weld', tn: 'Weld / bent', ar: 'ولد / بنت', fr: 'Fils (garçon) / fille', ex: 'Weld khti = mon neveu (le fils de ma sœur).' },
-            { id: 'm_okht', tn: 'Okht', ar: 'أخت', fr: 'Sœur (de…)', ex: 'Khti = ma sœur. Khouya = mon frère.' },
+            { id: 'm_okht', tn: 'Khet', ar: 'خت', fr: 'Sœur (de…)', ex: 'Khti = ma sœur. Khouya = mon frère.' },
             { id: 'm_jara', tn: 'Jara', ar: 'جارة', fr: 'Voisine', ex: 'Jar = voisin. Jaratha = sa voisine.' },
             { id: 'm_metcherfin', tn: 'Metcherfin', ar: 'متشرفين', fr: 'Enchanté', ex: 'Pour un garçon comme pour une fille.' },
             { id: 'm_kanqra', tn: 'Kanqra', ar: 'كنقرا', fr: 'J’étudie', ex: 'Kanqra f Fransa = j’étudie en France.' },
@@ -240,7 +240,7 @@
           ],
           exercises: [
             R('naima', '{g:Nta|Nti} {g:jdid|jdida} hna?', '{g:نتا|نتي} {g:جديد|جديدة} هنا؟', 'Tu es nouveau{e} ici ?', [
-              ok('Iyeh, ana {g:weld|bent} okht Tata Saadia.', 'Oui, je suis {g:le fils|la fille} de la sœur de Tata Saadia.'),
+              ok('Iyeh, ana {g:weld|bent} khet Tata Saadia.', 'Oui, je suis {g:le fils|la fille} de la sœur de Tata Saadia.'),
               ko('Bchhal?', 'C’est combien ?', 'Tu demandes un prix à la voisine. Elle va raconter à tout l’immeuble que tu veux acheter son appartement.'),
               ko('Wselna!', 'On est arrivés !', 'Tu n’es pas dans un taxi. Tu es sur le palier, et Lalla Naïma te regarde.')]),
             { type: 'meaning', word: 'm_metcherfin' },
@@ -279,7 +279,7 @@
             { who: 'yassine', tn: 'Tajine b djaj w zitoun!', ar: 'طاجين بالدجاج والزيتون!', fr: 'Un tajine au poulet et aux olives !' },
             { who: 'saadia', tn: '{g:Koul|Kouli}, a {petit}! {g:Nta|Nti} {g:daaif|daaifa} bzzaf!', ar: '{g:كول|كولي}، آ {petitAr}! {g:نتا|نتي} {g:ضعيف|ضعيفة} بزاف!', fr: 'Mange, {petitFr} ! Tu es beaucoup trop maigre !', note: 'Tu as pris deux kilos depuis ton arrivée. Pour Tata, tu es toujours trop maigre.' },
             { who: 'me', tn: 'Bnin bzzaf, a Tata!', ar: 'بنين بزاف، آ طاطا!', fr: 'C’est délicieux, tata !' },
-            { who: 'saadia', tn: 'Zid, zid! Zid chwiya!', ar: 'زيد، زيد! زيد شوية!', fr: 'Reprends, reprends ! Reprends un peu !' },
+            { who: 'saadia', tn: '{g:Zid|Zidi}, {g:zid|zidi}! {g:Zid|Zidi} chwiya!', ar: '{g:زيد|زيدي}، {g:زيد|زيدي}! {g:زيد|زيدي} شوية!', fr: 'Reprends, reprends ! Reprends un peu !' },
             { who: 'me', tn: 'La, choukran, chbaat!', ar: 'لا، شكرا، شبعت!', fr: 'Non merci, je n’ai plus faim !' },
             { who: 'yassine', tn: 'Chbaat? Ewa, ana ghadi nkemmel!', ar: 'شبعت؟ إيوا، أنا غادي نكمل!', fr: 'Plus faim ? Eh bien, moi, je vais finir !' },
             { who: 'saadia', tn: 'Bssahtek, a {petit}!', ar: 'بصحتك، آ {petitAr}!', fr: 'Bon appétit (à ta santé), {petitFr} !', note: 'Bssahtek se dit après le repas, ou quand quelqu’un a un nouveau vêtement.' },
@@ -292,22 +292,22 @@
             { id: 'm_zitoun', tn: 'Zitoun', ar: 'زيتون', fr: 'Olives', ex: 'Zit = huile.' },
             { id: 'm_koul', tn: '{g:Koul|Kouli}', ar: '{g:كول|كولي}', fr: 'Mange !', ex: 'Koul à un garçon, kouli à une fille. Le mot préféré de Tata.' },
             { id: 'm_bnin', tn: 'Bnin', ar: 'بنين', fr: 'Délicieux', ex: 'Bnin bzzaf! = c’est trop bon !' },
-            { id: 'm_zid', tn: 'Zid', ar: 'زيد', fr: 'Reprends, continue', ex: 'Zid chwiya = reprends un peu.' },
+            { id: 'm_zid', tn: '{g:Zid|Zidi}', ar: '{g:زيد|زيدي}', fr: 'Reprends, continue', ex: 'Zid chwiya = reprends un peu.' },
             { id: 'm_chbaat', tn: 'Chbaat', ar: 'شبعت', fr: 'Je n’ai plus faim', ex: 'À dire trois fois pour être cru{e}.' },
             { id: 'm_ewa', tn: 'Ewa', ar: 'إيوا', fr: 'Eh bien, alors', ex: 'Ewa, yallah! = bon, allez !' },
             { id: 'm_bssahtek', tn: 'Bssahtek', ar: 'بصحتك', fr: 'À ta santé, bon appétit', ex: 'Après un repas, ou pour un habit neuf.' },
-            { id: 'm_lwalidin', tn: 'Llah yrhem lwalidin', ar: 'الله يرحم الوالدين', fr: 'Merci (que Dieu bénisse tes parents)', ex: 'Le merci le plus chaleureux.' }
+            { id: 'm_lwalidin', tn: 'Llah yrhem lwalidin', ar: 'الله يرحم الوالدين', fr: 'Merci (que Dieu ait pitié des parents)', ex: 'Le merci le plus chaleureux.' }
           ],
           exercises: [
             { type: 'meaning', word: 'm_bnin' },
             R('saadia', '{g:Koul|Kouli}, a {petit}!', '{g:كول|كولي}، آ {petitAr}!', 'Mange, {petitFr} !', [
               ok('Bnin bzzaf, a Tata!', 'C’est délicieux, tata !'),
               ko('Bchhal?', 'C’est combien ?', 'Tu demandes le prix du tajine à Tata. Elle est vexée pour trois générations.'),
-              ko('Fin {g:ghadi|ghadya}?', 'Tu vas où ?', 'Personne ne va nulle part. Surtout pas toi, il reste le dessert.')]),
+              ko('Fin ghadya?', 'Tu vas où ?', 'Personne ne va nulle part. Surtout pas toi, il reste le dessert.')]),
             { type: 'reverse', word: 'm_chbaat' },
-            R('saadia', 'Zid, zid! Zid chwiya!', 'زيد، زيد! زيد شوية!', 'Reprends ! Reprends un peu !', [
+            R('saadia', '{g:Zid|Zidi}, {g:zid|zidi}! {g:Zid|Zidi} chwiya!', '{g:زيد|زيدي}، {g:زيد|زيدي}! {g:زيد|زيدي} شوية!', 'Reprends ! Reprends un peu !', [
               ok('La, choukran, chbaat!', 'Non merci, je n’ai plus faim !'),
-              ko('Smaa hadi!', 'Écoute celle-là !', 'Ce n’est pas le taxi de Si Driss. Pas de musique à table.'),
+              ko('Smaai hadi!', 'Écoute celle-là !', 'Ce n’est pas le taxi de Si Driss. Pas de musique à table.'),
               ko('Sbah lkhir!', 'Bonjour !', 'Il est neuf heures du soir et tu es à table depuis une heure.')]),
             { type: 'listen', word: 'm_bssahtek' },
             { type: 'order', tn: 'Llah yrhem lwalidin a Tata', fr: 'Merci du fond du cœur, tata', tokens: ['Llah', 'yrhem', 'lwalidin', 'a', 'Tata'] },
@@ -399,7 +399,7 @@
             { type: 'listen', word: 'm_maticha' },
             R('boujemaa', 'W chi maticha? W chi btata?', 'وشي ماطيشة؟ وشي بطاطا؟', 'Et des tomates ? Et des pommes de terre ?', [
               ok('Safi, hadchi kafi, choukran.', 'C’est bon, ça suffit, merci.'),
-              ko('Iyeh, aatini kolchi!', 'Oui, donne-moi tout !', 'Tout ?! Ba Boujemaa appelle son fils pour porter tes sacs jusqu’à Casa.'),
+              ko('Iyeh, aatini kolchi!', 'Oui, donne-moi tout !', 'Tout ?! Ba Boujemaa appelle son fils pour porter tes sacs jusqu’à la maison.'),
               ko('Smiti Boujemaa.', 'Je m’appelle Boujemaa.', 'Non, LUI, c’est Boujemaa.')]),
             { type: 'order', tn: 'Bchhal kilo d limoun', fr: 'C’est combien, le kilo d’oranges ?', tokens: ['Bchhal', 'kilo', 'd', 'limoun'] },
             { type: 'speak', tn: 'Nqess chwiya, aafak.', ar: 'نقص شوية، عافاك.', fr: 'Baisse un peu, s’il te plaît.' }
@@ -419,7 +419,9 @@
             { who: 'me', tn: 'Iyeh, kayn jamaa sghir.', ar: 'إيه، كاين جامع صغير.', fr: 'Oui, il y a une petite mosquée.' },
             { who: 'yassine', tn: 'Mzyan! {g:Sir|Siri} nichan, mn baad {g:dour|douri} aal lisser.', ar: 'مزيان! {g:سير|سيري} نيشان، من بعد {g:دور|دوري} على ليسر.', fr: 'Bien ! Va tout droit, puis tourne à gauche.' },
             { who: 'me', tn: 'Lisser? Machi limen?', ar: 'ليسر؟ ماشي ليمن؟', fr: 'À gauche ? Pas à droite ?' },
-            { who: 'yassine', tn: 'Lisser! W wach baaid? La, qrib, khamsa d dqayq.', ar: 'ليسر! وواش بعيد؟ لا، قريب، خمسة د دقايق.', fr: 'À gauche ! Et c’est loin ? Non, c’est tout près, cinq minutes.', note: 'Cinq minutes, chez Yassine, ça veut dire une demi-heure.' }
+            { who: 'yassine', tn: 'Lisser!', ar: 'ليسر!', fr: 'À gauche !' },
+            { who: 'me', tn: 'Wach baaid?', ar: 'واش بعيد؟', fr: 'C’est loin ?' },
+            { who: 'yassine', tn: 'La, qrib, khamsa d dqayq.', ar: 'لا، قريب، خمسة د دقايق.', fr: 'Non, c’est tout près, cinq minutes.', note: 'Cinq minutes, chez Yassine, ça veut dire une demi-heure.' }
           ],
           words: [
             { id: 'm_tlefft', tn: 'Tlefft', ar: 'تلفت', fr: 'Je suis perdu(e)', ex: 'Tlefti? = tu es perdu ?' },
@@ -522,7 +524,7 @@ Object.assign(window.TWB_CAST, {
 });
 
 window.TWB_CONTENT.ma = {
-  name: 'Darija marocain', short: 'Darija', label: 'Darija marocain (Casablanca)', mascot: 'saadia', order: 3, code: 'MA', flag: '🇲🇦',
+  name: 'Darija marocain', short: 'Maghribi', label: 'Darija marocain (Casablanca)', mascot: 'saadia', order: 3, code: 'MA', flag: '🇲🇦',
   // Voix : voix IA marocaine si elle a été générée (src/audio/ma-ia/), sinon voix arabe du téléphone (ar-MA d'abord).
   voice: 'tts', ttsLangs: ['ar-MA', 'ar-DZ', 'ar-SA', 'ar'], srLang: 'ar-MA', speakField: 'ar',
   ui: {
@@ -574,7 +576,7 @@ CHAMPS À REMPLIR :
     personas: {
       saadia: {
         prompt: "Tu es Tata Saadia, la tata de l'élève, qui habite Casablanca (quartier du Maârif) : chaleureuse, commère, un peu dramatique, tu veux toujours le faire manger (tajine, harira, msemmen, couscous du vendredi, cornes de gazelle) et tu le compares à son cousin Yassine. Tu l'appelles « a {petit} ».",
-        hello: { tn: 'Salam a {petit}! Aji, aawed liya, {g:kidayr|kidayra}?', ar: 'سلام آ {petitAr}! أجي، عاود ليا، {g:كيداير|كيدايرة}؟', fr: 'Coucou {petitFr} ! Viens, raconte-moi, comment tu vas ?' },
+        hello: { tn: 'Salam a {petit}! Aji, {g:aawed|aawdi} liya, {g:kidayr|kidayra}?', ar: 'سلام آ {petitAr}! أجي، {g:عاود|عاودي} ليا، {g:كيداير|كيدايرة}؟', fr: 'Coucou {petitFr} ! Viens, raconte-moi, comment tu vas ?' },
         topics: ['Raconte ta journée', 'Le repas de ce soir', 'Le cousin Yassine', 'Le mariage de Salma']
       },
       driss: {
