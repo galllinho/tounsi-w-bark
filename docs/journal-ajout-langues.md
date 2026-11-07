@@ -155,7 +155,7 @@ Preuve par reconnaissance vocale (Whisper « small », `tools/tts/check-asr.py`,
 
 - `generate-dz.py` réécrit sur la chaîne de Habibi-TTS (configuration v1, `infer_process` de habibi_tts), comme la voix marocaine.
 - Modèle : **Habibi-TTS Specialized/ALG** (darja algérienne, licence Apache 2.0) avec l'extrait de référence algérien officiel (`assets/ALG.wav`). Essai sur 10 phrases : score de reconnaissance **0,99** (Whisper retrouve presque mot pour mot « سلام يا بنتي والله توحشتك بزاف »). KasbahTTS correctement chargé : 0,97, gardé en option (`MODELE=kasbah`).
-- Les 669 fichiers de `src/audio/dz-ia/` sont supprimés et regénérés sur la branche (`voix-toutes.yml`, 20 machines).
+- Les 669 fichiers de `src/audio/dz-ia/` sont supprimés et regénérés sur la branche (`voix-toutes.yml`, 20 machines) : **668 phrases sur 669**, score de reconnaissance de 0,91 à 0,98 selon les lots, spectrogrammes de vraie parole. La phrase manquante (durée hors règle) est lue par la voix du téléphone ; un nouveau lancement de « Voix IA » → `dz` la regénérera.
 - Nouveau contrôle automatique : `tools/tts/check-asr.py` dans `voix-toutes.yml` (algérien et marocain) supprime les fichiers inaudibles des phrases de 12 lettres ou plus ; `voix-controle.yml` contrôle un échantillon des voix déjà enregistrées. `voix-test-dz.yml` ne publie plus rien depuis une branche.
 
 ### Pour publier (non fait, à la demande de l'utilisateur)
