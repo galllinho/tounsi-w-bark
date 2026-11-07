@@ -1920,7 +1920,9 @@ function kidify(list){
     return x;
   });
 }
-const kidWords = () => { const ws = (learned().length >= 6 ? learned() : allWords()).filter(w => emojiOf(w)); const seen = new Set(); return ws.filter(w => { const e = emojiOf(w); if (seen.has(e)) return false; seen.add(e); return true; }); };
+// Mots avec image pour les mini-jeux : d'abord les mots appris ; s'il y en a moins de 4 avec une image, tous les mots de la langue
+const kidPick = list => { const seen = new Set(); return list.filter(w => { const e = emojiOf(w); if (!e || seen.has(e)) return false; seen.add(e); return true; }); };
+const kidWords = () => { const ws = kidPick(learned()); return ws.length >= 4 ? ws : kidPick(allWords()); };
 function kidGamesCard(){
   if (!S.kid) return '';
   return `<div class="sec">Jeux</div><div class="games">

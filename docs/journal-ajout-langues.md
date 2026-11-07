@@ -85,3 +85,43 @@ Session avec l'utilisateur. Consigne : **ne rien publier** (aucun push sur main)
 1. Copier `src/content-dz.js` en `src/content-ma.js` (et `content-dz-more.js` en `content-ma-more.js`) ; remplacer la clé `window.TWB_CONTENT.dz` par `.ma`, `order: 3`, `code: 'MA'`, `flag: '🇲🇦'`, les textes `ui`, `lines`, `chat`, `notif`, les personnages (nouvelles clés) et les identifiants (niveaux `m1…`, mots `m_…`, grammaire `mg1…`, unités « Lire et écrire » `ms1…`).
 2. Ajouter les deux `<script src="content-ma….js">` dans `src/app.html` (après content-dz-more.js) et les noms de fichiers dans `tools/check-dz.js` et `tools/tts/collect.js`.
 3. Écrire `docs/reference-marocain.md`, vérifier avec `node tools/check-dz.js ma`, tester avec `tools/test-app.js`. Le sélecteur de langues affichera le pack tout seul.
+
+## 7 novembre 2026 : darija marocain (Casablanca et Rabat), pack « ma » — version 0.7.0
+
+Session automatique (Claude), sans l'utilisateur. Travail sur la branche « ameliorations » (avec les nouveautés du 6 novembre), puis fusion dans main et une seule publication.
+
+### Ce qui a été fait
+
+- **Recherche** → `docs/reference-marocain.md` : transcription latine sans chiffres (q pour ق, g pour ڭ), grammaire (ma…ch, machi, makaynch, futur ghadi / gha, présent ka-, passé avec « tu » identique pour garçon et fille, -tiw, dyal et d, had, nombres avec « d »), vocabulaire confirmé par au moins deux sources, tableau des pièges entre marocain, algérien et tunisien, sources, points à faire confirmer. Remarque : l'outil de lecture des pages web était bloqué dans cette session ; la recherche s'est faite par moteur de recherche et à partir des ouvrages de référence listés (Wikipédia, manuel du Peace Corps Maroc, DODa, Harrell, Wiktionary, Lonely Planet).
+- **Contenu** : `src/content-ma.js` et `src/content-ma-more.js`.
+  - 5 niveaux × 5 épisodes (210 lignes de scène, 284 mots), 5 épreuves (10/7, 10/7, 12/8, 12/8, 14/10), 5 leçons de grammaire « Le coin de Tata Saadia » (possessifs et dyal ; négation ; présent ka- et tu garçon/fille ; passé ; futur ghadi et khass), 25 missions IA, 2 histoires de Jha en marocain (`PACK.stories`, avec questions).
+  - 14 personnages avec portraits : Tata Saadia (mascotte, Maârif), Si Driss (petit taxi rouge, fan du Raja), Si Hamid (moul lhanout), Ba Abdellah (café), Lalla Naïma (voisine), Yassine (cousin, fan du Wydad), Lalla Hniya (grand-mère), Salma (la mariée), Ba Boujemaa (marché central), Docteure Leïla, Mi Zahra (kessala du hammam), Si Abdeslam (babouches, médina de Rabat), Aziz (jus d'orange à Jemaa el-Fna), Karim (guichet de Casa-Voyageurs).
+  - Lieux : aéroport Mohammed-V, Maârif, la Corniche d'Aïn Diab, le marché central, la qissariya, la nuit du henné et l'amariya, la médina de Rabat, le hammam, le derby Raja–Wydad (sans moquerie), le train pour Marrakech, Jemaa el-Fna, le couscous du vendredi.
+  - 6 personas de discussion IA marocaines avec les règles de la darija pour Gemini (pas de tunisien, pas d'algérien, tutoiement garçon/fille, vocatif « a »).
+  - Parcours « Lire et écrire » marocain (10 unités « ms1… », progression séparée) : la lettre **ڭ** (g) remplace ڨ, mots et phrases marocains.
+  - Mode enfant : 57 mots ont une image (emoji) choisie à la main en plus de la détection automatique.
+- **Outils** : `tools/check-dz.js` connaît le pack « ma » (ڭ, q strict, histoires contrôlées aussi) ; nouveau `tools/check-mots-etrangers.js` (aucun mot tunisien ou algérien dans le marocain, et inversement) ; nouveau `tools/test-nouveautes.js` (mode enfant, Trouve l'image, Memory, défi du jour, révision, signalement, histoires, progression séparée, absence d'IA sur la version web) ; `tools/tts/collect.js` connaît le marocain.
+- **Version** : package.json 0.7.0 ; le numéro de version de l'APK vient maintenant de package.json (0.7.N, N = numéro de construction).
+
+### Vérifications
+
+1. `node tools/check-dz.js ma` : latin ↔ arabe consonne par consonne, garçon et fille : 623 lignes, 0 écart (après avoir appris à l'outil que شكرا se lit choukran).
+2. `node tools/check-mots-etrangers.js` : 0 mot suspect dans le marocain, l'algérien et le tunisien.
+3. Relecture ligne par ligne par un agent séparé qui n'avait pas écrit le contenu, contre `docs/reference-marocain.md` : 46 remarques. Corrigé : impératifs non accordés (smaa, dir, zid, chouf, aawed, trtah), accords appliqués à la mauvaise personne dans des réponses, « khet » au lieu de « okht », « mn imta » (depuis quand), « wahed laassir d llimoun », « aaqbal lik », « kanchteh », la carte de grammaire sur -i / -a, deux mauvaises réponses de grammaire qui s'entendent en vrai, une réplique où l'élève se répondait à lui-même, des incohérences de récit. Les variantes discutables sont listées dans la référence.
+4. Tests Playwright (voir plus bas).
+
+### Choix faits sans l'utilisateur
+
+- **Parler visé** : la darija standard de Casablanca et Rabat. **Vocatif « a »** (a wlidi, a Tata), comme au Maroc. **Q écrit q** (qahwa), **ڭ écrit g** (gal, gles, gaa) ; dans l'écriture arabe, toujours ڭ.
+- **Mascotte** : « Tata Saadia » (tata est le mot courant à Casablanca). **Grand-mère** : « Lalla Hniya ».
+- « Bravo » = **Tbarkallah !**, « oups » = **Ewa…**, puce de langue « 🇲🇦 Maghribi ».
+- **Futur** avec ghadi (invariable comme marque du futur, accordé dans « fin ghadi / ghadya »). **Présent** avec ka- (pas ta-).
+- **Monnaie** : dirhams, sans les « ryal » (expliqué dans la référence).
+- Pour des enfants : pas « de Tanger à Lagouira » (sens politique) mais « du nord au sud » ; pas « vrai Marocain » mais « marocain de cœur » ; le derby reste gentil des deux côtés.
+- Les nouveautés propres au tunisien (niveau Fêtes) n'ont pas été refaites ; les histoires de Jha, elles, existent en marocain.
+
+### Points à faire relire par un natif de Casablanca
+
+Toute la liste est dans `docs/reference-marocain.md` (« Points à faire confirmer »), en priorité les niveaux 4 et 5 et les deux histoires.
+
+### Voix marocaine

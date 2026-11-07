@@ -826,6 +826,15 @@ Object.assign(window.TWB_CAST, {
   put(window.TWB_MA_L5);
   Object.entries(window.TWB_MA_GRAMMAR).forEach(([lv, g]) => { D.levels.find(l => l.id === lv).grammar = g; });
   delete window.TWB_MA_L34; delete window.TWB_MA_L5; delete window.TWB_MA_GRAMMAR;
+  // Images du mode enfant pour les mots concrets dont la traduction ne suffit pas à trouver l'emoji
+  const EMO = { m_khobza: '🍞', m_lhlib: '🥛', m_qahwa: '☕', m_atay: '🍵', m_naanaa: '🌿', m_sokkar: '🍬', m_kasdlma: '💧', m_djaj: '🍗',
+    m_zitoun: '🫒', m_limoun: '🍊', m_hamd: '🍋', m_maticha: '🍅', m_btata: '🥔', m_glas: '🍦', m_lbhar: '🌊', m_tswira: '📷',
+    m_jellaba: '🧥', m_belgha: '🥿', m_qaftan: '👗', m_lhenna: '🖐️', m_lkoura: '⚽', m_ttran: '🚆', m_lhammam: '🧼', m_lkis: '🧤',
+    m_ssabon: '🧼', m_rassi: '🤕', m_kerchi: '🤢', m_skhana: '🤒', m_lhalwa: '🍰', m_aassir: '🧃', m_lkhizzou: '🥕', m_sseksou: '🍲',
+    m_harira: '🍲', m_lhommos: '🫘', m_jamaa: '🕌', m_tanjiya: '🏺', m_lmousiqa: '🎶', m_laaroussa: '👰', m_laaris: '🤵', m_skhoun: '🔥',
+    m_drahem: '💵', m_mitayn: '💵', m_lbeztam: '👛', m_werqa: '🎫', m_blassa: '💺', m_ssrjem: '🪟', m_graa: '🥒', m_kilo: '⚖️', m_alo: '📞',
+    m_zwin: '😍', m_bnin: '😋', m_kanbghik: '❤️', m_tbessem: '😁', m_nchteh: '💃', m_lkhodra: '🥦', m_derby: '⚽', m_jjemaa: '📅' };
+  D.levels.forEach(l => l.episodes.forEach(e => e.words.forEach(w => { if (EMO[w.id] && !w.emoji) w.emoji = EMO[w.id]; })));
   // Un mot revu dans un épisode plus loin garde un identifiant unique (carnet, étoiles, révisions)
   const seen = new Set();
   D.levels.forEach(l => l.episodes.forEach(e => e.words.forEach(w => {
