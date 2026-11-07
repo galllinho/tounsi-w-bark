@@ -125,3 +125,18 @@ Session automatique (Claude), sans l'utilisateur. Travail sur la branche « amel
 Toute la liste est dans `docs/reference-marocain.md` (« Points à faire confirmer »), en priorité les niveaux 4 et 5 et les deux histoires.
 
 ### Voix marocaine
+
+- **Recherche** (Hugging Face sondé depuis GitHub Actions, l'espace de travail ne l'atteignant pas : `voix-sonde-ma.yml`) : pas de `facebook/mms-tts-ary` (n'existe pas) ; **Habibi-TTS** (SWivid) a un modèle **spécialisé MAR** (darija marocaine, « Moroccan or Darija »), entraîné entre autres sur `adiren7/darija_speech_to_text` et `KandirResearch/DarijaTTS-clean`, licence **Apache 2.0** pour les modèles spécialisés (le modèle « Unified » est CC BY-NC-SA et n'est pas utilisé), avec un extrait de référence marocain officiel (`assets/MAR.mp3` et sa transcription).
+- **Test** (`voix-test-ma.yml`, 12 phrases) : modèle chargé, la lettre ڭ fait partie de son vocabulaire, 12 fichiers sur 12 avec une durée cohérente (0,09 à 0,11 s par lettre, 0,5 à 3,3 s par phrase), environ 140 s par phrase sur une machine GitHub.
+- **Adoptée** : génération complète sur la branche ameliorations (`voix-toutes.yml`, langue `ma`, 20 machines en parallèle, environ 80 minutes) : **662 phrases sur 662** (versions garçon et fille), aucune rejetée par le contrôle des durées, `src/audio/ma-ia/` (7,2 Mo). Les 3 lignes qui contiennent le prénom de l'élève restent lues par la voix du téléphone (`ar-MA`, puis `ar`).
+- **Personne n'a encore écouté** ces voix. Si elles sonnent mal, supprimer `src/audio/ma-ia/` : l'appli reprend la voix du téléphone. Les voix enregistrées par la famille dans le Studio passent toujours en premier. Après un ajout de contenu marocain, relancer Actions → « Voix IA (toutes les phrases d'une langue) » → `ma` (seules les nouvelles phrases sont générées).
+
+### Tests (7 novembre)
+
+- `tools/test-app.js` (toutes les leçons, épreuves, grammaire, unités « Lire et écrire », révision, carnet, profil, Studio, sélecteur de langues, mission simulée) pour le tunisien (30 épisodes, 6 épreuves, 6 grammaires, 10 unités), l'algérien (25, 5, 5, 10), le marocain (25, 5, 5, 10) et le kabyle, dans « Nuit de jasmin » et « Sidi Bou Saïd », garçon et fille : **zéro erreur JavaScript**.
+- `tools/test-nouveautes.js` (mode enfant, Trouve l'image, Memory, défi du jour, signalement, histoires, révision espacée, profil, progression séparée par langue) pour les quatre langues, version Android et version web (`WEB=1`, sans IA vérifié) : **zéro erreur JavaScript**.
+- Corrigé en testant : les mini-jeux du mode enfant affichaient « Il faut encore quelques mots » dès que l'élève avait fini un épisode dont les mots n'ont pas d'image ; ils prennent maintenant tous les mots de la langue quand les mots appris ne suffisent pas.
+
+### Minutes GitHub
+
+Le dépôt est public : minutes illimitées. Sonde des modèles (3 lancements, < 5 min), test de la voix (≈ 35 min), génération complète (20 machines × ≈ 80 min), puis une construction de l'APK et une de la version web au moment de la fusion dans main.
