@@ -1,12 +1,12 @@
 name: Voix IA (toutes les phrases d'une langue)
 # Génère la voix de chaque phrase d'un pack qui n'en a pas encore, l'ajoute dans src/audio/<langue>-ia/ et relance l'APK.
-# tn : SILMA TTS Derja (tunisien) ; dz : Habibi-TTS Specialized/ALG (darja algérienne, Apache 2.0 ; KasbahTTS avec MODELE=kasbah) ; ma : Habibi-TTS, modèle spécialisé MAR (darija marocaine, Apache 2.0). À relancer après un ajout de contenu :
+# tn : SILMA TTS Derja (tunisien) ; kab : Meta MMS-TTS (facebook/mms-tts-kab, CC BY-NC 4.0) ; dz : Habibi-TTS Specialized/ALG (darja algérienne, Apache 2.0 ; KasbahTTS avec MODELE=kasbah) ; ma : Habibi-TTS, modèle spécialisé MAR (darija marocaine, Apache 2.0). À relancer après un ajout de contenu :
 # seules les nouvelles phrases sont générées. Coût : environ 1,5 à 2 minutes GitHub par phrase (tunisien : 830 min pour 476).
 on:
   workflow_dispatch:
     inputs:
       langue:
-        description: "Langue : tn (tunisien), dz (algérien) ou ma (marocain)"
+        description: "Langue : tn (tunisien), dz (algérien), ma (marocain) ou kab (kabyle)"
         default: tn
       lots:
         description: Nombre de machines en parallèle
@@ -52,15 +52,24 @@ jobs:
           sudo apt-get install -y -q ffmpeg
           pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
           pip install -q habibi-tts soundfile faster-whisper
+      - name: Installer Meta MMS-TTS (kabyle)
+        if: inputs.langue == 'kab'
+        run: |
+          sudo apt-get install -y -q ffmpeg
+          pip install -q "torch>=2.6" --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "transformers>=4.40" soundfile accelerate
       - name: Générer les voix
         env: { MAX_MINUTES: '300' }
-        run: python tools/tts/${{ inputs.langue == 'dz' && 'generate-dz.py' || inputs.langue == 'ma' && 'generate-ma.py' || 'generate.py' }} lots/lot-${{ matrix.lot }}.json voix
+        run: python tools/tts/${{ inputs.langue == 'dz' && 'generate-dz.py' || inputs.langue == 'ma' && 'generate-ma.py' || inputs.langue == 'kab' && 'generate-kab.py' || 'generate.py' }} lots/lot-${{ matrix.lot }}.json voix
       - name: Vérifier les durées (algérien, marocain)
         if: inputs.langue == 'dz' || inputs.langue == 'ma'
         run: python tools/tts/check-durations.py lots/lot-${{ matrix.lot }}.json voix || true
       - name: Vérifier qu'on entend de la parole (algérien, marocain) ; les fichiers inaudibles sont supprimés
         if: inputs.langue == 'dz' || inputs.langue == 'ma'
         run: python tools/tts/check-asr.py lots/lot-${{ matrix.lot }}.json voix rapport.md --supprimer || true
+      - name: Vérifier qu'on entend de la parole (kabyle, Meta MMS)
+        if: inputs.langue == 'kab'
+        run: python tools/tts/check-asr-kab.py lots/lot-${{ matrix.lot }}.json voix rapport.md || true
       - name: Convertir en mp3
         if: always()
         run: |

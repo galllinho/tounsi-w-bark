@@ -28,6 +28,8 @@ def main():
         if os.path.exists(wav_path):
             continue
         t = unicodedata.normalize("NFC", it["text"].lower()).replace("’", "'").replace("…", ",")
+        # Lettres absentes du kabyle (et du modèle) : o → u (Mokrane → Mukrane), p → b, v → f
+        t = t.replace("o", "u").replace("p", "b").replace("v", "f")
         garde = []
         for c in t:
             if c in vocab or c == " ":
