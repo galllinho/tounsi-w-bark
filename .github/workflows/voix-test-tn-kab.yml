@@ -1,0 +1,69 @@
+name: Voix tunisienne et kabyle (essai de nouveaux modèles)
+# Essai sans publication : kabyle avec Meta MMS-TTS (facebook/mms-tts-kab), tunisien avec Habibi-TTS Unified (dialecte TUN),
+# comparé à la voix tunisienne actuelle (SILMA). Contrôles : durées et reconnaissance vocale (Whisper pour le tunisien,
+# Meta MMS pour le kabyle). Résultats (mp3 + rapports) dans les artefacts du lancement.
+on:
+  push: { branches: [correctif-voix-dz], paths: ['.github/workflows/voix-test-tn-kab.yml'] }
+  workflow_dispatch:
+permissions: { contents: read }
+jobs:
+  kabyle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: TOUTES=1 node tools/tts/collect.js lots 1 kab
+      - name: Installer (CPU)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "transformers>=4.40" soundfile accelerate
+      - name: Générer (Meta MMS-TTS kabyle)
+        run: python tools/tts/generate-kab.py lots/lot-0.json voix
+      - name: Reconnaissance vocale (Meta MMS, kabyle)
+        run: echo "# Kabyle (MMS-TTS)" > rapport.md && python tools/tts/check-asr-kab.py lots/lot-0.json voix rapport.md
+      - name: mp3
+        if: always()
+        run: mkdir -p mp3 && cd voix && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 48k "../mp3/${f%.wav}.mp3"; done; ls ../mp3 | wc -l
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: essai-kabyle, path: "mp3/*.mp3\nrapport.md" }
+  tunisien:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Phrases (échantillon réparti sur tout le pack)
+        run: |
+          TOUTES=1 node tools/tts/collect.js tout 1 tn
+          python -c "import json; d=json.load(open('tout/lot-0.json')); json.dump(d[::40][:15], open('ech.json','w'), ensure_ascii=False)"
+      - name: Installer Habibi-TTS et Whisper (CPU)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q habibi-tts soundfile faster-whisper
+      - name: Voix actuelle (SILMA) sur les mêmes phrases
+        run: |
+          mkdir -p silma && python -c "import json,shutil,os; [shutil.copy('src/audio/tn-ia/'+i['key']+'.mp3','silma/') for i in json.load(open('ech.json')) if os.path.exists('src/audio/tn-ia/'+i['key']+'.mp3')]"
+          echo "# Tunisien : voix actuelle (SILMA)" > rapport-silma.md && python tools/tts/check-asr.py ech.json silma rapport-silma.md || true
+      - name: Générer (Habibi-TTS Unified, dialecte TUN)
+        run: python tools/tts/generate-tn-habibi.py ech.json voix
+      - name: Contrôles
+        run: |
+          echo "# Tunisien : Habibi-TTS Unified (TUN)" > rapport.md
+          python tools/tts/check-durations.py ech.json voix rapport.md || true
+          python tools/tts/check-asr.py ech.json voix rapport.md || true
+      - name: mp3
+        if: always()
+        run: mkdir -p mp3 && cd voix && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 48k "../mp3/${f%.wav}.mp3"; done; ls ../mp3 | wc -l
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: essai-tunisien, path: "mp3/*.mp3\nrapport*.md" }
