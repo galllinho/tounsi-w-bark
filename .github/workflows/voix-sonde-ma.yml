@@ -13,15 +13,18 @@ jobs:
       - run: pip install -q huggingface_hub
       - name: Dépôt GitHub de Habibi-TTS (extraits de référence par dialecte)
         run: |
-          git clone -q --depth 1 https://github.com/SWivid/Habibi-TTS h && cd h && find . -path ./.git -prune -o -type f -print | head -200
-          cat README.md | head -150
-          grep -rn "MAR" --include=*.py --include=*.toml --include=*.json --include=*.txt --include=*.yaml . | head -60
+          git clone -q --depth 1 https://github.com/SWivid/Habibi-TTS h && cd h
+          echo "=== utils"; cat src/habibi_tts/model/utils.py
+          echo "=== gradio"; sed -n 1,260p src/habibi_tts/infer/infer_gradio.py
+          echo "=== cli"; cat src/habibi_tts/infer/infer_cli.py
+          echo "=== assets"; cat src/habibi_tts/assets/README.md
+          echo "=== toml"; cat pyproject.toml
       - name: Sonde
         shell: python
         run: |
           from huggingface_hub import HfApi, hf_hub_download
           api = HfApi()
-          for repo in ['Jip7e/habibi-tts-doda-darija']:
+          for repo in []:
               try:
                   info = api.model_info(repo, files_metadata=False)
                   print('==', repo, 'licence:', (info.card_data or {}).get('license') if info.card_data else None)
