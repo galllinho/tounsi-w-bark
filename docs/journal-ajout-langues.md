@@ -161,3 +161,10 @@ Preuve par reconnaissance vocale (Whisper « small », `tools/tts/check-asr.py`,
 ### Pour publier (non fait, à la demande de l'utilisateur)
 
 Fusionner la branche dans main : `git checkout main && git merge --no-ff correctif-voix-dz && git push`. Ce push construit l'APK et la version web.
+
+### Nouvelles sources de voix pour le tunisien et le kabyle (essais du 8 novembre, même branche)
+
+Recherche sur Hugging Face (`voix-sonde.yml`) puis essais sans publication (`voix-test-tn-kab.yml`), notés par reconnaissance vocale.
+
+- **Kabyle — adoptée** : Meta MMS-TTS `facebook/mms-tts-kab` (modèle VITS entraîné sur du kabyle, lettres latines ɣ ɛ ḥ ḍ ṭ ẓ č ǧ, licence CC BY-NC 4.0 : gratuit, non commercial, attribution « Meta MMS »). Score de reconnaissance (Meta MMS, adaptateur kabyle) : 0,75 en moyenne, 0,85 à 1,00 sur les phrases (« Azul a Nanna amek tellid » → « azulananna amek tellid ») ; les mots isolés sont moins bien reconnus. Le modèle ne connaît pas o, p, v : `generate-kab.py` écrit u, b, f (Mokrane → Mukrane). **64 phrases sur 64** dans `src/audio/kab-ia/` ; l'appli les joue déjà (les enregistrements du Studio famille passent avant), le texte d'aide du pack kabyle est mis à jour. À faire écouter par Maman.
+- **Tunisien — rien de mieux que SILMA** : Habibi-TTS « Unified » avec le dialecte TUN (licence CC BY-NC-SA 4.0), sur les mêmes 15 phrases : score 0,84, contre **0,91** pour la voix actuelle SILMA TTS Derja. Les autres modèles tunisiens trouvés (XTTS, Spark-TTS, MMS affinés par des particuliers) ont peu d'utilisateurs et souvent aucune licence indiquée : non essayés. On garde SILMA.

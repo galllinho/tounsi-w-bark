@@ -2,7 +2,8 @@
 // Écrit en kabyle latin standard (ɣ, ɛ, ḥ, ḍ, ṭ, ẓ, č, ǧ).
 // À FAIRE : relecture complète par Maman, puis enregistrement des phrases dans le « Studio famille ».
 //
-// Pas de champ « ar » : le téléphone n'a pas de voix kabyle, la voix viendra des enregistrements.
+// Pas de champ « ar » : le téléphone n'a pas de voix kabyle. Voix : enregistrements du Studio famille (prioritaires),
+// sinon voix IA générée par Meta MMS-TTS (src/audio/kab-ia/, tools/tts/generate-kab.py).
 // {mmi} = « a mmi » (mon fils) ou « a yelli » (ma fille) ; {k} = k (à un garçon) ou m (à une fille).
 
 window.TWB_CONTENT.kab = {
@@ -11,9 +12,9 @@ window.TWB_CONTENT.kab = {
     adj: 'kabyle', hello: 'Azul', bravo: 'Ayuz !', oops: 'A yemma…', pet: '{mmi}', cousin: 'Massi',
     with: 'avec Nanna · brouillon', welcome: 'Azul ! Place au kabyle avec Nanna.',
     start: 'Azul {prenom} ! Commence par l’épisode 1, je t’attends devant la maison depuis l’aube.',
-    ttsNote: 'Le téléphone n’a pas de voix kabyle : les phrases s’écoutent une fois enregistrées dans le Studio famille.',
+    ttsNote: 'Les phrases sont lues par une voix IA kabyle (Meta MMS-TTS) ; les enregistrements du Studio famille passent avant. Le téléphone, lui, n’a pas de voix kabyle.',
     chatIntro: 'Écris en kabyle (ou parle en français au micro), ils te répondent en kabyle.',
-    draftNote: 'Les textes kabyles sont en cours de relecture par une locutrice native, et les voix arrivent avec le Studio famille.',
+    draftNote: 'Les textes kabyles sont en cours de relecture par une locutrice native. Les voix sont générées par une IA en attendant celles de la famille (Studio famille).',
     chatDraft: 'L’IA connaît moins bien le kabyle que le tunisien : elle peut faire des fautes. Le téléphone ne comprend pas le kabyle à l’oral, et les réponses ne sont pas lues à voix haute.'
   },
   voice: 'rec', srLang: null, speakField: 'tn',
