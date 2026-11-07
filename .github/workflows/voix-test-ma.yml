@@ -1,0 +1,54 @@
+name: Voix marocaine (test)
+# Essai de la voix IA marocaine (Habibi-TTS, modèle spécialisé MAR, darija marocaine, licence Apache 2.0)
+# sur quelques phrases du pack « ma ». Vérifie la durée de chaque fichier. Sur une branche : rien n'est publié
+# (les mp3 sont dans les artefacts du lancement) ; sur main : pré-version « voix-ma-test-N » pour écoute.
+on:
+  push: { branches: [ameliorations], paths: ['.github/workflows/voix-test-ma.yml', 'tools/tts/generate-ma.py'] }
+  workflow_dispatch:
+    inputs:
+      nombre:
+        description: Nombre de phrases à essayer
+        default: '12'
+permissions: { contents: write }
+jobs:
+  voix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Phrases à essayer
+        run: node tools/tts/collect.js lots 1 ma ${{ inputs.nombre || '12' }}
+      - name: Installer Habibi-TTS (CPU)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q habibi-tts soundfile
+      - name: Générer les voix
+        run: python tools/tts/generate-ma.py lots/lot-0.json voix
+      - name: Vérifier les durées
+        run: python tools/tts/check-durations.py lots/lot-0.json voix rapport.md; cat rapport.md
+      - name: Convertir en mp3
+        if: always()
+        run: mkdir -p mp3 && cd voix && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -b:a 64k "../mp3/${f%.wav}.mp3"; done; ls ../mp3 | wc -l
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: voix-ma-test
+          if-no-files-found: ignore
+          path: |
+            mp3/*.mp3
+            rapport.md
+      - name: Publier pour écoute (seulement depuis main)
+        if: success() && github.ref_name == 'main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: voix-ma-test-${{ github.run_number }}
+          name: Test de la voix marocaine (${{ github.run_number }})
+          prerelease: true
+          make_latest: false
+          body_path: rapport.md
+          files: mp3/*.mp3

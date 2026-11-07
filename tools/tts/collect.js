@@ -1,12 +1,13 @@
 // Liste toutes les phrases (écriture arabe) qu'un pack de langue peut prononcer, garçon et fille,
 // et garde celles qui n'ont pas encore de voix (ni voix de la famille dans src/audio/<langue>, ni voix IA dans src/audio/<langue>-ia).
-// Usage : node tools/tts/collect.js dossier_sortie nombre_de_lots [langue]   (langue : tn par défaut, dz…)
+// Usage : node tools/tts/collect.js dossier_sortie nombre_de_lots [langue]   (langue : tn par défaut, dz, ma…)
 // Écrit lot-0.json … lot-N.json et affiche la liste des lots non vides (JSON) pour la matrice GitHub.
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const root = path.join(__dirname, '..', '..');
 const [out = 'lots', nb = '6', lang = 'tn', limit = '0'] = process.argv.slice(2);
-const ctx = { window: {} }; vm.createContext(ctx);
-for (const f of ['content.js', 'content-tn-more.js', 'content-tn-fetes.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js']) vm.runInContext(fs.readFileSync(path.join(root, 'src', f), 'utf8'), ctx);
+const ctx = { window: { TWB_CAST: {}, TWB_CONTENT: {} } }; vm.createContext(ctx);
+for (const f of ['content.js', 'content-tn-more.js', 'content-tn-fetes.js', 'content-script.js', 'content-dz.js', 'content-dz-more.js', 'content-ma.js', 'content-ma-more.js'])
+  if (fs.existsSync(path.join(root, 'src', f))) vm.runInContext(fs.readFileSync(path.join(root, 'src', f), 'utf8'), ctx);
 const W = ctx.window, AR = /[؀-ۿ]/, all = new Map();
 // Mêmes remplacements que fill() dans src/app.html, pour un garçon (f = false) puis une fille (f = true)
 const G = (s, f) => String(s).replace(/\{g:([^|{}]*)\|([^{}]*)\}/g, (m, a, b) => f ? b : a).replace(/\{petitAr\}/g, f ? 'بنتي' : 'وليدي').replace(/\{jayAr\}/g, f ? 'جاية' : 'جاي')
