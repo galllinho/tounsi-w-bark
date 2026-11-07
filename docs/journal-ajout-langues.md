@@ -140,3 +140,24 @@ Toute la liste est dans `docs/reference-marocain.md` (« Points à faire confirm
 ### Minutes GitHub
 
 Le dépôt est public : minutes illimitées. Sonde des modèles (3 lancements, < 5 min), test de la voix (≈ 35 min), génération complète (20 machines × ≈ 80 min), puis une construction de l'APK et une de la version web au moment de la fusion dans main.
+
+## 7 novembre 2026 (soir) : correctif des voix algériennes (branche « correctif-voix-dz », non publiée)
+
+Signalé par l'utilisateur : les voix IA algériennes ne font qu'un **grésillement**.
+
+### Cause
+
+`tools/tts/generate-dz.py` chargeait KasbahTTS avec la configuration « F5TTS_Base » (ancienne architecture de F5-TTS) au lieu de « F5TTS_v1_Base », celle de Habibi-TTS dont KasbahTTS est dérivé. Les tailles des couches étant les mêmes, le chargement ne plantait pas, mais le modèle produisait un bourdonnement continu. Le contrôle des durées ne pouvait pas le voir (la durée était cohérente), et personne n'avait écouté. Spectrogramme : bandes horizontales fixes, aucune structure de parole.
+
+Preuve par reconnaissance vocale (Whisper « small », `tools/tts/check-asr.py`, score = consonnes retrouvées) : anciennes voix algériennes **0,11** (Whisper « entend » des phrases inventées typiques du bruit), voix tunisiennes 0,62, voix marocaines 0,77 (correctes ; les seuls échecs sont des mots isolés trop courts pour Whisper).
+
+### Correctif
+
+- `generate-dz.py` réécrit sur la chaîne de Habibi-TTS (configuration v1, `infer_process` de habibi_tts), comme la voix marocaine.
+- Modèle : **Habibi-TTS Specialized/ALG** (darja algérienne, licence Apache 2.0) avec l'extrait de référence algérien officiel (`assets/ALG.wav`). Essai sur 10 phrases : score de reconnaissance **0,99** (Whisper retrouve presque mot pour mot « سلام يا بنتي والله توحشتك بزاف »). KasbahTTS correctement chargé : 0,97, gardé en option (`MODELE=kasbah`).
+- Les 669 fichiers de `src/audio/dz-ia/` sont supprimés et regénérés sur la branche (`voix-toutes.yml`, 20 machines).
+- Nouveau contrôle automatique : `tools/tts/check-asr.py` dans `voix-toutes.yml` (algérien et marocain) supprime les fichiers inaudibles des phrases de 12 lettres ou plus ; `voix-controle.yml` contrôle un échantillon des voix déjà enregistrées. `voix-test-dz.yml` ne publie plus rien depuis une branche.
+
+### Pour publier (non fait, à la demande de l'utilisateur)
+
+Fusionner la branche dans main : `git checkout main && git merge --no-ff correctif-voix-dz && git push`. Ce push construit l'APK et la version web.
