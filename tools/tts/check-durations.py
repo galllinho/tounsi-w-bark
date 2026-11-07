@@ -2,6 +2,7 @@
 
 Usage : python tools/tts/check-durations.py phrases.json dossier_wav [rapport.md]
 Règle : entre 0,04 et 0,22 seconde par lettre arabe (hors espaces), au moins 0,4 s, au plus 15 s.
+Les mots courts (une voix de 1,8 s ou moins) ont droit à plus de temps par lettre : le modèle les prononce plus lentement.
 Les fichiers hors règle sont SUPPRIMÉS (ils seront regénérés ou remplacés par la voix du téléphone).
 Code de sortie 1 si plus d'un quart des fichiers est hors règle (modèle inutilisable).
 """
@@ -21,7 +22,7 @@ for f in sorted(os.listdir(d)):
         dur = w.getnframes() / float(w.getframerate())
     letters = len([c for c in items[k] if "؀" <= c <= "ۿ"]) or 1
     r = dur / letters
-    ok = 0.4 <= dur <= 15 and 0.04 <= r <= 0.22
+    ok = 0.4 <= dur <= 15 and 0.04 <= r and (r <= 0.22 or dur <= 1.8)
     rows.append(f"| {'ok' if ok else 'HORS RÈGLE'} | {dur:.2f} s | {letters} | {r:.3f} | {items[k]} |")
     if not ok:
         bad += 1

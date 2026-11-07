@@ -177,6 +177,37 @@ h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:var(--display-w);l
 .langs button.on{background:var(--inv-bg);color:var(--inv-ink);border-color:var(--inv-bg)}
 .status{text-align:center;font-size:13px;color:var(--mute);min-height:18px;margin-top:6px}
 
+
+/* ---------- Novembre : signalement, mode enfant, jeux ---------- */
+.rep-in{display:inline-flex;vertical-align:middle;margin-left:6px;width:30px;height:30px;align-items:center;justify-content:center;border-radius:50%;color:var(--mute);opacity:.55}
+.rep-in svg,.icon-btn.rep svg{width:16px;height:16px}
+.scene-me .rep-in{color:var(--on-blue-mute)}
+.icon-btn.rep{color:var(--mute);opacity:.6}
+.linkbtn{display:block;margin:10px auto 0;font-size:13px;color:var(--mute);text-decoration:underline;padding:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip.on{background:var(--blue);color:var(--on-blue);border-color:var(--blue)}
+.imgs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.imgs .opt.img{font-size:56px;line-height:1;text-align:center;padding:18px 0;min-height:104px}
+.games{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.card.game{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:14px}
+.card.game .gi{font-size:34px;line-height:1.1;margin-bottom:4px}
+.card.game small{color:var(--mute);font-size:13px}
+.memo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.memo-c{position:relative;aspect-ratio:3/4;border-radius:14px;border:2px solid var(--line);background:var(--blue);color:var(--on-blue);font-size:30px;font-weight:800;overflow:hidden}
+.memo-c .face{display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:var(--card);color:var(--ink);padding:6px;text-align:center}
+.memo-c .face.word{font-size:16px;font-weight:700;line-height:1.2}
+.memo-c .face.img{font-size:44px}
+.memo-c.up .face{display:flex}
+.memo-c.up .back{display:none}
+.memo-c.ok{border-color:var(--good);box-shadow:0 0 0 2px var(--good)}
+.qsay{display:inline-flex;vertical-align:middle;margin-left:8px;width:34px;height:34px;align-items:center;justify-content:center;border-radius:50%;background:var(--blue-soft);color:var(--blue)}
+.qsay svg{width:18px;height:18px}
+
+html.kid .q{font-size:17px;color:var(--ink)}
+html.kid .opt{min-height:62px;font-size:19px}
+html.kid .btn{min-height:56px;font-size:18px}
+html.kid .big{font-size:36px}
+html.kid .bubble{font-size:18px}
 /* ---------- Skins (Profil → Apparence) ---------- */
 [data-skin="sidi"]{--blue:#1d4e9e;--blue-d:#123672;--blue-soft:#e3ebf6;--sand:#f6f8fb;--card:#fff;--ink:#14233d;--mute:#55627a;--line:#d9e2ef;--gold:#e0a526;--gold-soft:#fdf1d4;--good:#1a7f5a;--good-soft:#e0f2ea;--open-ink:#0f6767;
   --font-display:'Fraunces',Georgia,serif;--font-body:'Nunito Sans',system-ui,sans-serif;--display-w:800}
@@ -253,9 +284,12 @@ h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:var(--display-w);l
 
 <script src="content.js"></script>
 <script src="content-tn-more.js"></script>
+<script src="content-tn-fetes.js"></script>
 <script src="content-script.js"></script>
 <script src="content-dz.js"></script>
 <script src="content-dz-more.js"></script>
+<script src="content-ma.js"></script>
+<script src="content-ma-more.js"></script>
 <script src="content-kab.js"></script>
 <script>
 /* =========================================================
@@ -409,13 +443,14 @@ async function loadVoices(){
   try { const d = await idb(); await new Promise(r => { const t = d.transaction('voices'); const st = t.objectStore('voices'); const c = st.openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { LOCAL.set(cur.key, cur.value); cur.continue(); } else r(); }; c.onerror = r; }); } catch(e){}
   try { const r = await fetch('audio/index.json'); if (r.ok) BUNDLE = await r.json(); } catch(e){}
 }
-let curAudio = null;
+let curAudio = null, lastSpeak = 0;
 function playSrc(src){ return new Promise(res => { try { if (curAudio) curAudio.pause(); const a = new Audio(src); curAudio = a; a.onended = a.onerror = () => res(true); a.play().catch(() => res(false)); setTimeout(() => res(true), 15000); } catch(e){ res(false); } }); }
 function playKey(k){ if (LOCAL.has(k)) return playSrc(URL.createObjectURL(LOCAL.get(k))); if (BUNDLE[k]) return playSrc('audio/' + BUNDLE[k]); return Promise.resolve(false); }
 const ttsOK = () => PACK.voice === 'tts' && !!(Native.TTS || 'speechSynthesis' in window);
 function hasVoice(raw){ if (!raw) return false; const k = vkey(fill(raw)); return LOCAL.has(k) || !!BUNDLE[k] || ttsOK(); }
 async function speak(raw){
   if (!raw) return false;
+  lastSpeak = Date.now();
   const text = fill(raw), k = vkey(text);
   if (LOCAL.has(k) || BUNDLE[k]) return playKey(k);
   if (PACK.voice !== 'tts') return false;
@@ -487,7 +522,7 @@ function allWords(){
 const wordById = id => allWords().find(w => w.id === id);
 const levelOf = epId => PACK.levels.find(l => l.episodes.some(e => e.id === epId));
 const epIndex = id => { const l = levelOf(id); return l ? l.episodes.findIndex(e => e.id === id) : -1; };
-function levelOpen(l){ const i = PACK.levels.indexOf(l); if (i <= 0) return true; const p = PACK.levels[i - 1]; return !!(p.boss && S.done[p.boss.id]); }
+function levelOpen(l){ if (l.after) return !!S.done[l.after]; const i = PACK.levels.indexOf(l); if (i <= 0) return true; const p = PACK.levels[i - 1]; return !!(p.boss && S.done[p.boss.id]); }
 function isOpen(l, i){ return levelOpen(l) && (i === 0 || !!S.done[l.episodes[i - 1].id]); }
 const bossOpen = l => l.episodes.length && l.episodes.every(e => S.done[e.id]);
 const MN = () => CAST[PACK.mascot].name;
@@ -528,6 +563,7 @@ function onboarding(){
       <button class="opt" data-g="m">un garçon<small>wlidi · nta · mmi</small></button>
       <button class="opt" data-g="f">une fille<small>benti · nti · yelli</small></button>
     </div>
+    <label class="toggle card" style="margin-top:12px;cursor:pointer"><span><b>Mode enfant</b><br><small class="muted">Moins de 10 ans : consignes lues, images, mini-jeux</small></span><input type="checkbox" id="kidob" ${S.kid || window.TWB_WEB ? 'checked' : ''} style="width:26px;height:26px"></label>
     <button class="btn btn-primary btn-block" id="go" style="margin-top:14px">Yalla, on commence</button>
     ${!S.name && Object.keys(OTHERS).length ? '<button class="btn btn-ghost btn-block" id="ob-back" style="margin-top:10px">Retour aux profils</button>' : ''}
   </div>`;
@@ -539,7 +575,7 @@ function onboarding(){
   $('#go').onclick = () => {
     const n = $('#nm').value.trim();
     if (!n) { toast('La famille attend ton prénom…'); $('#nm').focus(); return; }
-    S.name = n; S.gender = g; S.lang = lg; save(); usePack(); home();
+    S.name = n; S.gender = g; S.lang = lg; S.kid = $('#kidob').checked; save(); usePack(); applyKid(); home();
   };
 }
 
@@ -634,10 +670,10 @@ function home(){
   const shown = (current.length ? current : playable.slice(-1));
   const doneLv = playable.filter(l => S.done[l.boss.id] && !shown.includes(l));
   const later = lv.filter(l => !shown.includes(l) && !doneLv.includes(l));
-  const nL = learned().length, rDone = S.review === today() + S.lang;
+  const nL = learned().length, rDone = S.review === today() + S.lang, nDue = srsDue().length;
   const review = nL >= 4 ? `<button class="card step" id="rev" style="margin-bottom:14px;border-top:0">
       <span class="dot ${rDone ? 'done' : 'open'}">${rDone ? '✓' : '?'}</span>
-      <span style="flex:1"><b>${esc(MN())} t’interroge</b><small>${rDone ? 'Fait aujourd’hui. Tu peux recommencer.' : '8 questions sur les mots que tu oublies · +15 jasmins'}</small></span></button>` : '';
+      <span style="flex:1"><b>${esc(MN())} t’interroge</b><small>${rDone ? 'Fait aujourd’hui. Tu peux recommencer.' : (nDue ? nDue + ' mot' + (nDue > 1 ? 's' : '') + ' à revoir aujourd’hui' : 'Les mots que tu oublies') + ' · +15 jasmins'}</small></span></button>` : '';
   const tsw = PACK.script ? `<div class="filters" style="margin-bottom:14px"><button data-tr="speak" class="${track === 'speak' ? 'on' : ''}">Parler</button><button data-tr="script" class="${track === 'script' ? 'on' : ''}">Lire et écrire</button></div>` : '';
   if (PACK.script && track === 'script') {
     shell(tsw + scriptHome());
@@ -648,7 +684,8 @@ function home(){
   shell(tsw + `<div class="say">${avatar(PACK.mascot, 52)}<div class="bubble">${esc(mascotMsg())}</div></div>
     ${installHint()}
     ${PACK.draft ? `<div class="card" style="margin-bottom:14px;background:var(--gold-soft);border-color:var(--gold);font-size:14px"><b>Version brouillon.</b> ${esc(UI('draftNote'))}</div>` : ''}
-    ${review}${shown.map(levelCard).join('')}
+    ${updateCard()}${challengeCard()}${review}${kidGamesCard()}${shown.map(levelCard).join('')}
+    ${storiesCard()}
     ${doneLv.length ? `<div class="sec">Niveaux réussis</div>${doneLv.map(levelCard).join('')}` : ''}
     ${later.length ? `<div class="sec">La suite</div>${later.map(levelCard).join('')}` : ''}`);
   root.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
@@ -658,15 +695,14 @@ function home(){
   });
   root.querySelectorAll('[data-boss]').forEach(b => b.onclick = () => { const l = lv.find(x => x.id === b.dataset.boss); bossOpen(l) ? startBoss(l) : toast('Termine les épisodes du niveau pour affronter ' + MN() + '.'); });
   const r = $('#rev'); if (r) r.onclick = startReview;
+  bindHomeExtras();
   root.querySelectorAll('[data-tr]').forEach(b => b.onclick = () => { track = b.dataset.tr; home(); });
   root.querySelectorAll('[data-gram]').forEach(b => b.onclick = () => { const l = lv.find(x => x.id === b.dataset.gram); if (!S.done[l.episodes[0].id]) return toast('Termine d’abord l’épisode 1 du niveau.'); grammarLesson(l, 0); });
 }
 
 // ---------- Révision : « Khalti t'interroge » ----------
 function startReview(){
-  const pool = learned();
-  const weak = w => (S.weak[w.id] || 0) + Math.random();
-  const pickd = pool.slice().sort((a, b) => weak(b) - weak(a)).slice(0, 8);
+  const pickd = srsPick(8);
   const types = ['meaning', 'write', 'reverse', 'listen'];
   const list = shuffle(pickd).map((w, i) => ({ type: types[i % 3], word: w.id }));
   stack = [];
@@ -674,7 +710,7 @@ function startReview(){
 }
 function reviewResult(firstTry, total, hontes){
   const gain = 15 + firstTry * 2;
-  S.xp += gain; S.hontes += hontes; S.review = today() + S.lang; bumpStreak(); save();
+  gainXP(gain, 'rev'); S.hontes += hontes; S.review = today() + S.lang; bumpStreak(); save();
   const msg = hontes === 0 ? 'Rien oublié ! Je suis impressionnée, et un peu déçue de ne rien avoir à te reprocher.' : hontes <= 3 ? 'Pas mal. Les mots oubliés reviendront demain, je les ai notés.' : 'Ta mémoire est en vacances. Les mots oubliés reviendront demain.';
   lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin-top:12px">Révision terminée</h1>
       <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(msg)}</div></div>
@@ -704,7 +740,7 @@ function wordRow(w){
   return `<div class="word"><div class="w"><b>${esc(fill(w.tn))}</b> <span class="fr">· ${esc(fill(w.fr))}</span>
     ${arDiv(w)}<div class="fr" style="margin-top:2px">${esc(fill(w.ex))}</div></div>
     ${hasVoice(V(w)) ? `<button class="icon-btn" data-say="${esc(V(w))}" aria-label="Écouter">${ICON.speaker}</button>` : ''}
-    <button class="star ${on ? 'on' : ''}" data-star="${w.id}" aria-label="Garder">${ICON.star}</button></div>`;
+    ${repBtn('Mot', w, true)}<button class="star ${on ? 'on' : ''}" data-star="${w.id}" aria-label="Garder">${ICON.star}</button></div>`;
 }
 function bindWords(){
   root.querySelectorAll('[data-star]').forEach(b => b.onclick = () => {
@@ -726,6 +762,9 @@ function profile(){
       <div class="stat"><b>${nd}/${eps.length}</b><span>épisodes terminés</span></div>
       <div class="stat"><b>${S.hontes}</b><span>moments de honte</span></div>
     </div>
+    <div class="sec">Mode enfant</div>
+    <div class="card"><div class="toggle"><span><b>Pour les moins de 10 ans</b><br><small class="muted">Consignes lues à voix haute, images, gros boutons et mini-jeux.</small></span><button class="sw ${S.kid ? 'on' : ''}" id="kidsw" role="switch" aria-checked="${!!S.kid}" aria-label="Mode enfant"></button></div></div>
+    ${leaderboardHTML()}
     <div class="sec">Profils sur ce téléphone</div>
     <div class="card" style="padding:6px 14px">
       ${Object.values(OTHERS).map(o => `<div class="toggle"><span style="display:flex;align-items:center;gap:10px">${pBadge(o, 36)}<span><b>${esc(o.name)}</b><br><small class="muted">${o.xp || 0} jasmins</small></span></span><span style="display:flex;gap:6px"><button class="btn btn-primary" data-play="${o.pid}" style="min-height:0;padding:8px 12px">Jouer</button><button class="btn btn-ghost" data-del="${o.pid}" aria-label="Supprimer le profil de ${esc(o.name)}" style="min-height:0;padding:8px 10px">${ICON.close}</button></span></div>`).join('')}
@@ -742,6 +781,7 @@ function profile(){
     <button class="card step" id="studio" style="border-top:0"><span class="dot open">${ICON.mic}</span><span style="flex:1"><b>Enregistrer les vraies voix</b><small>Un proche enregistre les phrases en ${esc(UI('adj'))} : elles remplacent la voix du téléphone.</small></span></button>
     <div class="sec">Apparence</div>
     <div class="skins">${SKINS.map(k => `<button class="skin ${S.skin === k.id ? 'on' : ''}" data-skin-pick="${k.id}" aria-pressed="${S.skin === k.id}"><span class="sw3">${k.c.map(c => `<i style="background:${c}"></i>`).join('')}</span><b>${esc(k.name)}</b><small>${esc(k.desc)}</small></button>`).join('')}</div>
+    ${reportsHTML()}
     <div class="sec">Sauvegarde</div>
     <div class="card">
       <p class="muted" style="margin:0 0 10px;font-size:14px">Ta progression est enregistrée sur ce téléphone. Garde aussi ton code de secours : il permet de la retrouver après un changement de téléphone, ou de la passer d’un téléphone à l’autre (Android ↔ iPhone).</p>
@@ -763,6 +803,8 @@ function profile(){
   root.querySelectorAll('[data-play]').forEach(b => b.onclick = () => switchProfile(b.dataset.play));
   root.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteProfile(b.dataset.del));
   $('#padd').onclick = () => addProfile();
+  $('#kidsw').onclick = () => { S.kid = !S.kid; save(); applyKid(); const y = window.scrollY; profile(); window.scrollTo(0, y); toast(S.kid ? 'Mode enfant activé' : 'Mode enfant désactivé'); };
+  bindReports();
   root.querySelectorAll('[data-del] svg').forEach(v => { v.style.width = '18px'; v.style.height = '18px'; });
   $('#bk-out').onclick = () => backupOut();
   $('#bk-in').onclick = () => backupIn();
@@ -787,7 +829,7 @@ function switchProfile(pid){
   const o = OTHERS[pid]; if (!o) return;
   if (S.name) OTHERS[S.pid] = S;
   delete OTHERS[pid];
-  S = Object.assign(blank(), o); save(); usePack(); applySkin(); stack = []; tab = 'learn';
+  S = Object.assign(blank(), o); save(); usePack(); applySkin(); applyKid(); stack = []; tab = 'learn';
   toast(UI('hello', 'Salut') + ' ' + S.name + ' !'); home();
 }
 function addProfile(){
@@ -953,6 +995,7 @@ function lessonFrame(progress, body, foot, opts){
     <div class="lesson-foot">${foot}</div></div>`;
   $('#quit').onclick = confirmQuit;
   window.scrollTo(0, 0);
+  kidPrompt();
 }
 function confirmQuit(){
   if (screen !== 'lesson' || confirm('Tu abandonnes ? ' + MN() + ' a déjà mis la table…')) { stack = []; home(); }
@@ -975,7 +1018,7 @@ let sceneLevel = 1;
 function lineHTML(l){
   const showFr = S.opts.fr && sceneLevel < 4;
   const inner = `<div>${esc(fill(l.tn))}</div>${arDiv(l)}
-    <div class="fr" ${showFr ? '' : 'hidden'}>${esc(fill(l.fr))}</div>${sayBtn(V(l))}`;
+    <div class="fr" ${showFr ? '' : 'hidden'}>${esc(fill(l.fr))}</div>${sayBtn(V(l))}${repBtn('Phrase de la scène', l)}`;
   if (l.who === 'me') return `<div class="scene-me fadein"><div class="bubble">${inner}</div></div>`;
   return `<div class="say fadein">${avatar(l.who, 44)}<div class="bubble"><div class="who">${esc(CAST[l.who].name)}</div>${inner}${l.note ? `<div class="note">${esc(fill(l.note))}</div>` : ''}</div></div>`;
 }
@@ -1043,7 +1086,8 @@ function genTypeSentences(ep, n){
   return shuffle(ep.scene.filter(l => l.who === 'me' && tokensOf(l.tn).length <= 6 && !/\{prenom\}/.test(l.tn))).slice(0, n)
     .map(l => ({ type: 'write', tn: l.tn, ar: l.ar, fr: l.fr, sentence: true }));
 }
-function buildLesson(ep, level){
+function buildLesson(ep, level){ return kidify(buildLesson0(ep, level)); }
+function buildLesson0(ep, level){
   const lv = level.num, fixed = [];
   const authored = ep.exercises.map(x => Object.assign({}, x));
   const words = ep.words;
@@ -1133,16 +1177,17 @@ function runExercises(list, ctx){
     show(x, buildQ(x, ctx));
   };
   const answered = (x, ok, info) => {
-    if (x.word) { S.weak[x.word] = Math.max(0, (S.weak[x.word] || 0) + (ok ? -1 : 1)); }
+    if (x.word) { S.weak[x.word] = Math.max(0, (S.weak[x.word] || 0) + (ok ? -1 : 1)); srsAnswer(x.word, ok); }
     if (ok) { doneCount++; if (!retried.has(x)) firstTry++; }
     else { hontes++; if (!ctx.boss && !retried.has(x)) { retried.add(x); queue.push(x); } else doneCount++; }
     feedback(ok, info, next);
   };
   const progress = () => 0.4 + 0.6 * doneCount / total;
-  const finish = () => ctx.boss ? bossResult(ctx.level, firstTry, total, hontes) : ctx.review ? reviewResult(firstTry, total, hontes) : ctx.grammar ? grammarResult(ctx.grammar, firstTry, total, hontes) : ctx.script ? scriptResult(ctx.script, firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
+  const finish = () => ctx.game ? gameResult(firstTry, total, hontes) : ctx.boss ? bossResult(ctx.level, firstTry, total, hontes) : ctx.review ? reviewResult(firstTry, total, hontes) : ctx.grammar ? grammarResult(ctx.grammar, firstTry, total, hontes) : ctx.story ? storyResult(ctx.story, firstTry, total, hontes) : ctx.script ? scriptResult(ctx.script, firstTry, total, hontes) : epResult(ctx.ep, firstTry, total, hontes);
 
   function show(x, q){
     if (x.type && x.type[0] === 'l' && x.type !== 'listen') return showScript(x);
+    if (x.type === 'img') return showImg(x);
     const check = `<button class="btn btn-primary btn-block" id="check" disabled>Vérifier</button>`;
     if (q.type === 'meaning' || q.type === 'reverse' || q.type === 'listen') {
       let prompt;
@@ -1266,6 +1311,18 @@ function runExercises(list, ctx){
       };
     }
   }
+  function showImg(x){
+    const w = wordById(x.word), e = emojiOf(w);
+    const pool = shuffle(allWords().filter(o => o.id !== w.id && emojiOf(o) && emojiOf(o) !== e));
+    const seen = new Set([e]), opts = [{ e, ok: true }];
+    for (const o of pool) { const oe = emojiOf(o); if (!seen.has(oe)) { seen.add(oe); opts.push({ e: oe, ok: false }); } if (opts.length === 4) break; }
+    const sh = shuffle(opts), hv = hasVoice(V(w));
+    lessonFrame(progress(), `<div class="q">${hv ? 'Écoute et touche la bonne image' : 'Touche la bonne image'}</div>
+      <div class="big center">${esc(fill(w.tn))}</div>${hv ? `<div class="center" style="margin:8px 0">${sayBtn(V(w), 'Réécouter')}</div>` : ''}
+      <div class="imgs">${sh.map((o, i) => `<button class="opt img" data-i="${i}" aria-label="Image ${i + 1}">${o.e}</button>`).join('')}</div>`, `<button class="btn btn-primary btn-block" id="check" disabled>Vérifier</button>`);
+    if (hv) speak(V(w));
+    choose(sh, i => { markOpts(sh); answered(x, sh[i].ok, { answer: e + ' ' + fill(w.fr), sub: fill(w.tn) + ' = ' + fill(w.fr), ar: V(w) }); });
+  }
   function showScript(x){
     const q = buildScriptQ(x), check = `<button class="btn btn-primary btn-block" id="check" disabled>Vérifier</button>`;
     const AR = 'font-family:var(--font-ar);';
@@ -1363,7 +1420,8 @@ function feedback(ok, info, onNext){
   const msg = fill(pick(ok ? KH.right : KH.wrong));
   f.innerHTML = `<div class="in"><div class="head">${avatar(PACK.mascot, 44)}<div><h3>${esc(ok ? UI('bravo', 'Bravo !') : UI('oops', 'Oups…'))}</h3><p>${esc(msg)}</p></div></div>
     ${!ok ? `<p style="margin:0 0 4px"><b>Bonne réponse :</b> ${esc(info.answer)}</p>` : ''}${info.sub ? `<p class="muted" style="margin:0 0 10px;font-size:14px">${esc(info.sub)}</p>` : '<div style="height:6px"></div>'}
-    <button class="btn ${ok ? 'btn-good' : 'btn-bad'} btn-block" id="cont">Continuer</button></div>`;
+    <button class="btn ${ok ? 'btn-good' : 'btn-bad'} btn-block" id="cont">Continuer</button>
+    <button class="linkbtn" data-rep="${esc(JSON.stringify({ k: 'Exercice', tn: info.answer || '', fr: info.sub || '', ar: info.ar ? fill(info.ar) : '' }))}">Cette réponse est fausse ? Signale-le</button></div>`;
   document.body.appendChild(f);
   const foot = root.querySelector('.lesson-foot'); if (foot) foot.style.visibility = 'hidden';
   if (info.ar && !ok && hasVoice(info.ar)) speak(info.ar);
@@ -1377,7 +1435,7 @@ function epResult(ep, firstTry, total, hontes){
   const gain = firstTry * 10 + 20;
   const prev = S.done[ep.id];
   S.done[ep.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
-  S.xp += gain; S.hontes += hontes; bumpStreak(); save();
+  gainXP(gain, 'ep'); S.hontes += hontes; bumpStreak(); save();
   const msg = stars === 3 ? 'Zéro faute ! Je vais le raconter à toute la famille, même à ceux qui ne t’ont rien demandé.' : stars === 2 ? 'Pas mal du tout. Quelques petites hontes, mais on n’en parlera pas au mariage.' : 'On a souffert ensemble. Mais tu es allé' + fill('{e}') + ' jusqu’au bout, et ça, c’est la famille.';
   const lvl = levelOf(ep.id);
   const nextEp = lvl.episodes[epIndex(ep.id) + 1];
@@ -1406,7 +1464,7 @@ function startBoss(level){
 }
 function bossResult(level, score, total, hontes){
   const pass = score >= level.boss.pass;
-  if (pass) { S.done[level.boss.id] = { stars: 3, at: today() }; S.xp += 50; }
+  if (pass) { S.done[level.boss.id] = { stars: 3, at: today() }; gainXP(50, 'boss'); }
   S.hontes += hontes; bumpStreak(); save();
   const nxt = PACK.levels[PACK.levels.indexOf(level) + 1];
   const ok = UI('bravo', 'Bravo !') + ' Tu as réussi mon épreuve. ' + (nxt && nxt.episodes.length ? 'Le niveau ' + nxt.num + ' « ' + nxt.name + ' » est ouvert !' : 'La suite arrive bientôt.');
@@ -1511,7 +1569,7 @@ function scriptUnit(uIndex, step){
 function scriptResult(u, firstTry, total, hontes){
   const stars = hontes === 0 ? 3 : hontes <= 3 ? 2 : 1;
   const prev = S.done[u.id]; S.done[u.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
-  S.xp += 15 + firstTry * 2; bumpStreak(); save();
+  gainXP(15 + firstTry * 2, 'script'); bumpStreak(); save();
   const nextI = SC.units.indexOf(u) + 1;
   lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<div class="bigstars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
       <h1 style="font-size:28px">Unité terminée !</h1>
@@ -1546,7 +1604,7 @@ function grammarLesson(level, i){
 function grammarResult(g, firstTry, total, hontes){
   const stars = hontes === 0 ? 3 : hontes <= 2 ? 2 : 1;
   const prev = S.done[g.id]; S.done[g.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
-  S.xp += 20 + firstTry * 2; bumpStreak(); save();
+  gainXP(20 + firstTry * 2, 'gram'); bumpStreak(); save();
   lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin-top:12px">${firstTry} / ${total}</h1>
       <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${hontes === 0 ? 'Parfait ! Tu pourrais donner des cours à ' + esc(UI('cousin', 'ton cousin')) + '.' : 'Bien. Relis le tableau une fois ce soir, et ça rentrera.'}</div></div></div>`,
     `<button class="btn btn-primary btn-block" id="next">Retour au parcours</button>`);
@@ -1671,7 +1729,7 @@ async function turn(text, run){
 function missionEnd(win, feedbackText){
   const st = chatState, ep = st.mission.ep;
   st.done = true; st.hands = false;
-  if (win) { const first = !S.missions[ep.id]; S.missions[ep.id] = true; if (first) S.xp += 30; bumpStreak(); save(); }
+  if (win) { const first = !S.missions[ep.id]; S.missions[ep.id] = true; if (first) gainXP(30, 'mission'); bumpStreak(); save(); }
   const f = document.createElement('div');
   f.className = 'feedback ' + (win ? 'good' : 'bad');
   f.innerHTML = `<div class="in"><div class="head">${avatar(st.key, 44)}<div><h3>${win ? 'Mission réussie !' : 'Mission pas encore réussie'}</h3><p>${esc(feedbackText || (win ? 'Bravo, tout en ' + UI('adj') + ' !' : 'Tu y étais presque.'))}</p></div></div>
@@ -1711,6 +1769,312 @@ async function gemini(key, msgs){
 }
 
 
+// =====================================================================================
+// Novembre : défi du jour, révision intelligente, classement, mode enfant, mini-jeux,
+// histoires, signalement d'erreurs, alerte de nouvelle version
+// =====================================================================================
+const dayNum = () => { const d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 6e4) / 864e5); };
+const weekId = () => Math.floor((dayNum() + 3) / 7);   // change chaque lundi
+
+// ---------- Jasmins : défi du jour + classement de la semaine ----------
+function dayState(){ if (!S.day || S.day.d !== today()) S.day = { d: today(), xp: 0, k: {}, won: false }; return S.day; }
+function gainXP(n, kind){
+  S.xp += n;
+  if (!S.week || S.week.w !== weekId()) S.week = { w: weekId(), xp: 0 };
+  S.week.xp += n;
+  const d = dayState(); d.xp += n; d.k[kind] = (d.k[kind] || 0) + 1;
+  const c = todayChallenge();
+  if (!d.won && c.test(d)) { d.won = true; S.xp += 20; S.week.xp += 20; setTimeout(() => toast('Défi du jour réussi ! +20 jasmins'), 900); }
+}
+const lessons = d => Object.entries(d.k).filter(([k]) => k !== 'rev').reduce((a, [, v]) => a + v, 0);
+const CHALLENGES = [
+  { t: () => 'Gagne 40 jasmins', test: d => d.xp >= 40, prog: d => Math.min(d.xp, 40) + ' / 40' },
+  { t: () => 'Termine un épisode (ou rejoue-en un)', test: d => (d.k.ep || 0) >= 1, prog: d => (d.k.ep || 0) + ' / 1' },
+  { t: () => 'Fais la révision : ' + MN() + ' t’interroge', test: d => (d.k.rev || 0) >= 1, prog: d => (d.k.rev || 0) + ' / 1', needWords: true },
+  { t: () => 'Fais 2 leçons, celles que tu veux', test: d => lessons(d) >= 2, prog: d => Math.min(lessons(d), 2) + ' / 2' },
+  { t: () => 'Gagne 70 jasmins', test: d => d.xp >= 70, prog: d => Math.min(d.xp, 70) + ' / 70' }
+];
+function todayChallenge(){
+  let i = dayNum() % CHALLENGES.length;
+  if (CHALLENGES[i].needWords && learned().length < 4) i = 0;
+  return CHALLENGES[i];
+}
+function challengeCard(){
+  const c = todayChallenge(), d = dayState();
+  return `<div class="card step" style="margin-bottom:14px;border-top:0;cursor:default">
+    <span class="dot ${d.won ? 'done' : 'open'}">${d.won ? '✓' : '!'}</span>
+    <span style="flex:1"><b>Défi du jour</b><small>${esc(c.t())} · ${d.won ? 'réussi, bravo !' : esc(c.prog(d)) + ' · +20 jasmins'}</small></span></div>`;
+}
+function weekXP(p){ return p.week && p.week.w === weekId() ? p.week.xp : 0; }
+function leaderboardHTML(){
+  const all = [S].concat(Object.values(OTHERS)).filter(p => p.name);
+  if (all.length < 2) return '';
+  const rows = all.sort((a, b) => weekXP(b) - weekXP(a));
+  const medal = ['1er', '2e', '3e'];
+  return `<div class="sec">Classement de la semaine</div><div class="card" style="padding:6px 14px">
+    ${rows.map((p, i) => `<div class="toggle"><span style="display:flex;align-items:center;gap:10px"><b style="width:30px;color:var(--mute)">${medal[i] || (i + 1) + 'e'}</b>${pBadge(p, 32)}<b>${esc(p.name)}</b></span><span><b>${weekXP(p)}</b> <small class="muted">jasmins</small></span></div>`).join('')}
+    <p class="muted" style="font-size:13px;margin:6px 0 8px">Remis à zéro chaque lundi. Les profils de ce téléphone seulement.</p></div>`;
+}
+
+// ---------- Révision intelligente (répétition espacée) ----------
+const SRS_GAP = [1, 2, 4, 7, 15, 30];
+function srsAnswer(id, ok){
+  S.srs = S.srs || {};
+  const c = S.srs[id] || { b: 0, due: 0 };
+  c.b = ok ? Math.min(c.b + 1, SRS_GAP.length - 1) : 0;
+  c.due = dayNum() + (ok ? SRS_GAP[c.b] : 1);
+  S.srs[id] = c;
+}
+function srsDue(){
+  const s = S.srs || {}, t = dayNum();
+  return learned().filter(w => !s[w.id] || s[w.id].due <= t);
+}
+function srsPick(n){
+  const s = S.srs || {}, due = srsDue();
+  const key = w => (s[w.id] ? s[w.id].due : -1) * 10 - (S.weak[w.id] || 0) + Math.random();
+  let list = due.sort((a, b) => key(a) - key(b)).slice(0, n);
+  if (list.length < n) list = list.concat(shuffle(learned().filter(w => !list.includes(w))).slice(0, n - list.length));
+  return list;
+}
+
+// ---------- Alerte de nouvelle version (appli Android) ----------
+let UPDATE = null;
+async function checkUpdate(){
+  if (window.TWB_WEB || !window.TWB_BUILD || !Native.App) return;
+  try {
+    const last = localStorage.getItem('twb.upd');
+    if (last && Date.now() - +last < 6 * 36e5) { const c = JSON.parse(localStorage.getItem('twb.updv') || 'null'); if (c && c.n > window.TWB_BUILD) UPDATE = c; return; }
+    const r = await fetch('https://api.github.com/repos/galllinho/tounsi-w-bark/releases/latest', { headers: { Accept: 'application/vnd.github+json' } });
+    if (!r.ok) return;
+    const j = await r.json(), n = parseInt(String(j.tag_name || '').replace(/\D/g, ''), 10);
+    const a = (j.assets || []).find(x => /\.apk$/.test(x.name));
+    localStorage.setItem('twb.upd', String(Date.now()));
+    if (n && a) { localStorage.setItem('twb.updv', JSON.stringify({ n, url: a.browser_download_url })); if (n > window.TWB_BUILD) { UPDATE = { n, url: a.browser_download_url }; if (screen === 'home' && tab === 'learn') home(); } }
+  } catch(e){}
+}
+function updateCard(){
+  if (!UPDATE) return '';
+  return `<div class="card" style="margin-bottom:14px;background:var(--good-soft);border-color:var(--good)"><b>Nouvelle version disponible (n° ${UPDATE.n})</b>
+    <p style="margin:4px 0 10px;font-size:14px">Télécharge-la puis installe-la par-dessus : ta progression est gardée.</p>
+    <button class="btn btn-primary btn-block" id="upd">Télécharger la mise à jour</button></div>`;
+}
+
+// ---------- Mode enfant ----------
+function applyKid(){ document.documentElement.classList.toggle('kid', !!S.kid); }
+async function sayFr(text){
+  if (!text) return;
+  try {
+    if (Native.TTS) { await Native.TTS.speak({ text, lang: 'fr-FR', rate: 0.95, pitch: 1.05, volume: 1, category: 'playback' }); return; }
+    if ('speechSynthesis' in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'fr-FR'; u.rate = 0.95; speechSynthesis.speak(u); }
+  } catch(e){}
+}
+function kidPrompt(){
+  if (!S.kid) return;
+  const q = root.querySelector('.lesson-body .q'); if (!q || q.querySelector('.qsay')) return;
+  const text = q.textContent.trim();
+  const b = document.createElement('button'); b.className = 'qsay'; b.setAttribute('aria-label', 'Lire la consigne'); b.innerHTML = ICON.speaker;
+  b.onclick = e => { e.stopPropagation(); sayFr(text); };
+  q.appendChild(b);
+  const t0 = Date.now();
+  setTimeout(() => { if (lastSpeak < t0) sayFr(text); }, 60);
+}
+// Images pour les mots (en mode enfant) : on cherche un mot français connu dans la traduction
+const EMOJI = {
+  pain: '🍞', khobz: '🍞', eau: '💧', cafe: '☕', capucin: '☕', the: '🍵', lait: '🥛', sucre: '🍬', jus: '🧃', citron: '🍋',
+  maison: '🏠', voiture: '🚗', taxi: '🚕', avion: '✈️', aeroport: '✈️', bus: '🚌', train: '🚆', bateau: '⛵', velo: '🚲',
+  chat: '🐱', chien: '🐶', mouton: '🐑', cheval: '🐴', ane: '🫏', oiseau: '🐦', poule: '🐔', poisson: '🐟', vache: '🐄', chameau: '🐫',
+  soleil: '☀️', pluie: '🌧️', pleut: '🌧️', mer: '🌊', plage: '🏖️', lune: '🌙', etoile: '⭐', fleur: '🌸', jasmin: '🌼', arbre: '🌳', montagne: '⛰️',
+  poulet: '🍗', viande: '🥩', couscous: '🍲', kousksi: '🍲', soupe: '🍲', chorba: '🍲', orange: '🍊', oranges: '🍊', pomme: '🍎', banane: '🍌', raisin: '🍇',
+  pasteque: '🍉', melon: '🍈', tomate: '🍅', tomates: '🍅', piment: '🌶️', piquant: '🌶️', harissa: '🌶️', oeuf: '🥚', oeufs: '🥚', fromage: '🧀',
+  gateau: '🍰', gateaux: '🍰', bonbon: '🍬', glace: '🍦', olive: '🫒', olives: '🫒', huile: '🫒', dattes: '🌴', datte: '🌴', figues: '🍈', salade: '🥗', frites: '🍟', pizza: '🍕', sandwich: '🥪',
+  livre: '📖', ecole: '🏫', telephone: '📱', argent: '💰', dinar: '💵', dinars: '💵', cle: '🔑', porte: '🚪', lit: '🛏️', table: '🍽️', cadeau: '🎁', ballon: '⚽', football: '⚽', match: '⚽',
+  mere: '👩', maman: '👩', pere: '👨', papa: '👨', grandmere: '👵', grandpere: '👴', bebe: '👶', frere: '👦', soeur: '👧', garcon: '👦', fille: '👧', famille: '👨‍👩‍👧', enfant: '🧒', enfants: '🧒',
+  medecin: '🩺', docteur: '🩺', malade: '🤒', fievre: '🤒', tete: '🤕', ventre: '🤢', main: '✋', oeil: '👁️', yeux: '👀', coeur: '❤️', dents: '🦷', pied: '🦶',
+  bonjour: '👋', salut: '👋', revoir: '👋', merci: '🙏', oui: '👍', non: '👎', bien: '👌', delicieux: '😋', bon: '😋', faim: '😋', cher: '💸', chaud: '🔥', froid: '🥶',
+  manger: '🍽️', mange: '🍽️', boire: '🥤', dormir: '😴', marcher: '🚶', danser: '💃', danse: '💃', chanter: '🎤', rire: '😂', pleurer: '😢', content: '😊', heureux: '😊', triste: '😢', fatigue: '😴',
+  mariage: '💍', mariee: '👰', fete: '🎉', musique: '🎶', photo: '📷', album: '📷', vetements: '👕', robe: '👗', chaussures: '👟', chechia: '🧢',
+  marche: '🧺', souk: '🧺', magasin: '🏪', hanout: '🏪', boutique: '🏪', mosquee: '🕌', hammam: '🧼', jardin: '🌳', ville: '🏙️', rue: '🛣️',
+  aujourdhui: '📅', demain: '📅', hier: '📅', matin: '🌅', soir: '🌆', nuit: '🌙', heure: '⏰', temps: '⏰',
+  un: '1️⃣', deux: '2️⃣', trois: '3️⃣', quatre: '4️⃣', cinq: '5️⃣', six: '6️⃣', sept: '7️⃣', huit: '8️⃣', neuf: '9️⃣', dix: '🔟',
+  lettre: '✉️', ramadan: '🌙', aid: '🎉', mouton2: '🐑', assida: '🍮', baklawa: '🍯', miel: '🍯', bougie: '🕯️', henne: '🖐️', histoire: '📖', conte: '📖', clou: '🔨'
+};
+const EMO_CACHE = {};
+const STOPW = new Set(['le', 'la', 'les', 'l', 'un', 'une', 'des', 'du', 'de', 'd', 'au', 'aux', 'ma', 'mon', 'mes', 'ta', 'ton', 'tes', 'sa', 'son', 'ses', 'avec', 'sans', 'tres', 'a', 'et', 'en', 'pour']);
+function emojiOf(w){
+  if (!w) return '';
+  if (w.emoji) return w.emoji;
+  if (EMO_CACHE[w.id] !== undefined) return EMO_CACHE[w.id];
+  const words = normLat(fill(w.fr)).replace(/[^a-z]+/g, ' ').split(' ').filter(x => x && !STOPW.has(x));
+  let e = '';
+  const joined = words.join('');
+  if (/grandmere/.test(joined)) e = EMOJI.grandmere;
+  else if (/grandpere/.test(joined)) e = EMOJI.grandpere;
+  else if (words.length && words.length <= 3) for (const x of words) if (EMOJI[x]) { e = EMOJI[x]; break; }
+  return (EMO_CACHE[w.id] = e);
+}
+function kidify(list){
+  if (!S.kid) return list;
+  let n = 0;
+  return list.map(x => {
+    if (n < 3 && x.word && ['meaning', 'reverse', 'listen'].includes(x.type) && emojiOf(wordById(x.word))) { n++; return Object.assign({}, x, { type: 'img' }); }
+    return x;
+  });
+}
+// Mots avec image pour les mini-jeux : d'abord les mots appris ; s'il y en a moins de 4 avec une image, tous les mots de la langue
+const kidPick = list => { const seen = new Set(); return list.filter(w => { const e = emojiOf(w); if (!e || seen.has(e)) return false; seen.add(e); return true; }); };
+const kidWords = () => { const ws = kidPick(learned()); return ws.length >= 4 ? ws : kidPick(allWords()); };
+function kidGamesCard(){
+  if (!S.kid) return '';
+  return `<div class="sec">Jeux</div><div class="games">
+    <button class="card game" id="g-img"><span class="gi" aria-hidden="true">🖼️</span><b>Trouve l’image</b><small>Écoute le mot, touche l’image</small></button>
+    <button class="card game" id="g-mem"><span class="gi" aria-hidden="true">🃏</span><b>Memory</b><small>Retrouve les paires</small></button></div>`;
+}
+function startImgGame(){
+  const ws = shuffle(kidWords()).slice(0, 8);
+  if (ws.length < 4) return toast('Il faut encore quelques mots pour ce jeu.');
+  stack = []; runExercises(ws.map(w => ({ type: 'img', word: w.id })), { game: true });
+}
+function gameResult(firstTry, total, hontes){
+  gainXP(5 + firstTry, 'game'); save();
+  lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<h1 style="font-size:30px;margin-top:12px">${firstTry} / ${total}</h1>
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(firstTry === total ? UI('bravo', 'Bravo !') + ' Toutes du premier coup !' : 'Bien joué ! On recommence quand tu veux.')}</div></div>
+      <div class="stats" style="margin-top:8px"><div class="stat"><b>+${5 + firstTry}</b><span>jasmins</span></div></div></div>`,
+    `<div class="seg"><button class="btn btn-ghost" id="again">Rejouer</button><button class="btn btn-primary" id="next">Retour</button></div>`);
+  screen = 'result';
+  $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
+  $('#again').onclick = startImgGame;
+}
+function memoryGame(){
+  const ws = shuffle(kidWords()).slice(0, 6);
+  if (ws.length < 4) return toast('Il faut encore quelques mots pour ce jeu.');
+  const cards = shuffle(ws.flatMap(w => [{ id: w.id, face: emojiOf(w), kind: 'img' }, { id: w.id, face: fill(w.tn), kind: 'word' }]));
+  let open = [], found = 0, tries = 0, lock = false;
+  lessonFrame(0, `<div class="q">Memory : retrouve chaque image et son mot</div>
+    <div class="memo">${cards.map((c, i) => `<button class="memo-c" data-m="${i}" aria-label="Carte ${i + 1}"><span class="back" aria-hidden="true">?</span><span class="face ${c.kind}">${esc(c.face)}</span></button>`).join('')}</div>`,
+    `<p class="center muted" style="margin:0" id="mst">Touche deux cartes</p>`);
+  screen = 'lesson';
+  root.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.m, c = cards[i];
+    if (lock || b.classList.contains('up')) return;
+    b.classList.add('up'); open.push([i, b]);
+    if (c.kind === 'word' && hasVoice(V(wordById(c.id)))) speak(V(wordById(c.id)));
+    if (open.length < 2) return;
+    tries++;
+    const [[i1, b1], [i2, b2]] = open; open = [];
+    if (cards[i1].id === cards[i2].id && cards[i1].kind !== cards[i2].kind) {
+      b1.classList.add('ok'); b2.classList.add('ok'); found++;
+      const bar = root.querySelector('.bar i'); if (bar) bar.style.width = Math.round(100 * found / ws.length) + '%';
+      if (found === ws.length) setTimeout(() => {
+        gainXP(10, 'game'); save();
+        lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<h1 style="font-size:28px;margin-top:12px">Bravo !</h1><p class="muted">${ws.length} paires en ${tries} essais</p>
+          <div class="stats" style="margin-top:8px"><div class="stat"><b>+10</b><span>jasmins</span></div></div></div>`,
+          `<div class="seg"><button class="btn btn-ghost" id="again">Rejouer</button><button class="btn btn-primary" id="next">Retour</button></div>`);
+        screen = 'result';
+        $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
+        $('#again').onclick = memoryGame;
+      }, 500);
+    } else { lock = true; setTimeout(() => { b1.classList.remove('up'); b2.classList.remove('up'); lock = false; }, 900); }
+  });
+}
+
+// ---------- Histoires à écouter ----------
+function storiesCard(){
+  const st = PACK.stories; if (!st || !st.length) return '';
+  return `<div class="sec">Les histoires de ${esc(MN())}</div>${st.map(s => `<button class="card step" data-story="${s.id}" style="margin-bottom:10px;border-top:0">
+    <span class="dot ${S.done[s.id] ? 'done' : 'open'}">${S.done[s.id] ? '✓' : '▶'}</span>
+    <span style="flex:1"><b>${esc(s.title)}</b><small>${esc(s.pitch)}</small></span></button>`).join('')}`;
+}
+function story(s, n){
+  sceneLevel = 1;
+  const last = n >= s.lines.length - 1;
+  lessonFrame(0.6 * (n + 1) / s.lines.length, `<div class="q">${esc(s.title)} · touche les bulles pour réécouter</div>${s.lines.slice(0, n + 1).map(lineHTML).join('')}`,
+    `<button class="btn btn-primary btn-block" id="next">${last ? (s.quiz && s.quiz.length ? 'Les questions de ' + esc(MN()) : 'Fin') : 'Suite'}</button>`);
+  const all = root.querySelectorAll('.say, .scene-me'); if (all.length) all[all.length - 1].scrollIntoView({ block: 'end', behavior: 'smooth' });
+  if (hasVoice(V(s.lines[n]))) speak(V(s.lines[n]));
+  $('#next').onclick = () => {
+    if (!last) return story(s, n + 1);
+    if (!s.quiz || !s.quiz.length) { S.done[s.id] = { stars: 3, at: today() }; gainXP(10, 'story'); save(); stack = []; return home(); }
+    runExercises(s.quiz.map(q => Object.assign({}, q)), { story: s });
+  };
+}
+function storyResult(s, firstTry, total, hontes){
+  const prev = S.done[s.id], stars = hontes === 0 ? 3 : hontes <= 1 ? 2 : 1;
+  S.done[s.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: today() };
+  gainXP(10 + firstTry * 2, 'story'); S.hontes += hontes; bumpStreak(); save();
+  lessonFrame(1, `<div class="result">${avatar(PACK.mascot, 110)}<div class="bigstars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
+      <h1 style="font-size:28px">Histoire terminée</h1>
+      <div class="say" style="margin-top:16px;text-align:left">${avatar(PACK.mascot, 40)}<div class="bubble">${esc(s.moral || 'Tu as tout compris, ou presque. On en raconte une autre demain ?')}</div></div>
+      <div class="stats" style="margin-top:8px"><div class="stat"><b>+${10 + firstTry * 2}</b><span>jasmins</span></div><div class="stat"><b>${firstTry}/${total}</b><span>du premier coup</span></div></div></div>`,
+    `<button class="btn btn-primary btn-block" id="next">Retour au parcours</button>`);
+  screen = 'result';
+  $('#quit').onclick = $('#next').onclick = () => { stack = []; home(); };
+}
+
+function bindHomeExtras(){
+  const u = $('#upd'); if (u) u.onclick = () => { location.href = UPDATE.url; };
+  const gi = $('#g-img'); if (gi) gi.onclick = startImgGame;
+  const gm = $('#g-mem'); if (gm) gm.onclick = memoryGame;
+  root.querySelectorAll('[data-story]').forEach(b => b.onclick = () => { const s = PACK.stories.find(x => x.id === b.dataset.story); stack = []; story(s, 0); });
+}
+
+// ---------- Signaler une erreur ----------
+const LSR = 'twb.reports.v1';
+let REPORTS = (() => { try { return JSON.parse(localStorage.getItem(LSR) || '[]') || []; } catch(e){ return []; } })();
+function saveReports(){
+  const v = JSON.stringify(REPORTS);
+  try { localStorage.setItem(LSR, v); } catch(e){}
+  if (Native.Prefs) Native.Prefs.set({ key: LSR, value: v }).catch(() => {});
+}
+async function restoreReports(){ if (!Native.Prefs) return; try { const { value } = await Native.Prefs.get({ key: LSR }); if (value) REPORTS = JSON.parse(value) || []; } catch(e){} }
+const ICON_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';
+function repBtn(kind, it, icon){
+  const data = esc(JSON.stringify({ k: kind, tn: fill(it.tn || ''), ar: it.ar ? fill(it.ar) : '', fr: fill(it.fr || '') }));
+  return icon ? `<button class="icon-btn rep" data-rep="${data}" aria-label="Signaler une erreur">${ICON_FLAG}</button>`
+    : `<button class="rep-in" data-rep="${data}" aria-label="Signaler une erreur dans cette phrase">${ICON_FLAG}</button>`;
+}
+function reportSheet(item){
+  const PB = ['Le tunisien est faux', 'La traduction est fausse', 'L’écriture arabe est fausse', 'La voix prononce mal', 'Autre chose'];
+  PB[0] = 'Le ' + UI('adj', 'darija') + ' est faux';
+  const sh = document.createElement('div'); sh.className = 'feedback'; sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-label', 'Signaler une erreur');
+  let pb = '';
+  sh.innerHTML = `<div class="in"><h3 style="margin:0 0 6px">Signaler une erreur</h3>
+    <div class="card" style="padding:10px 12px;margin-bottom:10px"><b>${esc(item.tn)}</b>${item.ar ? `<div class="ar" style="font-family:var(--font-ar);direction:rtl;text-align:right">${esc(item.ar)}</div>` : ''}<div class="muted" style="font-size:14px">${esc(item.fr)}</div></div>
+    <div class="chips">${PB.map((t, i) => `<button class="chip" data-pb="${i}">${esc(t)}</button>`).join('')}</div>
+    <textarea class="field" id="rp-n" rows="2" placeholder="Comment on dit vraiment ? (facultatif)" style="margin-top:10px"></textarea>
+    <div class="seg" style="margin-top:10px"><button class="btn btn-ghost" id="rp-x">Annuler</button><button class="btn btn-primary" id="rp-ok" disabled>Signaler</button></div></div>`;
+  document.body.appendChild(sh);
+  sh.querySelectorAll('[data-pb]').forEach(b => b.onclick = () => { sh.querySelectorAll('[data-pb]').forEach(c => c.classList.remove('on')); b.classList.add('on'); pb = PB[+b.dataset.pb]; sh.querySelector('#rp-ok').disabled = false; });
+  sh.querySelector('#rp-x').onclick = () => sh.remove();
+  sh.querySelector('#rp-ok').onclick = () => {
+    REPORTS.push(Object.assign({ at: today(), lang: S.lang, by: S.name, pb, note: sh.querySelector('#rp-n').value.trim() }, item));
+    saveReports(); sh.remove(); toast('Merci ! Retrouve tes signalements dans Profil.');
+  };
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-rep]'); if (!b) return;
+  e.stopPropagation(); e.preventDefault();
+  try { reportSheet(JSON.parse(b.dataset.rep)); } catch(err){}
+}, true);
+function reportsText(){
+  return 'Corrections pour Tounsi w Bark (' + REPORTS.length + ')\n\n' + REPORTS.map((r, i) => (i + 1) + '. [' + (PACKS[r.lang] ? PACKS[r.lang].name : r.lang) + ' · ' + r.k + '] ' + r.pb + '\n   ' + r.tn + (r.ar ? '  /  ' + r.ar : '') + '\n   « ' + r.fr + ' »' + (r.note ? '\n   → ' + r.note : '') + '\n   (signalé par ' + r.by + ', le ' + r.at + ')').join('\n\n');
+}
+function reportsHTML(){
+  const n = REPORTS.length;
+  return `<div class="sec">Erreurs signalées</div><div class="card"><p class="muted" style="margin:0 0 10px;font-size:14px">${n ? n + ' signalement' + (n > 1 ? 's' : '') + ' en attente. Envoie-les à la personne qui s’occupe de l’appli, puis vide la liste.' : 'Une faute dans une phrase ? Touche le petit drapeau à côté pour la signaler.'}</p>
+    ${n ? `<div class="seg"><button class="btn btn-primary" id="rp-send">Envoyer</button><button class="btn btn-ghost" id="rp-clear">Vider la liste</button></div>` : ''}</div>`;
+}
+function bindReports(){
+  const s = $('#rp-send'); if (s) s.onclick = async () => {
+    const text = reportsText();
+    try {
+      if (Native.Share) await Native.Share.share({ title: 'Corrections Tounsi w Bark', text, dialogTitle: 'Envoyer les corrections' });
+      else if (navigator.share) await navigator.share({ title: 'Corrections Tounsi w Bark', text });
+      else { await navigator.clipboard.writeText(text); toast('Copié : colle-le dans un message'); }
+    } catch(e){}
+  };
+  const c = $('#rp-clear'); if (c) c.onclick = () => { if (confirm('Vider la liste des erreurs signalées ? Fais-le après les avoir envoyées.')) { REPORTS = []; saveReports(); profile(); } };
+}
+
 // ---------- Version web (iPhone) : installation sur l'écran d'accueil + fonctionnement hors ligne ----------
 const standalone = () => window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
 function installHint(){
@@ -1728,8 +2092,10 @@ if (window.TWB_WEB && 'serviceWorker' in navigator && location.protocol === 'htt
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 restore().then(() => {
-  usePack(); applySkin();
+  usePack(); applySkin(); applyKid();
+  restoreReports();
   if (S.name && Object.keys(OTHERS).length) whoPlays(); else home();
+  checkUpdate();
   loadVoices().then(() => { if (screen === 'home') home(); });
   if (S.notif.on) scheduleNotif();
 });
