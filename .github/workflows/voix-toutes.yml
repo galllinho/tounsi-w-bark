@@ -1,6 +1,6 @@
 name: Voix IA (toutes les phrases d'une langue)
 # Génère la voix de chaque phrase d'un pack qui n'en a pas encore, l'ajoute dans src/audio/<langue>-ia/ et relance l'APK.
-# tn : SILMA TTS Derja (tunisien) ; dz : KasbahTTS (darja algérienne) ; ma : Habibi-TTS, modèle spécialisé MAR (darija marocaine, Apache 2.0). À relancer après un ajout de contenu :
+# tn : SILMA TTS Derja (tunisien) ; dz : Habibi-TTS Specialized/ALG (darja algérienne, Apache 2.0 ; KasbahTTS avec MODELE=kasbah) ; ma : Habibi-TTS, modèle spécialisé MAR (darija marocaine, Apache 2.0). À relancer après un ajout de contenu :
 # seules les nouvelles phrases sont générées. Coût : environ 1,5 à 2 minutes GitHub par phrase (tunisien : 830 min pour 476).
 on:
   workflow_dispatch:
@@ -46,25 +46,21 @@ jobs:
           pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
           pip install -q "numpy<=1.26.4" cached_path ema_pytorch hydra-core omegaconf librosa pydub safetensors soundfile tqdm transformers vocos "x_transformers>=1.31.14" torchdiffeq unidecode matplotlib huggingface_hub
           pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
-      - name: Installer F5-TTS pour KasbahTTS (algérien)
-        if: inputs.langue == 'dz'
+      - name: Installer Habibi-TTS (algérien, marocain) et la reconnaissance vocale
+        if: inputs.langue == 'dz' || inputs.langue == 'ma'
         run: |
           sudo apt-get install -y -q ffmpeg
           pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
-          pip install -q f5-tts huggingface_hub soundfile
-          pip install -q --no-deps git+https://github.com/SILMA-AI/silma-tts.git
-      - name: Installer Habibi-TTS (marocain)
-        if: inputs.langue == 'ma'
-        run: |
-          sudo apt-get install -y -q ffmpeg
-          pip install -q torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
-          pip install -q habibi-tts soundfile
+          pip install -q habibi-tts soundfile faster-whisper
       - name: Générer les voix
         env: { MAX_MINUTES: '300' }
         run: python tools/tts/${{ inputs.langue == 'dz' && 'generate-dz.py' || inputs.langue == 'ma' && 'generate-ma.py' || 'generate.py' }} lots/lot-${{ matrix.lot }}.json voix
       - name: Vérifier les durées (algérien, marocain)
         if: inputs.langue == 'dz' || inputs.langue == 'ma'
         run: python tools/tts/check-durations.py lots/lot-${{ matrix.lot }}.json voix || true
+      - name: Vérifier qu'on entend de la parole (algérien, marocain) ; les fichiers inaudibles sont supprimés
+        if: inputs.langue == 'dz' || inputs.langue == 'ma'
+        run: python tools/tts/check-asr.py lots/lot-${{ matrix.lot }}.json voix rapport.md --supprimer || true
       - name: Convertir en mp3
         if: always()
         run: |
